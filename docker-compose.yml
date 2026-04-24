@@ -50,10 +50,11 @@ services:
 
   web:
     build: .
-    command: gunicorn -w 4 -b 0.0.0.0:5000 run:app --timeout 120 --access-logfile -
+    command: /bin/sh -c "gunicorn -w ${WEB_CONCURRENCY:-4} -b 0.0.0.0:5000 run:app --timeout 120 --access-logfile -"
     env_file:
       - .env
     environment:
+      - WEB_CONCURRENCY=1
       - DATABASE_URL=postgresql://${POSTGRES_USER:-wauser}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-whatsapp_saas}
       - REDIS_URL=redis://redis:6379/0
       - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://host.docker.internal:8081}
