@@ -15,7 +15,10 @@ celery.conf.update(
     timezone='Europe/Berlin',
     task_routes={
         'app.tasks.process_document': {'queue': 'documents'},
-    }
+    },
+    # On Render.com (no shared disk between web/worker) set CELERY_TASK_ALWAYS_EAGER=true
+    # so document processing runs synchronously inside the web process
+    task_always_eager=os.environ.get('CELERY_TASK_ALWAYS_EAGER', 'false').lower() == 'true',
 )
 
 
