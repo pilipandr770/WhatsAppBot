@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% block title %}WA.AI — WhatsApp KI-Support{% endblock %}
+
+{% block public_content %}
+<style>
+body { background: #0c0d10; }
+.hero { text-align:center; padding: 100px 20px 60px; }
+.hero-badge {
+  display:inline-block; background:rgba(37,211,102,0.1); color:#25D366;
+  border:1px solid rgba(37,211,102,0.2); border-radius:20px;
+  padding:5px 14px; font-size:12.5px; font-weight:600;
+  margin-bottom:24px; text-transform:uppercase; letter-spacing:0.06em;
+}
+.hero h1 {
+  font-size:52px; font-weight:700; line-height:1.15;
+  max-width:680px; margin:0 auto 20px;
+}
+.hero h1 span { color:#25D366; }
+.hero p { font-size:17px; color:#6b7280; max-width:500px; margin:0 auto 36px; line-height:1.7; }
+.features { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; max-width:900px; margin:0 auto; padding:0 20px 80px; }
+.feat { background:#141618; border:1px solid #2a2d33; border-radius:12px; padding:24px; }
+.feat-icon { font-size:28px; margin-bottom:12px; }
+.feat-title { font-size:15px; font-weight:600; margin-bottom:6px; }
+.feat-text { font-size:13.5px; color:#6b7280; line-height:1.6; }
+.nav-bar { display:flex; align-items:center; justify-content:space-between; padding:20px 40px; border-bottom:1px solid #1c1e22; }
+</style>
+
+<div class="nav-bar">
+  <div style="font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;">
+    <span style="font-size:22px;">💬</span> WA.AI
+  </div>
+  <div style="display:flex;gap:12px;">
+    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Anmelden</a>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Kostenlos starten</a>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-badge">🇩🇪 Made for Germany</div>
+  <h1>WhatsApp-Support mit <span>echtem KI</span></h1>
+  <p>Verbinde deine WhatsApp-Nummer, lade deine FAQ hoch — und lass Claude automatisch auf Kundenanfragen antworten.</p>
+  <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="font-size:15px;padding:12px 28px;">
+    Jetzt kostenlos testen →
+  </a>
+</div>
+
+<div class="features">
+  <div class="feat">
+    <div class="feat-icon">📱</div>
+    <div class="feat-title">Normale WhatsApp-Nummer</div>
+    <div class="feat-text">Keine WhatsApp Business API nötig. Einfach QR-Code scannen — fertig.</div>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">🧠</div>
+    <div class="feat-title">Claude KI antwortet</div>
+    <div class="feat-text">Modernste KI (Anthropic Claude) beantwortet Kundenfragen — rund um die Uhr, auf Deutsch.</div>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">📄</div>
+    <div class="feat-title">Wissensdatenbank</div>
+    <div class="feat-text">Lade PDFs, FAQ und Preislisten hoch. Der Bot antwortet basierend auf deinen Inhalten.</div>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">💬</div>
+    <div class="feat-title">Gesprächshistorie</div>
+    <div class="feat-text">Alle Chats live einsehen. Volle Kontrolle über Bot-Aktivität und Gesprächsverläufe.</div>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">⚡</div>
+    <div class="feat-title">Sofortiger Setup</div>
+    <div class="feat-text">In 5 Minuten live. Keine Entwickler nötig — komplett No-Code für den Endkunden.</div>
+  </div>
+  <div class="feat">
+    <div class="feat-icon">🔒</div>
+    <div class="feat-title">Datenschutz DSGVO</div>
+    <div class="feat-text">Server in Deutschland (Hetzner, Frankfurt). DSGVO-konformer Betrieb.</div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Gespräche — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.connect_instance', instance_id=instance.id) }}" class="nav-item">📱 Verbinden</a>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item active">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Gespräche</div>
+    <div class="page-sub">{{ instance.display_name }} — {{ conversations|length }} Chats</div>
+  </div>
+</div>
+
+<div class="page-body">
+  {% if conversations %}
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Kontakt</th>
+          <th>Telefon</th>
+          <th>Nachrichten</th>
+          <th>Letzter Kontakt</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for conv in conversations %}
+        <tr>
+          <td>
+            <div style="font-weight:500;">{{ conv.contact_name or 'Unbekannt' }}</div>
+          </td>
+          <td>
+            <span style="font-family:'DM Mono',monospace;font-size:12.5px;color:var(--text-muted);">
+              +{{ conv.phone_number }}
+            </span>
+          </td>
+          <td>
+            <span style="font-family:'DM Mono',monospace;">{{ conv.message_count or 0 }}</span>
+          </td>
+          <td style="color:var(--text-muted);font-size:12.5px;">
+            {% if conv.last_message_at %}
+              {{ conv.last_message_at.strftime('%d.%m.%Y %H:%M') }}
+            {% else %}—{% endif %}
+          </td>
+          <td>
+            <a href="{{ url_for('dashboard.conversation_detail', instance_id=instance.id, conv_id=conv.id) }}"
+               class="btn btn-secondary btn-sm">Anzeigen →</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">💬</div>
+    <div class="empty-title">Noch keine Gespräche</div>
+    <div class="empty-text">Sobald jemand deinen Bot anschreibt, erscheinen die Chats hier.</div>
+  </div>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Deine WhatsApp KI-Instanzen</div>
+  </div>
+  {% if current_user.can_add_instance %}
+  <button class="btn btn-primary" onclick="document.getElementById('newInstanceModal').classList.add('open')">
+    + Neue Instanz
+  </button>
+  {% else %}
+  <a href="{{ url_for('billing.plans') }}" class="btn btn-secondary">↑ Upgrade</a>
+  {% endif %}
+</div>
+
+<div class="page-body">
+
+  <!-- Plan hint if no sub -->
+  {% if not current_user.subscription or not current_user.subscription.is_active %}
+  <div class="alert alert-info">
+    ℹ Du hast noch kein aktives Abonnement. Du kannst eine Instanz kostenlos zum Testen erstellen (1x).
+    <a href="{{ url_for('billing.plans') }}" style="margin-left:6px;font-weight:600;">Plan wählen →</a>
+  </div>
+  {% endif %}
+
+  <!-- Stats row -->
+  <div class="grid-3" style="margin-bottom:24px;">
+    <div class="stat-card">
+      <div class="stat-label">Instanzen</div>
+      <div class="stat-value">{{ instances|length }}</div>
+      <div class="stat-change">von {{ current_user.instances_limit }} verfügbar</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Verbunden</div>
+      <div class="stat-value" style="color:var(--accent)">{{ instances|selectattr('is_connected')|list|length }}</div>
+      <div class="stat-change">aktive Nummern</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Nachrichten gesamt</div>
+      <div class="stat-value">{{ instances|sum(attribute='total_messages') }}</div>
+      <div class="stat-change">alle Instanzen</div>
+    </div>
+  </div>
+
+  <!-- Instance list -->
+  {% if instances %}
+  <div style="display:flex; flex-direction:column; gap:12px;">
+    {% for inst in instances %}
+    <div class="card" style="display:flex; align-items:center; gap:20px; padding:16px 20px;">
+      <!-- Status indicator -->
+      <div style="flex-shrink:0;">
+        {% if inst.status == 'connected' %}
+          <span class="badge badge-green"><span class="dot"></span> Online</span>
+        {% elif inst.status == 'connecting' %}
+          <span class="badge badge-yellow"><span class="dot dot-pulse"></span> Verbindet...</span>
+        {% else %}
+          <span class="badge badge-gray"><span class="dot"></span> Offline</span>
+        {% endif %}
+      </div>
+
+      <!-- Name -->
+      <div style="flex:1;">
+        <div style="font-weight:600;">{{ inst.display_name }}</div>
+        <div style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;">{{ inst.instance_name }}</div>
+      </div>
+
+      <!-- Stats -->
+      <div style="text-align:right;flex-shrink:0;">
+        <div style="font-size:13px;color:var(--text-dim);">{{ inst.total_messages }} Nachrichten</div>
+        <div style="font-size:12px;color:var(--text-muted);">{{ inst.conversations|length }} Gespräche</div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;gap:8px;flex-shrink:0;">
+        {% if inst.status != 'connected' %}
+        <a href="{{ url_for('dashboard.connect_instance', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">QR-Code</a>
+        {% endif %}
+        <a href="{{ url_for('dashboard.bot_config', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">⚙ Config</a>
+        <a href="{{ url_for('dashboard.conversations', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">💬 Chats</a>
+        <a href="{{ url_for('dashboard.documents', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">📄 Docs</a>
+        <form method="post" action="{{ url_for('dashboard.delete_instance', instance_id=inst.id) }}"
+              onsubmit="return confirm('Instanz löschen?')" style="display:inline;">
+          <button type="submit" class="btn btn-danger btn-sm">✕</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📱</div>
+    <div class="empty-title">Noch keine Instanzen</div>
+    <div class="empty-text">Erstelle deine erste WhatsApp KI-Instanz</div>
+    {% if current_user.can_add_instance %}
+    <button class="btn btn-primary" style="margin-top:16px;"
+            onclick="document.getElementById('newInstanceModal').classList.add('open')">
+      + Erste Instanz erstellen
+    </button>
+    {% else %}
+    <a href="{{ url_for('billing.plans') }}" class="btn btn-primary" style="margin-top:16px;">Plan wählen</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- New Instance Modal -->
+<div class="modal-backdrop" id="newInstanceModal">
+  <div class="modal">
+    <div class="modal-title">Neue WhatsApp-Instanz</div>
+    <form method="post" action="{{ url_for('dashboard.create_instance') }}">
+      <div class="form-group">
+        <label class="form-label">Name der Instanz</label>
+        <input type="text" name="display_name" class="form-input"
+               placeholder="z.B. Kundenservice, Shop-Support" required maxlength="100">
+        <div class="form-hint">Interner Name zur Unterscheidung deiner Nummern.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost"
+                onclick="document.getElementById('newInstanceModal').classList.remove('open')">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Erstellen & QR anzeigen</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

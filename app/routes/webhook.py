@@ -1,0 +1,196 @@
+import logging
+from datetime import datetime
+from flask import Blueprint, request, jsonify
+from app import db
+from app.models import WhatsAppInstance, Conversation, Message
+from app.services.claude_service import get_ai_response
+from app.services.rag import search_relevant_chunks
+from app.services.evolution import evolution_client
+
+webhook_bp = Blueprint('webhook', __name__)
+logger = logging.getLogger(__name__)
+
+
+@webhook_bp.route('/<instance_name>', methods=['POST'])
+def handle_webhook(instance_name):
+    """Main webhook endpoint for Evolution API events."""
+    data = request.get_json(silent=True)
+
+    if not data:
+        return jsonify({'status': 'ok'})
+
+    event = data.get('event', '')
+    logger.info(f"WEBHOOK [{instance_name}] event={event!r} data_keys={list(data.get('data', {}).keys() if isinstance(data.get('data'), dict) else ['<list>'])}")
+
+    try:
+        if event == 'messages.upsert':
+            _process_message(instance_name, data)
+        elif event == 'connection.update':
+            _process_connection_update(instance_name, data)
+        elif event == 'qrcode.updated':
+            _process_qr_update(instance_name, data)
+    except Exception as e:
+        logger.error(f"Webhook error [{instance_name}] {event}: {e}", exc_info=True)
+
+    return jsonify({'status': 'ok'})
+
+
+def _process_message(instance_name: str, data: dict):
+    msg_data = data.get('data', {})
+
+    # v2.3.7: data may be a list of messages
+    if isinstance(msg_data, list):
+        for item in msg_data:
+            _process_single_message(instance_name, item)
+        return
+
+    _process_single_message(instance_name, msg_data)
+
+
+def _process_single_message(instance_name: str, msg_data: dict):
+    key = msg_data.get('key', {})
+
+    # Skip outgoing messages
+    if key.get('fromMe', False):
+        return
+
+    # Extract text content
+    message_obj = msg_data.get('message', {})
+    text = (
+        message_obj.get('conversation') or
+        (message_obj.get('extendedTextMessage') or {}).get('text') or
+        ''
+    ).strip()
+
+    logger.info(f"MSG key={key} text_len={len(text)}")
+
+    if not text:
+        return  # Skip media, stickers, etc.
+
+    contact_jid = key.get('remoteJid', '')
+
+    # Skip group messages
+    if '@g.us' in contact_jid:
+        return
+
+    # Find instance in DB
+    instance = WhatsAppInstance.query.filter_by(instance_name=instance_name).first()
+    if not instance:
+        logger.warning(f"Instance not found: {instance_name}")
+        return
+
+    config = instance.bot_config
+    if not config or not config.is_active:
+        return
+
+    # Get or create conversation
+    conversation = Conversation.query.filter_by(
+        instance_id=instance.id,
+        contact_jid=contact_jid
+    ).first()
+
+    if not conversation:
+        conversation = Conversation(
+            instance_id=instance.id,
+            contact_jid=contact_jid,
+            contact_name=msg_data.get('pushName') or contact_jid.split('@')[0]
+        )
+        db.session.add(conversation)
+        db.session.flush()
+
+    # Save incoming message
+    user_message = Message(
+        conversation_id=conversation.id,
+        role='user',
+        content=text
+    )
+    db.session.add(user_message)
+    db.session.flush()
+
+    # Build conversation history (last 10 messages for context window)
+    history_msgs = (
+        Message.query
+        .filter_by(conversation_id=conversation.id)
+        .order_by(Message.created_at.desc())
+        .limit(10)
+        .all()
+    )
+    history = [{'role': m.role, 'content': m.content} for m in reversed(history_msgs)]
+
+    # RAG context
+    rag_context = None
+    if config.use_rag:
+        rag_context = search_relevant_chunks(instance.id, text)
+
+    # Generate AI response
+    ai_text = get_ai_response(
+        system_prompt=config.system_prompt,
+        messages=history,
+        rag_context=rag_context,
+        max_tokens=config.max_tokens
+    )
+
+    # Save AI response
+    assistant_message = Message(
+        conversation_id=conversation.id,
+        role='assistant',
+        content=ai_text
+    )
+    db.session.add(assistant_message)
+
+    # Update conversation stats
+    conversation.message_count = (conversation.message_count or 0) + 2
+    conversation.last_message_at = datetime.utcnow()
+
+    db.session.commit()
+
+    # Send reply via Evolution API
+    evolution_client.send_text(
+        instance_name=instance_name,
+        token=instance.api_token,
+        to_jid=contact_jid,
+        text=ai_text
+    )
+
+    logger.info(f"Replied to {contact_jid} on {instance_name}: {len(ai_text)} chars")
+
+
+def _process_qr_update(instance_name: str, data: dict):
+    qr_data = data.get('data', {})
+    qr_base64 = (
+        qr_data.get('base64') or
+        qr_data.get('qrcode', {}).get('base64', '') or
+        qr_data.get('qr', '')
+    )
+    if not qr_base64:
+        logger.warning(f"qrcode.updated received but no base64 for {instance_name}: {list(qr_data.keys())}")
+        return
+
+    instance = WhatsAppInstance.query.filter_by(instance_name=instance_name).first()
+    if not instance:
+        return
+
+    instance.qr_code = qr_base64
+    instance.qr_updated_at = datetime.utcnow()
+    db.session.commit()
+    logger.info(f"QR stored for {instance_name} ({len(qr_base64)} bytes)")
+
+
+def _process_connection_update(instance_name: str, data: dict):
+    state = data.get('data', {}).get('state', '')
+    instance = WhatsAppInstance.query.filter_by(instance_name=instance_name).first()
+
+    if not instance:
+        return
+
+    state_map = {
+        'open': 'connected',
+        'connecting': 'connecting',
+        'close': 'disconnected',
+    }
+
+    new_status = state_map.get(state, instance.status)
+    if instance.status != new_status:
+        instance.status = new_status
+        db.session.commit()
+        logger.info(f"Instance {instance_name} status → {new_status}")

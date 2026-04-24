@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}Konfiguration — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.connect_instance', instance_id=instance.id) }}" class="nav-item">📱 Verbinden</a>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item active">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Bot-Konfiguration</div>
+    <div class="page-sub">{{ instance.display_name }}</div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;">
+    {% if instance.status == 'connected' %}
+      <span class="badge badge-green"><span class="dot"></span> Verbunden</span>
+    {% else %}
+      <span class="badge badge-gray"><span class="dot"></span> Offline</span>
+    {% endif %}
+  </div>
+</div>
+
+<div class="page-body">
+<form method="post">
+  <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
+
+    <!-- Left: Main config -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="card">
+        <div class="card-title">🤖 Bot-Identität</div>
+        <div class="form-group">
+          <label class="form-label">Bot-Name</label>
+          <input type="text" name="bot_name" class="form-input"
+                 value="{{ config.bot_name }}" placeholder="KI-Assistent">
+          <div class="form-hint">Wird intern zur Identifikation genutzt.</div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Sprache</label>
+          <select name="language" class="form-select">
+            <option value="de" {% if config.language == 'de' %}selected{% endif %}>🇩🇪 Deutsch</option>
+            <option value="en" {% if config.language == 'en' %}selected{% endif %}>🇬🇧 Englisch</option>
+            <option value="ru" {% if config.language == 'ru' %}selected{% endif %}>🇷🇺 Russisch</option>
+            <option value="tr" {% if config.language == 'tr' %}selected{% endif %}>🇹🇷 Türkisch</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📝 System-Prompt</div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Anweisungen für den KI-Bot</label>
+          <textarea name="system_prompt" class="form-textarea" rows="10"
+                    placeholder="Beschreibe, wie der Bot sich verhalten soll...">{{ config.system_prompt }}</textarea>
+          <div class="form-hint">
+            Der System-Prompt definiert Persönlichkeit, Tonalität und Verhalten des Bots.
+            Je präziser, desto besser die Antworten.
+          </div>
+        </div>
+      </div>
+
+      <!-- Prompt examples -->
+      <div class="card" style="border-style:dashed;">
+        <div class="card-title" style="color:var(--text-muted);">💡 Prompt-Vorlagen</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          {% set templates = [
+            ('Kundenservice', 'Du bist ein freundlicher Kundenservice-Assistent für {Firmenname}. Beantworte Fragen höflich auf Deutsch. Wenn du etwas nicht weißt, leite den Kunden an support@firma.de weiter. Öffnungszeiten: Mo–Fr 9–18 Uhr.'),
+            ('Restaurant', 'Du bist der digitale Assistent von {Restaurantname}. Beantworte Fragen zur Speisekarte, Reservierungen und Öffnungszeiten. Reservierungen sind telefonisch unter {Telefon} möglich.'),
+            ('Immobilien', 'Du bist ein KI-Assistent für {Immobilienbüro}. Beantworte Fragen zu verfügbaren Objekten, Miet- und Kaufpreisen. Für Besichtigungen leite Interessenten an unsere Makler weiter.'),
+          ] %}
+          {% for name, prompt in templates %}
+          <button type="button" class="btn btn-ghost btn-sm" style="text-align:left;justify-content:flex-start;"
+                  onclick="document.querySelector('textarea[name=system_prompt]').value=`{{ prompt }}`">
+            {{ name }} →
+          </button>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Settings -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+
+      <div class="card">
+        <div class="card-title">⚡ Status</div>
+        <label class="form-check" style="margin-bottom:16px;">
+          <input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %}>
+          <div>
+            <div style="font-weight:500;">Bot aktiv</div>
+            <div style="font-size:12px;color:var(--text-muted);">Bot antwortet auf Nachrichten</div>
+          </div>
+        </label>
+        <label class="form-check">
+          <input type="checkbox" name="use_rag" {% if config.use_rag %}checked{% endif %}>
+          <div>
+            <div style="font-weight:500;">Wissensdatenbank nutzen</div>
+            <div style="font-size:12px;color:var(--text-muted);">Antworten aus hochgeladenen Dokumenten</div>
+          </div>
+        </label>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🎛 Parameter</div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Max. Tokens pro Antwort</label>
+          <input type="number" name="max_tokens" class="form-input"
+                 value="{{ config.max_tokens }}" min="100" max="2000" step="100">
+          <div class="form-hint">
+            100 Tokens ≈ 75 Wörter.<br>
+            Empfehlung: 300–600 für Support.
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="background:var(--accent-dim);border-color:rgba(37,211,102,0.2);">
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">
+          📊 Statistiken
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">Gespräche</span>
+            <span style="font-weight:600;">{{ instance.conversations|length }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">Nachrichten</span>
+            <span style="font-weight:600;">{{ instance.total_messages }}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">Dokumente</span>
+            <span style="font-weight:600;">{{ instance.documents|length }}</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        💾 Konfiguration speichern
+      </button>
+    </div>
+  </div>
+</form>
+</div>
+{% endblock %}

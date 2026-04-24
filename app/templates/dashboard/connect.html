@@ -1,0 +1,127 @@
+{% extends 'base.html' %}
+{% block title %}Verbinden — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">WhatsApp verbinden</div>
+    <div class="page-sub">{{ instance.display_name }}</div>
+  </div>
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">← Zurück</a>
+</div>
+
+<div class="page-body" style="max-width:600px;">
+  <div class="card" style="text-align:center; padding:40px;">
+
+    <div id="status-badge" style="margin-bottom:24px;">
+      {% if instance.status == 'connected' %}
+        <span class="badge badge-green" style="font-size:14px;padding:6px 16px;">
+          <span class="dot"></span> Verbunden
+        </span>
+      {% else %}
+        <span class="badge badge-yellow" style="font-size:14px;padding:6px 16px;">
+          <span class="dot dot-pulse"></span> Warte auf QR-Scan...
+        </span>
+      {% endif %}
+    </div>
+
+    <div id="qr-container" {% if instance.status == 'connected' %}style="display:none"{% endif %}>
+      <p style="color:var(--text-muted);margin-bottom:20px;font-size:13.5px;">
+        Öffne WhatsApp auf deinem Handy →<br>
+        <strong style="color:var(--text)">Einstellungen → Geräte → Gerät hinzufügen</strong>
+      </p>
+      <div id="qr-wrapper" style="
+        background:#fff; border-radius:12px; padding:16px;
+        display:inline-block; margin-bottom:20px; min-height:200px;
+        display:flex; align-items:center; justify-content:center;">
+        <div id="qr-loading" style="color:#666;font-size:13px;">QR-Code wird geladen...</div>
+        <img id="qr-img" style="display:none; width:200px; height:200px;" alt="QR Code">
+      </div>
+      <br>
+      <button onclick="loadQR()" class="btn btn-secondary btn-sm">🔄 QR-Code aktualisieren</button>
+    </div>
+
+    <div id="connected-msg" {% if instance.status != 'connected' %}style="display:none"{% endif %}>
+      <div style="font-size:48px;margin-bottom:16px;">✅</div>
+      <div style="font-size:18px;font-weight:600;color:var(--accent);margin-bottom:8px;">Erfolgreich verbunden!</div>
+      <p style="color:var(--text-muted);font-size:13.5px;margin-bottom:24px;">
+        Dein WhatsApp-Bot ist aktiv und bereit, Nachrichten zu beantworten.
+      </p>
+      <a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="btn btn-primary">
+        ⚙ Bot konfigurieren →
+      </a>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">ℹ Hinweise</div>
+    <ul style="color:var(--text-muted);font-size:13px;padding-left:18px;line-height:2;">
+      <li>Der QR-Code ist 60 Sekunden gültig — danach aktualisieren</li>
+      <li>Dein Handy muss mit dem Internet verbunden bleiben</li>
+      <li>Keine WhatsApp Business API nötig — normale Nummer reicht</li>
+      <li>Nach dem Verbinden kannst du den Bot konfigurieren</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const instanceId = {{ instance.id }};
+const isConnected = {{ 'true' if instance.status == 'connected' else 'false' }};
+
+let qrRetryTimer = null;
+
+async function loadQR() {
+  if (qrRetryTimer) { clearTimeout(qrRetryTimer); qrRetryTimer = null; }
+  try {
+    const resp = await fetch(`/dashboard/instance/${instanceId}/qr`);
+    if (!resp.ok) {
+      document.getElementById('qr-loading').textContent = `Fehler ${resp.status} beim Laden. Erneuter Versuch...`;
+      qrRetryTimer = setTimeout(loadQR, 4000);
+      return;
+    }
+    const data = await resp.json();
+    if (data.qr) {
+      document.getElementById('qr-loading').style.display = 'none';
+      const img = document.getElementById('qr-img');
+      img.src = data.qr.startsWith('data:') ? data.qr : `data:image/png;base64,${data.qr}`;
+      img.style.display = 'block';
+    } else {
+      document.getElementById('qr-loading').textContent = 'QR-Code wird vorbereitet... Bitte warten.';
+      qrRetryTimer = setTimeout(loadQR, 3000);
+    }
+  } catch(e) {
+    document.getElementById('qr-loading').textContent = 'Verbindungsfehler. Erneuter Versuch...';
+    qrRetryTimer = setTimeout(loadQR, 4000);
+  }
+}
+
+async function checkStatus() {
+  try {
+    const resp = await fetch(`/dashboard/instance/${instanceId}/status`);
+    const data = await resp.json();
+    if (data.status === 'connected') {
+      document.getElementById('qr-container').style.display = 'none';
+      document.getElementById('connected-msg').style.display = 'block';
+      document.getElementById('status-badge').innerHTML =
+        '<span class="badge badge-green" style="font-size:14px;padding:6px 16px;"><span class="dot"></span> Verbunden</span>';
+    }
+  } catch(e) {}
+}
+
+if (!isConnected) {
+  loadQR();
+  setInterval(checkStatus, 3000);
+  setInterval(loadQR, 55000);
+}
+</script>
+{% endblock %}

@@ -1,0 +1,64 @@
+# Environment & secrets
+.env
+*.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+venv/
+.venv/
+env/
+ENV/
+
+# Flask / uploads
+instance/
+uploads/
+*.sqlite
+*.db
+
+# Migrations (keep if you want schema versioning, remove line to commit)
+# migrations/
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# Logs
+*.log
+logs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Docker volumes (local data)
+postgres_data/
+redis_data/
+
+# Debug / temp files generated during development
+cookies.txt
+*.headers.txt
+create_headers.txt
+register_headers.txt
+create_resp*.html
+register_resp.html
+login_resp.html
+dashboard.html
+web_index.html
+nginx.conf

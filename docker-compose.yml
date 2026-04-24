@@ -1,0 +1,117 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-whatsapp_saas}
+      POSTGRES_USER: ${POSTGRES_USER:-wauser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  evolution-api:
+    image: evoapicloud/evolution-api:v2.3.7
+    environment:
+      SERVER_URL: ${SERVER_URL:-http://localhost:8080}
+      AUTHENTICATION_TYPE: apikey
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:-super-secret-key}
+      AUTHENTICATION_EXPOSE_IN_FETCH_INSTANCES: 'true'
+      DATABASE_ENABLED: 'true'
+      DATABASE_PROVIDER: postgresql
+      # Use a separate database for evolution-api to avoid schema conflicts
+      DATABASE_CONNECTION_URI: postgresql://${POSTGRES_USER:-wauser}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/evolution_db
+      DATABASE_CONNECTION_CLIENT_NAME: evolution_api
+      CACHE_REDIS_ENABLED: 'true'
+      CACHE_REDIS_URI: redis://redis:6379/1
+      CACHE_REDIS_PREFIX_KEY: evolution
+      LOG_LEVEL: ERROR,WARN,LOG
+      LOG_BAILEYS: error
+      DEL_INSTANCE: '0'
+      LANGUAGE: de-DE
+    ports:
+      - "8081:8080"
+    depends_on:
+      - postgres
+      - init-evolution-db
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  web:
+    build: .
+    command: gunicorn -w 4 -b 0.0.0.0:5000 run:app --timeout 120 --access-logfile -
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-wauser}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-whatsapp_saas}
+      - REDIS_URL=redis://redis:6379/0
+      - EVOLUTION_API_URL=${EVOLUTION_API_URL:-http://host.docker.internal:8081}
+      - APP_BASE_URL=${APP_BASE_URL:-https://yourdomain.com}
+      - UPLOAD_FOLDER=/app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+      - redis
+      - evolution-api
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  worker:
+    build: .
+    command: celery -A celery_worker.celery worker --loglevel=info -Q documents
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-wauser}:${POSTGRES_PASSWORD:-changeme}@postgres:5432/${POSTGRES_DB:-whatsapp_saas}
+      - REDIS_URL=redis://redis:6379/0
+      - UPLOAD_FOLDER=/app/uploads
+    volumes:
+      - uploads_data:/app/uploads
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+    networks:
+      - app-net
+
+  init-evolution-db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-wauser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+      POSTGRES_DB: ${POSTGRES_DB:-whatsapp_saas}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >
+      sh -c "until pg_isready -h postgres -p 5432; do sleep 1; done; \
+      psql -h postgres -U \"${POSTGRES_USER:-wauser}\" -tAc \"SELECT 1 FROM pg_database WHERE datname='evolution_db'\" | grep -q 1 || psql -h postgres -U \"${POSTGRES_USER:-wauser}\" -c \"CREATE DATABASE evolution_db\""
+    depends_on:
+      - postgres
+    restart: 'no'
+    networks:
+      - app-net
+
+  # nginx: disabled for local development (TLS certs not available)
+  # To enable in production, restore this service and mount real certs.
+
+volumes:
+  postgres_data:
+  uploads_data:
+
+networks:
+  app-net:
+    driver: bridge
