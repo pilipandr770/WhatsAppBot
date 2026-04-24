@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}Datenschutz{% endblock %}
+{% block public_content %}
+<div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
+  <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
+  <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Datenschutzerklärung</h1>
+  <p style="color:#6b7280;margin-bottom:32px;">Stand: [DATUM] · gemäß DSGVO</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">1. Verantwortlicher</h2>
+  <p>Andrii Pylypchuk<br>Bergmannweg 16, 65934 Frankfurt am Main<br>E-Mail: <a href="mailto:info@andrii-it.de">info@andrii-it.de</a></p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">2. Erhobene Daten</h2>
+  <p>Wir verarbeiten folgende personenbezogene Daten:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li><strong style="color:#e8eaf0;">Registrierungsdaten:</strong> Name, E-Mail-Adresse, Firmenname</li>
+    <li><strong style="color:#e8eaf0;">Zahlungsdaten:</strong> werden ausschließlich von Stripe verarbeitet; wir speichern nur die Stripe-Kunden-ID</li>
+    <li><strong style="color:#e8eaf0;">WhatsApp-Nachrichten:</strong> Nachrichten werden zur Bearbeitung durch die KI temporär verarbeitet und in unserer Datenbank gespeichert</li>
+    <li><strong style="color:#e8eaf0;">Nutzungsdaten:</strong> Log-Daten, IP-Adressen (nur in Server-Logs, nicht dauerhaft gespeichert)</li>
+    <li><strong style="color:#e8eaf0;">Hochgeladene Dokumente:</strong> vom Nutzer hochgeladene Dateien für die Wissensbasis (RAG)</li>
+  </ul>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">3. Zweck der Verarbeitung</h2>
+  <p>Die Daten werden verarbeitet zur:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li>Bereitstellung und Verbesserung des Dienstes (Art. 6 Abs. 1 lit. b DSGVO)</li>
+    <li>Abwicklung von Zahlungen (Art. 6 Abs. 1 lit. b DSGVO)</li>
+    <li>Einhaltung gesetzlicher Pflichten (Art. 6 Abs. 1 lit. c DSGVO)</li>
+  </ul>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">4. Drittanbieter</h2>
+  <p><strong>Anthropic (Claude AI):</strong> Nachrichten werden zur KI-Verarbeitung an die Anthropic-API übertragen.
+  Datenschutz: <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a></p>
+  <p><strong>Stripe:</strong> Zahlungsabwicklung. Datenschutz: <a href="https://stripe.com/de/privacy" target="_blank">stripe.com/de/privacy</a></p>
+  <p><strong>Render.com:</strong> Hosting-Anbieter. Datenschutz: <a href="https://render.com/privacy" target="_blank">render.com/privacy</a></p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Speicherdauer</h2>
+  <p>Personenbezogene Daten werden gelöscht, sobald sie für den Verarbeitungszweck nicht mehr
+  erforderlich sind. Buchhaltungsrelevante Daten werden entsprechend der gesetzlichen
+  Aufbewahrungsfristen (10 Jahre) gespeichert. Nutzer können die Löschung ihres Kontos
+  jederzeit selbst veranlassen.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">6. Rechte der betroffenen Person</h2>
+  <p>Sie haben das Recht auf:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li>Auskunft über gespeicherte Daten (Art. 15 DSGVO)</li>
+    <li>Berichtigung unrichtiger Daten (Art. 16 DSGVO)</li>
+    <li>Löschung Ihrer Daten (Art. 17 DSGVO) — über „Konto löschen" im Dashboard</li>
+    <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
+    <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
+    <li>Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
+    <li>Beschwerde bei der zuständigen Datenschutzbehörde</li>
+  </ul>
+  <p>Zur Ausübung Ihrer Rechte wenden Sie sich an: <a href="mailto:[EMAIL]">[EMAIL]</a></p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">7. Cookies</h2>
+  <p>Wir verwenden ausschließlich technisch notwendige Cookies (Session-Cookie für die Anmeldung).
+  Es werden keine Tracking- oder Werbe-Cookies eingesetzt.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">8. Sicherheit</h2>
+  <p>Alle Datenübertragungen erfolgen verschlüsselt via HTTPS/TLS. Passwörter werden
+  ausschließlich als Bcrypt-Hash gespeichert.</p>
+
+  <div style="margin-top:48px;padding-top:24px;border-top:1px solid #2a2d33;font-size:12px;color:#6b7280;">
+    <a href="{{ url_for('main.impressum') }}" style="color:#6b7280;margin-right:20px;">Impressum</a>
+    <a href="{{ url_for('main.agb') }}" style="color:#6b7280;">AGB</a>
+  </div>
+</div>
+{% endblock %}

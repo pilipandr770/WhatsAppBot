@@ -59,6 +59,7 @@ register_headers.txt
 create_resp*.html
 register_resp.html
 login_resp.html
-dashboard.html
 web_index.html
+# root-level debug html files only (not templates)
+/dashboard.html
 nginx.conf

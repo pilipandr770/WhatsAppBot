@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title %}AGB{% endblock %}
+{% block public_content %}
+<div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
+  <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
+  <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Allgemeine Geschäftsbedingungen</h1>
+  <p style="color:#6b7280;margin-bottom:32px;">Stand: [DATUM]</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 1 Geltungsbereich</h2>
+  <p>Diese AGB gelten für alle Verträge zwischen Andrii Pylypchuk (nachfolgend „Anbieter") und den Nutzern
+  der SaaS-Plattform WA.AI (nachfolgend „Dienst"). Abweichende Bedingungen des Nutzers werden nicht
+  anerkannt, es sei denn, der Anbieter stimmt ihrer Geltung ausdrücklich schriftlich zu.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 2 Leistungsbeschreibung</h2>
+  <p>Der Anbieter stellt einen KI-gestützten WhatsApp-Chatbot-Dienst bereit, der es Unternehmen
+  ermöglicht, automatisierte Antworten auf WhatsApp-Nachrichten zu konfigurieren und zu betreiben.
+  Der Dienst wird als Software-as-a-Service (SaaS) über das Internet bereitgestellt.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 3 Kostenlose Testphase</h2>
+  <p>Neue Nutzer erhalten nach der Registrierung eine kostenlose Testphase von 3 Tagen.
+  Nach Ablauf der Testphase ist zur weiteren Nutzung der Abschluss eines kostenpflichtigen
+  Abonnements erforderlich. Eine Kreditkarte ist für die Testphase nicht erforderlich.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 4 Vertragsschluss und Abonnement</h2>
+  <p>Der Vertrag kommt durch die Registrierung und Buchung eines Abonnements zustande.
+  Abonnements werden monatlich abgerechnet und verlängern sich automatisch, sofern sie nicht
+  rechtzeitig gekündigt werden. Die Abrechnung erfolgt über den Zahlungsdienstleister Stripe.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 5 Preise und Zahlung</h2>
+  <p>Die aktuellen Preise sind auf der Preisseite der Plattform einsehbar. Alle Preise verstehen
+  sich zuzüglich der gesetzlichen Umsatzsteuer. Die Zahlung erfolgt im Voraus per Kreditkarte
+  über Stripe.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 6 Kündigung</h2>
+  <p>Der Nutzer kann sein Abonnement jederzeit über das Kundenportal kündigen. Die Kündigung
+  wird zum Ende des laufenden Abrechnungszeitraums wirksam. Der Anbieter kann den Vertrag
+  bei schwerwiegenden Verstößen gegen diese AGB fristlos kündigen.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 7 Nutzerpflichten</h2>
+  <p>Der Nutzer verpflichtet sich, den Dienst nur im Rahmen der geltenden Gesetze zu nutzen.
+  Insbesondere ist es untersagt, den Dienst für Spam, unzulässige Werbung oder die Verarbeitung
+  von Daten ohne entsprechende Rechtsgrundlage zu verwenden. Der Nutzer ist für die Einhaltung
+  des WhatsApp-Nutzungsvertrags selbst verantwortlich.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 8 Verfügbarkeit und Haftung</h2>
+  <p>Der Anbieter strebt eine Verfügbarkeit von 99 % an, übernimmt jedoch keine Garantie für
+  ununterbrochene Verfügbarkeit. Die Haftung für leichte Fahrlässigkeit ist, soweit gesetzlich
+  zulässig, ausgeschlossen. Die Haftung bei Vorsatz und grober Fahrlässigkeit sowie für
+  Schäden aus der Verletzung von Leben, Körper und Gesundheit bleibt unberührt.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 9 Datenschutz</h2>
+  <p>Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer
+  <a href="{{ url_for('main.datenschutz') }}">Datenschutzerklärung</a>.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 10 Änderungen der AGB</h2>
+  <p>Der Anbieter behält sich vor, diese AGB mit einer Frist von 30 Tagen zu ändern.
+  Nutzer werden per E-Mail über Änderungen informiert. Widerspricht der Nutzer nicht innerhalb
+  von 30 Tagen, gelten die neuen AGB als akzeptiert.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 11 Anwendbares Recht</h2>
+  <p>Es gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand ist [ORT].</p>
+
+  <div style="margin-top:48px;padding-top:24px;border-top:1px solid #2a2d33;font-size:12px;color:#6b7280;">
+    <a href="{{ url_for('main.impressum') }}" style="color:#6b7280;margin-right:20px;">Impressum</a>
+    <a href="{{ url_for('main.datenschutz') }}" style="color:#6b7280;">Datenschutz</a>
+  </div>
+</div>
+{% endblock %}

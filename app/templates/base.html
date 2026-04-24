@@ -97,7 +97,7 @@
     .user-email { font-size: 11px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
     /* Main content */
-    .main-content { flex: 1; overflow: auto; }
+    .main-content { flex: 1; overflow: auto; display: flex; flex-direction: column; }
     .page-header {
       padding: 28px 32px 20px;
       border-bottom: 1px solid var(--border);
@@ -105,7 +105,7 @@
     }
     .page-title { font-size: 20px; font-weight: 600; }
     .page-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; }
-    .page-body { padding: 28px 32px; }
+    .page-body { padding: 28px 32px; flex: 1; }
 
     /* Cards */
     .card {
@@ -125,9 +125,7 @@
       border: none; cursor: pointer;
       transition: all 0.15s; font-family: inherit;
     }
-    .btn-primary {
-      background: var(--accent); color: #000;
-    }
+    .btn-primary { background: var(--accent); color: #000; }
     .btn-primary:hover { opacity: 0.88; color: #000; }
     .btn-secondary {
       background: var(--surface-2); color: var(--text);
@@ -158,15 +156,11 @@
       transition: border-color 0.15s;
       outline: none;
     }
-    .form-input:focus, .form-select:focus, .form-textarea:focus {
-      border-color: var(--accent);
-    }
+    .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
     .form-textarea { resize: vertical; min-height: 100px; }
     .form-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
     .form-check { display: flex; align-items: center; gap: 8px; cursor: pointer; }
-    .form-check input[type=checkbox] {
-      width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer;
-    }
+    .form-check input[type=checkbox] { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
 
     /* Badges / Status */
     .badge {
@@ -179,11 +173,7 @@
     .badge-yellow { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-red { background: rgba(239,68,68,0.12); color: var(--danger); }
     .badge-gray { background: var(--surface-2); color: var(--text-muted); }
-    .dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: currentColor;
-      animation: none;
-    }
+    .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
     .dot-pulse { animation: pulse 1.5s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
 
@@ -196,6 +186,7 @@
     .alert-success { background: rgba(37,211,102,0.08); border: 1px solid rgba(37,211,102,0.2); color: #4ade80; }
     .alert-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #f87171; }
     .alert-info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; }
+    .alert-warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: #fbbf24; }
 
     /* Table */
     .table { width: 100%; border-collapse: collapse; }
@@ -205,11 +196,7 @@
       letter-spacing: 0.06em; color: var(--text-muted);
       border-bottom: 1px solid var(--border);
     }
-    .table td {
-      padding: 12px 14px;
-      border-bottom: 1px solid var(--border);
-      font-size: 13.5px;
-    }
+    .table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 13.5px; }
     .table tr:last-child td { border-bottom: none; }
     .table tr:hover td { background: rgba(255,255,255,0.02); }
 
@@ -243,14 +230,37 @@
     }
     .modal-backdrop.open { display: flex; }
     .modal {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 28px;
       width: 440px; max-width: 95vw;
     }
     .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+
+    /* Footer */
+    .app-footer {
+      padding: 16px 32px;
+      border-top: 1px solid var(--border);
+      font-size: 12px;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+    .app-footer a { color: var(--text-muted); }
+    .app-footer a:hover { color: var(--text-dim); }
+
+    /* Cookie banner */
+    #cookie-banner {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 999;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 16px 32px;
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      font-size: 13px; color: var(--text-dim);
+    }
+    #cookie-banner.hidden { display: none; }
   </style>
   {% block extra_css %}{% endblock %}
 </head>
@@ -265,19 +275,29 @@
       <span>WA.AI</span>
     </div>
 
-    <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
-      ⊞ Dashboard
+    <a href="{{ url_for('dashboard.index') }}"
+       class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}">
+      ⊞ Панель управления
     </a>
 
     {% block sidebar_instance %}{% endblock %}
 
     <div class="nav-section">Konto</div>
-    <a href="{{ url_for('billing.plans') }}" class="nav-item {% if 'billing' in request.endpoint %}active{% endif %}">
+    <a href="{{ url_for('billing.plans') }}"
+       class="nav-item {% if 'billing' in request.endpoint %}active{% endif %}">
       💳 Abonnement
     </a>
-    <a href="{{ url_for('auth.logout') }}" class="nav-item">
-      ↩ Abmelden
+
+    {% if current_user.is_admin %}
+    <div class="nav-section">Admin</div>
+    <a href="{{ url_for('admin.index') }}"
+       class="nav-item {% if 'admin' in request.endpoint %}active{% endif %}"
+       style="color: var(--warning);">
+      ⚙ Admin-Panel
     </a>
+    {% endif %}
+
+    <a href="{{ url_for('auth.logout') }}" class="nav-item">↩ Abmelden</a>
 
     <div class="sidebar-footer">
       <div class="user-pill">
@@ -292,24 +312,94 @@
 
   <!-- Main -->
   <div class="main-content">
+
+    <!-- Trial warning banner -->
+    {% if current_user.is_in_trial and not (current_user.subscription and current_user.subscription.is_active) %}
+    <div style="background:rgba(245,158,11,0.08);border-bottom:1px solid rgba(245,158,11,0.2);
+                padding:10px 32px;display:flex;align-items:center;justify-content:space-between;
+                font-size:13px;color:#fbbf24;">
+      <span>⏳ Kostenlose Testphase — noch <strong>{{ current_user.trial_days_left }} Tag(e)</strong></span>
+      <a href="{{ url_for('billing.plans') }}" class="btn btn-sm btn-primary" style="color:#000;">
+        Jetzt upgraden →
+      </a>
+    </div>
+    {% elif not current_user.has_access %}
+    <div style="background:rgba(239,68,68,0.08);border-bottom:1px solid rgba(239,68,68,0.2);
+                padding:10px 32px;display:flex;align-items:center;justify-content:space-between;
+                font-size:13px;color:#f87171;">
+      <span>⚠ Testphase abgelaufen — bitte wähle einen Plan</span>
+      <a href="{{ url_for('billing.plans') }}" class="btn btn-sm btn-primary" style="color:#000;">
+        Plan wählen →
+      </a>
+    </div>
+    {% endif %}
+
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         <div style="padding: 16px 32px 0;">
           {% for cat, msg in messages %}
-            <div class="alert alert-{{ 'success' if cat == 'success' else 'error' if cat == 'error' else 'info' }}">
-              {{ '✓' if cat == 'success' else '✕' if cat == 'error' else 'ℹ' }} {{ msg }}
+            <div class="alert alert-{{ 'success' if cat == 'success' else 'error' if cat == 'error' else 'warning' if cat == 'warning' else 'info' }}">
+              {{ '✓' if cat == 'success' else '✕' if cat == 'error' else '⚠' if cat == 'warning' else 'ℹ' }} {{ msg }}
             </div>
           {% endfor %}
         </div>
       {% endif %}
     {% endwith %}
+
     {% block content %}{% endblock %}
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <span>© {{ 2025 }} WA.AI</span>
+      <div style="display:flex;gap:16px;">
+        <a href="{{ url_for('main.impressum') }}">Impressum</a>
+        <a href="{{ url_for('main.agb') }}">AGB</a>
+        <a href="{{ url_for('main.datenschutz') }}">Datenschutz</a>
+        {% if current_user.subscription and current_user.subscription.is_active %}
+        <form method="post" action="{{ url_for('auth.delete_account') }}"
+              onsubmit="return confirm('Konto wirklich löschen? Alle Daten werden gelöscht.');"
+              style="display:inline;">
+          <button type="submit" style="background:none;border:none;color:var(--text-muted);
+                  font-size:12px;cursor:pointer;font-family:inherit;padding:0;">
+            Konto löschen
+          </button>
+        </form>
+        {% endif %}
+      </div>
+    </footer>
+
   </div>
 </div>
+
 {% else %}
   {% block public_content %}{% endblock %}
 {% endif %}
 
+<!-- Cookie Banner -->
+<div id="cookie-banner">
+  <span>
+    🍪 Wir verwenden ausschließlich technisch notwendige Cookies (Session).
+    Kein Tracking. <a href="{{ url_for('main.datenschutz') }}">Mehr erfahren</a>
+  </span>
+  <div style="display:flex;gap:8px;flex-shrink:0;">
+    <button onclick="acceptCookies()" class="btn btn-primary btn-sm" style="color:#000;">
+      Verstanden
+    </button>
+  </div>
+</div>
+
 {% block scripts %}{% endblock %}
+
+<script>
+  (function() {
+    if (localStorage.getItem('cookie_consent') === '1') {
+      document.getElementById('cookie-banner').classList.add('hidden');
+    }
+  })();
+  function acceptCookies() {
+    localStorage.setItem('cookie_consent', '1');
+    document.getElementById('cookie-banner').classList.add('hidden');
+  }
+</script>
 </body>
 </html>

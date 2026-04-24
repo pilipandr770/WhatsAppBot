@@ -9,3 +9,18 @@ def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
     return render_template('landing.html')
+
+
+@main_bp.route('/impressum')
+def impressum():
+    return render_template('legal/impressum.html')
+
+
+@main_bp.route('/agb')
+def agb():
+    return render_template('legal/agb.html')
+
+
+@main_bp.route('/datenschutz')
+def datenschutz():
+    return render_template('legal/datenschutz.html')

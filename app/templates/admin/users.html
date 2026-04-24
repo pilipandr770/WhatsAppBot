@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Nutzer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Nutzerverwaltung</div>
+    <div class="page-sub">{{ users|length }} Nutzer{{ ' gefunden' if q else '' }}</div>
+  </div>
+  <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">← Übersicht</a>
+</div>
+
+<div class="page-body">
+  <form method="get" style="margin-bottom:20px;display:flex;gap:10px;max-width:500px;">
+    <input name="q" value="{{ q }}" placeholder="Suche nach Name, E-Mail, Firma…"
+           class="form-input" style="flex:1;">
+    <button type="submit" class="btn btn-secondary">Suchen</button>
+    {% if q %}<a href="{{ url_for('admin.users') }}" class="btn btn-ghost">✕</a>{% endif %}
+  </form>
+
+  <div class="card" style="padding:0;">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Nutzer</th>
+          <th>Firma</th>
+          <th>Plan / Status</th>
+          <th>Instanzen</th>
+          <th>Registriert</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for user in users %}
+        <tr>
+          <td>
+            <div style="font-weight:500;">
+              {{ user.name }}
+              {% if user.is_admin %}<span style="font-size:10px;color:var(--warning);margin-left:6px;">ADMIN</span>{% endif %}
+            </div>
+            <div style="font-size:12px;color:var(--text-muted);">{{ user.email }}</div>
+          </td>
+          <td style="color:var(--text-muted);">{{ user.company or '—' }}</td>
+          <td>
+            {% if user.subscription and user.subscription.is_active %}
+              <span class="badge badge-green">{{ user.subscription.plan|capitalize }}</span>
+            {% elif user.is_in_trial %}
+              <span class="badge badge-yellow">Trial ({{ user.trial_days_left }}d)</span>
+            {% else %}
+              <span class="badge badge-red">Abgelaufen</span>
+            {% endif %}
+          </td>
+          <td style="font-family:'DM Mono',monospace;">
+            {{ user.active_instances_count }} / {{ user.instances_limit }}
+          </td>
+          <td style="color:var(--text-muted);font-size:12px;">{{ user.created_at.strftime('%d.%m.%Y') }}</td>
+          <td>
+            <a href="{{ url_for('admin.user_detail', user_id=user.id) }}"
+               class="btn btn-sm btn-secondary">Detail →</a>
+          </td>
+        </tr>
+        {% endfor %}
+        {% if not users %}
+        <tr><td colspan="6" class="empty-state">Keine Nutzer gefunden.</td></tr>
+        {% endif %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

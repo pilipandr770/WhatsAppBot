@@ -176,9 +176,27 @@ def _handle_subscription_change(stripe_sub):
         return
 
     sub.status = stripe_sub['status']
-    if stripe_sub['status'] == 'canceled':
+    if stripe_sub['status'] in ('canceled', 'unpaid', 'past_due'):
         sub.instances_limit = 0
     db.session.commit()
+
+
+@billing_bp.route('/cancel', methods=['POST'])
+@login_required
+def cancel_subscription():
+    sub = current_user.subscription
+    if not sub or not sub.stripe_subscription_id:
+        flash('Kein aktives Abo gefunden.', 'error')
+        return redirect(url_for('billing.plans'))
+    try:
+        stripe.Subscription.cancel(sub.stripe_subscription_id)
+        sub.status = 'canceled'
+        sub.instances_limit = 0
+        db.session.commit()
+        flash('Abo wurde gekündigt. Du kannst bis zum Ende der Periode weiternutzen.', 'info')
+    except stripe.error.StripeError as e:
+        flash(f'Fehler bei der Kündigung: {e.user_message}', 'error')
+    return redirect(url_for('billing.plans'))
 
 
 def _current_plan():

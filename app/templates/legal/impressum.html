@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+{% block title %}Impressum{% endblock %}
+{% block public_content %}
+<div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
+  <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
+  <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Impressum</h1>
+  <p style="color:#6b7280;margin-bottom:32px;">Angaben gemäß § 5 TMG</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">Betreiber</h2>
+  <p>
+    Andrii Pylypchuk<br>
+    Bergmannweg 16<br>
+    65934 Frankfurt am Main<br>
+    Deutschland
+  </p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">Kontakt</h2>
+  <p>
+    E-Mail: <a href="mailto:info@andrii-it.de">info@andrii-it.de</a><br>
+    Telefon: +49 160 95030120<br>
+    Web: <a href="https://www.andrii-it.de" target="_blank">www.andrii-it.de</a>
+  </p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">Umsatzsteuer</h2>
+  <p>
+    Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG:<br>
+    DE456902445
+  </p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">Verantwortlich für den Inhalt</h2>
+  <p>Andrii Pylypchuk</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">Streitschlichtung</h2>
+  <p>Die Europäische Kommission stellt eine Plattform zur Online-Streitbeilegung (OS) bereit:
+  <a href="https://ec.europa.eu/consumers/odr" target="_blank">https://ec.europa.eu/consumers/odr</a>.
+  Wir sind nicht verpflichtet und nicht bereit, an Streitbeilegungsverfahren vor einer
+  Verbraucherschlichtungsstelle teilzunehmen.</p>
+
+  <div style="margin-top:48px;padding-top:24px;border-top:1px solid #2a2d33;font-size:12px;color:#6b7280;">
+    <a href="{{ url_for('main.agb') }}" style="color:#6b7280;margin-right:20px;">AGB</a>
+    <a href="{{ url_for('main.datenschutz') }}" style="color:#6b7280;">Datenschutz</a>
+  </div>
+</div>
+{% endblock %}

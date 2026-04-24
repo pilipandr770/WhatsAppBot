@@ -33,11 +33,13 @@ def create_app():
     from app.routes.dashboard import dashboard_bp
     from app.routes.webhook import webhook_bp
     from app.routes.billing import billing_bp
+    from app.routes.admin import admin_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(webhook_bp, url_prefix='/wh')
     app.register_blueprint(billing_bp, url_prefix='/billing')
+    app.register_blueprint(admin_bp, url_prefix='/admin')
 
     from app.routes.main import main_bp
     app.register_blueprint(main_bp)

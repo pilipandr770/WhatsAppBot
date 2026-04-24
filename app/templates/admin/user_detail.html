@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+{% block title %}Nutzer: {{ user.name }}{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">{{ user.name }}</div>
+    <div class="page-sub">{{ user.email }} {% if user.is_admin %}· Admin{% endif %}</div>
+  </div>
+  <a href="{{ url_for('admin.users') }}" class="btn btn-secondary">← Zurück</a>
+</div>
+
+<div class="page-body">
+  <div class="grid-2" style="gap:24px;align-items:start;">
+
+    <!-- Left column -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- User info -->
+      <div class="card">
+        <div class="card-title">Nutzerinfo</div>
+        <table style="width:100%;font-size:13.5px;">
+          <tr><td style="color:var(--text-muted);padding:5px 0;width:120px;">ID</td><td>{{ user.id }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Name</td><td>{{ user.name }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">E-Mail</td><td>{{ user.email }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Firma</td><td>{{ user.company or '—' }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Registriert</td><td>{{ user.created_at.strftime('%d.%m.%Y %H:%M') }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Trial bis</td>
+              <td>{% if user.trial_ends_at %}{{ user.trial_ends_at.strftime('%d.%m.%Y') }}
+                  {% if user.is_in_trial %}<span class="badge badge-yellow" style="margin-left:6px;">aktiv</span>{% endif %}
+                  {% else %}—{% endif %}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Stripe ID</td>
+              <td style="font-size:12px;font-family:monospace;">{{ user.stripe_customer_id or '—' }}</td></tr>
+        </table>
+      </div>
+
+      <!-- WhatsApp Instances -->
+      <div class="card">
+        <div class="card-title">WhatsApp-Instanzen ({{ instances|length }})</div>
+        {% if instances %}
+        {% for inst in instances %}
+        <div style="padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;">
+          <div style="font-weight:500;">{{ inst.display_name or inst.instance_name }}</div>
+          <div style="color:var(--text-muted);font-size:12px;">{{ inst.instance_name }} ·
+            <span style="color:{% if inst.status == 'connected' %}var(--accent){% elif inst.status == 'connecting' %}var(--warning){% else %}var(--danger){% endif %};">
+              {{ inst.status }}
+            </span>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div style="color:var(--text-muted);font-size:13px;">Keine Instanzen.</div>
+        {% endif %}
+      </div>
+
+    </div>
+
+    <!-- Right column -->
+    <div style="display:flex;flex-direction:column;gap:20px;">
+
+      <!-- Subscription -->
+      <div class="card">
+        <div class="card-title">Abonnement</div>
+        {% set sub = user.subscription %}
+        {% if sub %}
+        <table style="width:100%;font-size:13.5px;margin-bottom:16px;">
+          <tr><td style="color:var(--text-muted);padding:5px 0;width:140px;">Status</td>
+              <td><span class="badge {% if sub.is_active %}badge-green{% elif sub.status == 'canceled' %}badge-red{% else %}badge-gray{% endif %}">
+                {{ sub.status }}</span></td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Plan</td><td>{{ sub.plan|capitalize }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Instanz-Limit</td><td>{{ sub.instances_limit }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Läuft bis</td>
+              <td>{{ sub.current_period_end.strftime('%d.%m.%Y') if sub.current_period_end else '—' }}</td></tr>
+          <tr><td style="color:var(--text-muted);padding:5px 0;">Stripe Sub ID</td>
+              <td style="font-size:11px;font-family:monospace;">{{ sub.stripe_subscription_id or '—' }}</td></tr>
+        </table>
+        {% else %}
+        <p style="color:var(--text-muted);font-size:13px;margin-bottom:16px;">Kein Abo-Datensatz.</p>
+        {% endif %}
+      </div>
+
+      <!-- Manual plan override -->
+      <div class="card">
+        <div class="card-title">Plan manuell setzen</div>
+        <form method="post" action="{{ url_for('admin.set_plan', user_id=user.id) }}">
+          <input type="hidden" name="action" value="activate">
+          <div class="form-group">
+            <label class="form-label">Plan</label>
+            <select name="plan" class="form-select">
+              {% for key, label in plans.items() %}
+              <option value="{{ key }}" {% if user.subscription and user.subscription.plan == key %}selected{% endif %}>
+                {{ label }} ({{ instances_by_plan[key] }} Instanz(en))
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+            Aktivieren (ohne Stripe)
+          </button>
+        </form>
+
+        <div class="divider"></div>
+
+        <form method="post" action="{{ url_for('admin.set_plan', user_id=user.id) }}" style="margin-bottom:12px;">
+          <input type="hidden" name="action" value="deactivate">
+          <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">
+            Zugang deaktivieren
+          </button>
+        </form>
+      </div>
+
+      <!-- Trial extension -->
+      <div class="card">
+        <div class="card-title">Trial verlängern</div>
+        <form method="post" action="{{ url_for('admin.set_plan', user_id=user.id) }}" style="display:flex;gap:8px;">
+          <input type="hidden" name="action" value="extend_trial">
+          <input type="number" name="trial_days" value="7" min="1" max="90" class="form-input" style="width:80px;">
+          <button type="submit" class="btn btn-secondary" style="flex:1;justify-content:center;">
+            Tage hinzufügen
+          </button>
+        </form>
+      </div>
+
+      <!-- Admin toggle -->
+      <div class="card">
+        <div class="card-title">Admin-Rechte</div>
+        <form method="post" action="{{ url_for('admin.toggle_admin', user_id=user.id) }}">
+          <button type="submit" class="btn {% if user.is_admin %}btn-danger{% else %}btn-secondary{% endif %}" style="width:100%;justify-content:center;">
+            {% if user.is_admin %}Admin-Rechte entziehen{% else %}Zum Admin machen{% endif %}
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

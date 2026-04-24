@@ -1,7 +1,9 @@
 from app import db, login_manager
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+
+TRIAL_DAYS = 3
 
 
 @login_manager.user_loader
@@ -17,6 +19,8 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100))
     company = db.Column(db.String(150))
     stripe_customer_id = db.Column(db.String(100))
+    is_admin = db.Column(db.Boolean, default=False)
+    trial_ends_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     instances = db.relationship('WhatsAppInstance', backref='user', lazy=True, cascade='all, delete-orphan')
@@ -33,14 +37,27 @@ class User(db.Model, UserMixin):
         return WhatsAppInstance.query.filter_by(user_id=self.id).count()
 
     @property
+    def is_in_trial(self):
+        return bool(self.trial_ends_at and datetime.utcnow() < self.trial_ends_at)
+
+    @property
+    def trial_days_left(self):
+        if self.trial_ends_at:
+            return max(0, (self.trial_ends_at - datetime.utcnow()).days)
+        return 0
+
+    @property
+    def has_access(self):
+        """True if user can use the bot (active subscription OR in trial)."""
+        if self.subscription and self.subscription.is_active:
+            return True
+        return self.is_in_trial
+
+    @property
     def instances_limit(self):
-        # If user has an active (or trialing) subscription, use its limit
         if self.subscription and self.subscription.is_active:
             return self.subscription.instances_limit
-
-        # No active subscription: allow a single trial instance for testing
-        existing = WhatsAppInstance.query.filter_by(user_id=self.id).count()
-        if existing == 0:
+        if self.is_in_trial:
             return 1
         return 0
 
