@@ -34,8 +34,8 @@ def index():
 @login_required
 def create_instance():
     if not current_user.can_add_instance:
-        flash('Limit erreicht. Bitte upgrade deinen Plan.', 'error')
-        return redirect(url_for('dashboard.index'))
+        flash('Instanz-Limit erreicht. Bitte upgrade deinen Plan.', 'error')
+        return redirect(url_for('billing.plans'))
 
     display_name = request.form.get('display_name', '').strip()
     if not display_name:
