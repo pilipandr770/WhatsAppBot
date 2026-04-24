@@ -17,3 +17,6 @@ RUN mkdir -p /app/uploads
 ENV PYTHONUNBUFFERED=1
 
 EXPOSE 5000
+
+# Default start command for platforms (uses WEB_CONCURRENCY if set)
+CMD /bin/sh -c "gunicorn -w ${WEB_CONCURRENCY:-1} -b 0.0.0.0:5000 run:app --timeout 120 --access-logfile -"
