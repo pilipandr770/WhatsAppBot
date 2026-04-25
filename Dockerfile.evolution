@@ -1,11 +1,18 @@
 FROM evoapicloud/evolution-api:v2.2.3
 
-# The base image uses /app/.env via startup script (source), so override it there
-RUN if [ -f /app/.env ]; then \
-      sed -i 's/^HTTP_PORT=.*/HTTP_PORT=10000/' /app/.env; \
-    else \
-      echo "HTTP_PORT=10000" > /app/.env; \
-    fi
+# Find and patch the .env file that the startup script uses
+# The image workdir appears to be /evolution or /usr/src/app
+RUN for envfile in /evolution/.env /usr/src/app/.env /home/evolution/.env /.env; do \
+      if [ -f "$envfile" ]; then \
+        echo "Found $envfile" && \
+        grep -q '^HTTP_PORT=' "$envfile" && \
+          sed -i 's/^HTTP_PORT=.*/HTTP_PORT=10000/' "$envfile" || \
+          echo "HTTP_PORT=10000" >> "$envfile"; \
+        echo "Patched $envfile:"; \
+        grep HTTP_PORT "$envfile"; \
+        break; \
+      fi; \
+    done
 
 ENV HTTP_PORT=10000
 ENV PORT=10000
