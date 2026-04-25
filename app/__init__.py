@@ -1,9 +1,17 @@
+import logging
+import os
+
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from flask_migrate import Migrate
 from sqlalchemy import event, text
-import os
+
+# Configure root logger so all module loggers are visible in Render logs
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s [%(name)s] %(message)s'
+)
 
 db = SQLAlchemy()
 login_manager = LoginManager()

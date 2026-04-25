@@ -1,13 +1,20 @@
 import os
 import uuid
+import time
+import threading
 import logging
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
+from datetime import datetime
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
 from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message
 from app.services.evolution import evolution_client
 from app.tasks import process_document
+
+# Module-level cooldown tracker: instance_id -> datetime of last auto-recreate trigger
+# Prevents hammering Evolution API when QR webhook hasn't arrived yet
+_recreate_pending: dict = {}
 
 dashboard_bp = Blueprint('dashboard', __name__)
 logger = logging.getLogger(__name__)
@@ -84,31 +91,95 @@ def connect_instance(instance_id):
 def get_qr(instance_id):
     instance = _get_instance(instance_id)
 
-    # Return QR stored from webhook if fresh (< 55 seconds old)
+    # Already connected — no QR needed
+    if instance.status == 'connected':
+        return jsonify({'qr': '', 'status': 'connected'})
+
+    # Return QR stored from webhook if still fresh (< 55 seconds old)
     if instance.qr_code and instance.qr_updated_at:
-        from datetime import datetime, timezone
         age = (datetime.utcnow() - instance.qr_updated_at).total_seconds()
         if age < 55:
             return jsonify({'qr': instance.qr_code, 'status': instance.status})
         else:
-            # QR expired — clear it so frontend knows to wait for new one
+            # QR expired — clear it so frontend knows to wait for a new one
             instance.qr_code = None
             db.session.commit()
 
-    # No fresh QR in DB — trigger connect asynchronously (fire and forget)
-    try:
-        import threading
-        def _trigger_connect():
+    # No fresh QR in DB.
+    # Decide: auto-recreate the Evolution API instance (if stuck) or just trigger connect.
+    now = datetime.utcnow()
+    instance_age = (now - instance.created_at).total_seconds() if instance.created_at else 999
+    never_got_qr = instance.qr_updated_at is None
+    last_recreate = _recreate_pending.get(instance_id)
+    cooldown_expired = (last_recreate is None or (now - last_recreate).total_seconds() > 90)
+
+    if never_got_qr and instance_age > 30 and cooldown_expired:
+        # Instance never received a QR webhook — recreate Evolution API side in background
+        logger.info(f"[QR] Auto-recreating stuck instance {instance.instance_name} (age={instance_age:.0f}s)")
+        _recreate_pending[instance_id] = now
+        app = current_app._get_current_object()
+
+        def _do_recreate():
+            with app.app_context():
+                inst = db.session.get(WhatsAppInstance, instance_id)
+                if inst:
+                    _recreate_evolution_instance(inst)
+
+        threading.Thread(target=_do_recreate, daemon=True).start()
+    else:
+        # Just poke Evolution API to (re)generate a QR — webhook will deliver it
+        _inst_name = instance.instance_name
+        _inst_token = instance.api_token
+
+        def _do_trigger():
             try:
-                evolution_client.trigger_connect(instance.instance_name, instance.api_token)
+                evolution_client.trigger_connect(_inst_name, _inst_token)
             except Exception as ex:
-                logger.debug(f"trigger_connect: {ex}")
-        t = threading.Thread(target=_trigger_connect, daemon=True)
-        t.start()
-    except Exception as e:
-        logger.warning(f"Could not start connect thread: {e}")
+                logger.debug(f"trigger_connect {_inst_name}: {ex}")
+
+        threading.Thread(target=_do_trigger, daemon=True).start()
 
     return jsonify({'qr': '', 'status': instance.status})
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/reconnect', methods=['POST'])
+@login_required
+def reconnect_instance(instance_id):
+    """Force-delete and re-create the Evolution API instance to get a fresh QR."""
+    instance = _get_instance(instance_id)
+    if instance.status == 'connected':
+        return jsonify({'status': 'ok', 'message': 'Already connected'})
+    try:
+        _recreate_evolution_instance(instance)
+        _recreate_pending.pop(instance_id, None)  # reset cooldown after manual trigger
+        return jsonify({'status': 'ok', 'message': 'Reconnecting — QR incoming...'})
+    except Exception as e:
+        logger.error(f"reconnect_instance {instance_id}: {e}", exc_info=True)
+        return jsonify({'status': 'error', 'message': str(e)}), 500
+
+
+# ─── Evolution helpers ────────────────────────────────────────────────────────
+
+def _recreate_evolution_instance(instance: WhatsAppInstance):
+    """Delete + re-create the Evolution API instance so it fires a fresh QRCODE_UPDATED webhook."""
+    name = instance.instance_name
+    logger.info(f"[Recreate] Deleting Evolution instance {name}")
+    try:
+        evolution_client.delete_instance(name, instance.api_token)
+    except Exception as e:
+        logger.warning(f"[Recreate] delete_instance {name}: {e}")
+
+    time.sleep(2)  # give Evolution API a moment to clean up
+
+    logger.info(f"[Recreate] Creating Evolution instance {name}")
+    _, new_token = evolution_client.create_instance(name)
+
+    instance.api_token = new_token
+    instance.qr_code = None
+    instance.qr_updated_at = None
+    instance.status = 'connecting'
+    db.session.commit()
+    logger.info(f"[Recreate] Done — {name} recreated, awaiting QRCODE_UPDATED webhook")
 
 
 @dashboard_bp.route('/instance/<int:instance_id>/status')

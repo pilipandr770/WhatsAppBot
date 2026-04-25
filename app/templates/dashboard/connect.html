@@ -39,13 +39,26 @@
       </p>
       <div id="qr-wrapper" style="
         background:#fff; border-radius:12px; padding:16px;
-        display:inline-block; margin-bottom:20px; min-height:200px;
-        display:flex; align-items:center; justify-content:center;">
-        <div id="qr-loading" style="color:#666;font-size:13px;">QR-Code wird geladen...</div>
+        display:inline-flex; align-items:center; justify-content:center;
+        margin-bottom:20px; min-width:200px; min-height:200px;">
+        <div id="qr-loading" style="color:#666;font-size:13px;text-align:center;">
+          QR-Code wird geladen...<br>
+          <span id="qr-wait-hint" style="font-size:11px;color:#999;display:none;">
+            Erster Start kann 15–30 Sek. dauern…
+          </span>
+        </div>
         <img id="qr-img" style="display:none; width:200px; height:200px;" alt="QR Code">
       </div>
       <br>
-      <button onclick="loadQR()" class="btn btn-secondary btn-sm">🔄 QR-Code aktualisieren</button>
+      <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+        <button onclick="loadQR()" class="btn btn-secondary btn-sm">🔄 Aktualisieren</button>
+        <button id="btn-reconnect" onclick="forceReconnect()" class="btn btn-secondary btn-sm">
+          ⚡ Neu verbinden
+        </button>
+      </div>
+      <p style="margin-top:12px;font-size:11px;color:var(--text-muted);">
+        Kein QR sichtbar? Klicke auf <strong>Neu verbinden</strong>.
+      </p>
     </div>
 
     <div id="connected-msg" {% if instance.status != 'connected' %}style="display:none"{% endif %}>
@@ -79,29 +92,89 @@ const instanceId = {{ instance.id }};
 const isConnected = {{ 'true' if instance.status == 'connected' else 'false' }};
 
 let qrRetryTimer = null;
+let qrPollCount = 0;
 
 async function loadQR() {
   if (qrRetryTimer) { clearTimeout(qrRetryTimer); qrRetryTimer = null; }
   try {
     const resp = await fetch(`/dashboard/instance/${instanceId}/qr`);
     if (!resp.ok) {
-      document.getElementById('qr-loading').textContent = `Fehler ${resp.status} beim Laden. Erneuter Versuch...`;
+      setLoadingText(`Fehler ${resp.status}. Erneuter Versuch...`);
       qrRetryTimer = setTimeout(loadQR, 4000);
       return;
     }
     const data = await resp.json();
+
+    if (data.status === 'connected') {
+      showConnected();
+      return;
+    }
+
     if (data.qr) {
+      qrPollCount = 0;
       document.getElementById('qr-loading').style.display = 'none';
+      document.getElementById('qr-wait-hint').style.display = 'none';
       const img = document.getElementById('qr-img');
       img.src = data.qr.startsWith('data:') ? data.qr : `data:image/png;base64,${data.qr}`;
       img.style.display = 'block';
+      // Auto-refresh before QR expires (every 50s)
+      qrRetryTimer = setTimeout(loadQR, 50000);
     } else {
-      document.getElementById('qr-loading').textContent = 'QR-Code wird vorbereitet... Bitte warten.';
+      qrPollCount++;
+      // Show hint after 3 empty polls (~9s)
+      if (qrPollCount >= 3) {
+        document.getElementById('qr-wait-hint').style.display = 'block';
+      }
+      setLoadingText('QR-Code wird vorbereitet...');
+      // Hide old QR image if any
+      document.getElementById('qr-img').style.display = 'none';
+      document.getElementById('qr-loading').style.display = 'block';
       qrRetryTimer = setTimeout(loadQR, 3000);
     }
   } catch(e) {
-    document.getElementById('qr-loading').textContent = 'Verbindungsfehler. Erneuter Versuch...';
+    setLoadingText('Verbindungsfehler. Erneuter Versuch...');
     qrRetryTimer = setTimeout(loadQR, 4000);
+  }
+}
+
+function setLoadingText(text) {
+  document.getElementById('qr-loading').childNodes[0].textContent = text;
+}
+
+async function forceReconnect() {
+  const btn = document.getElementById('btn-reconnect');
+  btn.disabled = true;
+  btn.textContent = '⏳ Verbinde...';
+  if (qrRetryTimer) { clearTimeout(qrRetryTimer); qrRetryTimer = null; }
+
+  document.getElementById('qr-img').style.display = 'none';
+  document.getElementById('qr-loading').style.display = 'block';
+  setLoadingText('Instanz wird neu gestartet...');
+  document.getElementById('qr-wait-hint').style.display = 'none';
+  qrPollCount = 0;
+
+  try {
+    const resp = await fetch(`/dashboard/instance/${instanceId}/reconnect`, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'}
+    });
+    const data = await resp.json();
+    if (data.status === 'ok') {
+      setLoadingText('Neustart OK — QR wird geladen...');
+      // Wait a moment then start polling
+      qrRetryTimer = setTimeout(loadQR, 4000);
+    } else {
+      setLoadingText(`Fehler: ${data.message || 'Unbekannt'}`);
+      qrRetryTimer = setTimeout(loadQR, 5000);
+    }
+  } catch(e) {
+    setLoadingText('Verbindungsfehler beim Neustart.');
+    qrRetryTimer = setTimeout(loadQR, 5000);
+  } finally {
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '⚡ Neu verbinden';
+    }, 10000);
   }
 }
 
@@ -110,18 +183,22 @@ async function checkStatus() {
     const resp = await fetch(`/dashboard/instance/${instanceId}/status`);
     const data = await resp.json();
     if (data.status === 'connected') {
-      document.getElementById('qr-container').style.display = 'none';
-      document.getElementById('connected-msg').style.display = 'block';
-      document.getElementById('status-badge').innerHTML =
-        '<span class="badge badge-green" style="font-size:14px;padding:6px 16px;"><span class="dot"></span> Verbunden</span>';
+      showConnected();
     }
   } catch(e) {}
+}
+
+function showConnected() {
+  if (qrRetryTimer) { clearTimeout(qrRetryTimer); qrRetryTimer = null; }
+  document.getElementById('qr-container').style.display = 'none';
+  document.getElementById('connected-msg').style.display = 'block';
+  document.getElementById('status-badge').innerHTML =
+    '<span class="badge badge-green" style="font-size:14px;padding:6px 16px;"><span class="dot"></span> Verbunden</span>';
 }
 
 if (!isConnected) {
   loadQR();
   setInterval(checkStatus, 3000);
-  setInterval(loadQR, 55000);
 }
 </script>
 {% endblock %}
