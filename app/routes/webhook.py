@@ -20,14 +20,20 @@ def handle_webhook(instance_name):
         return jsonify({'status': 'ok'})
 
     event = data.get('event', '')
-    logger.info(f"WEBHOOK [{instance_name}] event={event!r} data_keys={list(data.get('data', {}).keys() if isinstance(data.get('data'), dict) else ['<list>'])}")
+    # Normalize event names: Evolution may send different casings/formats
+    normalized_event = (event or '').lower().replace('_', '.')
+    logger.info(
+        f"WEBHOOK [{instance_name}] event={event!r} normalized={normalized_event!r} "
+        f"data_keys={list(data.get('data', {}).keys() if isinstance(data.get('data'), dict) else ['<list>'])}"
+    )
 
     try:
-        if event == 'messages.upsert':
+        # Accept several event name formats: dot vs underscore and case variations
+        if normalized_event == 'messages.upsert':
             _process_message(instance_name, data)
-        elif event == 'connection.update':
+        elif normalized_event == 'connection.update':
             _process_connection_update(instance_name, data)
-        elif event == 'qrcode.updated':
+        elif normalized_event == 'qrcode.updated':
             _process_qr_update(instance_name, data)
     except Exception as e:
         logger.error(f"Webhook error [{instance_name}] {event}: {e}", exc_info=True)
