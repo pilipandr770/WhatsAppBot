@@ -165,7 +165,9 @@ def _recreate_evolution_instance(instance: WhatsAppInstance):
     name = instance.instance_name
     logger.info(f"[Recreate] Deleting Evolution instance {name}")
     try:
-        evolution_client.delete_instance(name, instance.api_token)
+        # Use the global API key (admin) for delete — avoids token mismatch errors
+        # If Flask's stored token is out of sync with Evolution, delete still succeeds
+        evolution_client.delete_instance(name, None)  # None → falls back to global_key
     except Exception as e:
         logger.warning(f"[Recreate] delete_instance {name}: {e}")
 
