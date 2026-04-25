@@ -99,7 +99,7 @@ class WhatsAppInstance(db.Model):
 
     bot_config = db.relationship('BotConfig', backref='instance', uselist=False, cascade='all, delete-orphan')
     documents = db.relationship('Document', backref='instance', lazy=True, cascade='all, delete-orphan')
-    conversations = db.relationship('Conversation', backref='instance', lazy=True)
+    conversations = db.relationship('Conversation', backref='instance', lazy=True, cascade='all, delete-orphan')
 
     @property
     def is_connected(self):
@@ -167,7 +167,7 @@ class Conversation(db.Model):
     last_message_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    messages = db.relationship('Message', backref='conversation', lazy=True, order_by='Message.created_at')
+    messages = db.relationship('Message', backref='conversation', lazy=True, cascade='all, delete-orphan', order_by='Message.created_at')
 
     __table_args__ = (db.UniqueConstraint('instance_id', 'contact_jid', name='uq_instance_contact'),)
 
