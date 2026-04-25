@@ -101,49 +101,21 @@ def get_qr(instance_id):
             instance.qr_code = None
             db.session.commit()
 
-    # No fresh QR in DB.
-    # Use qr_updated_at as a DB-level cooldown marker (works across multiple Gunicorn workers):
-    #   - None          → never attempted a recreate
-    #   - set, qr=None  → recreate triggered recently, webhook not yet received
-    #   - set, qr!=None → QR received (handled above)
-    now = datetime.utcnow()
-    instance_age = (now - instance.created_at).total_seconds() if instance.created_at else 999
-    last_attempt_age = (
-        (now - instance.qr_updated_at).total_seconds()
-        if instance.qr_updated_at else None
-    )
+    # No fresh QR — poke Evolution API to (re)generate one via trigger_connect.
+    # The QRCODE_UPDATED webhook will deliver the QR asynchronously.
+    # Full delete+create (recreate) is only done via the manual "Neu verbinden" button
+    # to avoid race conditions with concurrent reconnect attempts.
+    _inst_name = instance.instance_name
+    _inst_token = instance.api_token
 
-    # Trigger a new recreate if:
-    #   - instance is old enough (> 30s) AND
-    #   - never attempted before, OR last attempt was > 90s ago (previous one failed)
-    needs_recreate = (
-        instance_age > 30 and
-        (last_attempt_age is None or last_attempt_age > 90)
-    )
+    def _do_trigger():
+        try:
+            evolution_client.trigger_connect(_inst_name, _inst_token)
+            logger.debug(f"[QR] trigger_connect sent for {_inst_name}")
+        except Exception as ex:
+            logger.debug(f"[QR] trigger_connect {_inst_name}: {ex}")
 
-    if needs_recreate:
-        logger.info(
-            f"[QR] Scheduling recreate for {instance.instance_name} "
-            f"(age={instance_age:.0f}s, last_attempt={last_attempt_age})"
-        )
-        # Stamp qr_updated_at NOW as a "recreate pending" marker BEFORE spawning thread.
-        # This prevents other workers from also triggering a recreate within 90s.
-        instance.qr_updated_at = now
-        instance.qr_code = None
-        db.session.commit()
-
-        app = current_app._get_current_object()
-
-        def _do_recreate():
-            with app.app_context():
-                inst = db.session.get(WhatsAppInstance, instance_id)
-                if inst:
-                    _recreate_evolution_instance(inst)
-
-        threading.Thread(target=_do_recreate, daemon=True).start()
-    else:
-        logger.debug(f"[QR] Waiting for webhook: {instance.instance_name} last_attempt={last_attempt_age:.0f}s ago"
-                     if last_attempt_age else f"[QR] Instance too young: {instance.instance_name}")
+    threading.Thread(target=_do_trigger, daemon=True).start()
 
     return jsonify({'qr': '', 'status': instance.status})
 
@@ -155,8 +127,16 @@ def reconnect_instance(instance_id):
     instance = _get_instance(instance_id)
     if instance.status == 'connected':
         return jsonify({'status': 'ok', 'message': 'Already connected'})
+
+    # Guard: prevent a second concurrent reconnect within 15 seconds
+    if instance.qr_updated_at:
+        age = (datetime.utcnow() - instance.qr_updated_at).total_seconds()
+        if age < 15:
+            logger.info(f"[Reconnect] Cooldown active for {instance.instance_name} ({age:.0f}s ago) — skipping")
+            return jsonify({'status': 'ok', 'message': 'Reconnect in progress, wait for QR...'})
+
     try:
-        # Stamp pending marker before recreate (same pattern as get_qr auto-recreate)
+        # Stamp pending marker BEFORE recreate so no parallel request can also trigger it
         instance.qr_updated_at = datetime.utcnow()
         instance.qr_code = None
         db.session.commit()
@@ -172,37 +152,46 @@ def reconnect_instance(instance_id):
 def _recreate_evolution_instance(instance: WhatsAppInstance):
     """Delete + re-create the Evolution API instance so it fires a fresh QRCODE_UPDATED webhook.
 
-    IMPORTANT ordering:
-    1. Delete old Evolution instance.
-    2. Clear DB state (qr_code=None) and COMMIT — so the incoming QRCODE_UPDATED webhook
-       writes to a clean slate without being overwritten afterward.
-    3. Create new Evolution instance → Evolution fires QRCODE_UPDATED webhook immediately.
-    4. Update ONLY the token in DB — never touch qr_code/qr_updated_at after create()
-       because the webhook handler may already have stored the fresh QR by then.
+    Ordering:
+    1. Delete (global key, ignores errors).
+    2. sleep(3) for Evolution to finish cleanup.
+    3. Create — retry once with another delete if 403 (instance still exists).
+    4. Update ONLY api_token in DB — never touch qr_code/qr_updated_at after create().
     """
+    import requests as _req
+
     name = instance.instance_name
     logger.info(f"[Recreate] Deleting Evolution instance {name}")
     try:
-        # Use global API key for delete — avoids token mismatch (stored token may be stale)
-        evolution_client.delete_instance(name, None)  # None → falls back to global_key
+        evolution_client.delete_instance(name, None)  # global_key fallback
     except Exception as e:
         logger.warning(f"[Recreate] delete_instance {name}: {e}")
 
-    time.sleep(2)  # give Evolution API a moment to clean up
+    time.sleep(3)
 
-    # Update status — qr_updated_at was already stamped in get_qr() before this thread started
     instance.status = 'connecting'
     db.session.commit()
 
     logger.info(f"[Recreate] Creating Evolution instance {name}")
-    _, new_token = evolution_client.create_instance(name)
+    new_token = None
+    for attempt in range(2):
+        try:
+            _, new_token = evolution_client.create_instance(name)
+            break
+        except _req.HTTPError as e:
+            if e.response is not None and e.response.status_code in (403, 409) and attempt == 0:
+                logger.warning(f"[Recreate] Create {e.response.status_code} on attempt 1 — instance still exists, deleting again")
+                evolution_client.delete_instance(name, None)
+                time.sleep(3)
+                continue
+            raise
 
-    # Only update the token — do NOT touch qr_code or qr_updated_at.
-    # The QRCODE_UPDATED webhook from create_instance() may already have arrived and
-    # stored the fresh QR. Overwriting here would cause the "QR disappears" race condition.
-    instance.api_token = new_token
-    db.session.commit()
-    logger.info(f"[Recreate] Done — {name} token updated, awaiting QRCODE_UPDATED webhook")
+    if new_token:
+        instance.api_token = new_token
+        db.session.commit()
+        logger.info(f"[Recreate] Done — {name} recreated, token saved, awaiting QRCODE_UPDATED webhook")
+    else:
+        logger.error(f"[Recreate] Failed to create instance {name} — no token")
 
 
 @dashboard_bp.route('/instance/<int:instance_id>/status')
