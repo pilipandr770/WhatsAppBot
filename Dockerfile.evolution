@@ -1,0 +1,6 @@
+FROM evoapicloud/evolution-api:v2.2.3
+
+ENV HTTP_PORT=10000
+ENV PORT=10000
+
+EXPOSE 10000
