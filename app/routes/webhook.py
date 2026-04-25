@@ -163,23 +163,37 @@ def _process_single_message(instance_name: str, msg_data: dict):
 
 def _process_qr_update(instance_name: str, data: dict):
     qr_data = data.get('data', {})
+
+    # Try all known payload formats across Evolution API versions:
+    # v2.2.x: data.qrcode.base64
+    # v2.3.x: data.base64  (direct)
+    # fallback: data.qr
     qr_base64 = (
         qr_data.get('base64') or
-        qr_data.get('qrcode', {}).get('base64', '') or
-        qr_data.get('qr', '')
+        (qr_data.get('qrcode') or {}).get('base64') or
+        qr_data.get('qr') or
+        ''
     )
+
     if not qr_base64:
-        logger.warning(f"qrcode.updated received but no base64 for {instance_name}: {list(qr_data.keys())}")
+        # Log full structure (truncated) to help diagnose format changes
+        import json as _json
+        try:
+            preview = _json.dumps(qr_data)[:300]
+        except Exception:
+            preview = str(qr_data)[:300]
+        logger.warning(f"QRCODE_UPDATED for {instance_name}: no base64 found. data={preview}")
         return
 
     instance = WhatsAppInstance.query.filter_by(instance_name=instance_name).first()
     if not instance:
+        logger.warning(f"QRCODE_UPDATED: instance not found in DB: {instance_name}")
         return
 
     instance.qr_code = qr_base64
     instance.qr_updated_at = datetime.utcnow()
     db.session.commit()
-    logger.info(f"QR stored for {instance_name} ({len(qr_base64)} bytes)")
+    logger.info(f"✅ QR stored for {instance_name} ({len(qr_base64)} bytes)")
 
 
 def _process_connection_update(instance_name: str, data: dict):
