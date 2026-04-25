@@ -7,8 +7,8 @@ from app.models import User, Subscription, WhatsAppInstance, Conversation, Messa
 
 admin_bp = Blueprint('admin', __name__)
 
-INSTANCES_BY_PLAN = {'starter': 1, 'pro': 5, 'business': 20}
-PLAN_LABELS = {'starter': 'Starter', 'pro': 'Pro', 'business': 'Business'}
+INSTANCES_BY_PLAN = {'solo': 1, 'business': 3, 'agentur': 15}
+PLAN_LABELS = {'solo': 'Solo-Assistent', 'business': 'Business-Assistent', 'agentur': 'Agentur'}
 
 
 def admin_required(f):

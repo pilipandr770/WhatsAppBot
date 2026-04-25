@@ -13,36 +13,56 @@ stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
 # Price IDs from Stripe Dashboard - set in .env
 PLANS = {
-    'starter': {
-        'name': 'Starter',
-        'price': '€29',
+    'solo': {
+        'name': 'Solo-Assistent',
+        'price': '€59',
         'period': '/Monat',
         'instances': 1,
-        'features': ['1 WhatsApp-Nummer', 'KI-Antworten', 'Basis-Konfiguration', 'E-Mail Support'],
-        'price_id': os.environ.get('STRIPE_PRICE_STARTER', ''),
+        'features': [
+            '1 WhatsApp-Nummer',
+            'KI-Antworten 24/7',
+            'Wissensbasis (Dokumente)',
+            'Unbegrenzte Gespräche',
+            'E-Mail Support',
+        ],
+        'price_id': os.environ.get('STRIPE_PRICE_SOLO', ''),
         'highlight': False,
-    },
-    'pro': {
-        'name': 'Pro',
-        'price': '€79',
-        'period': '/Monat',
-        'instances': 5,
-        'features': ['5 WhatsApp-Nummern', 'KI-Antworten', 'Dokument-Upload (RAG)', 'Gesprächshistorie', 'Prioritäts-Support'],
-        'price_id': os.environ.get('STRIPE_PRICE_PRO', ''),
-        'highlight': True,
     },
     'business': {
-        'name': 'Business',
-        'price': '€199',
+        'name': 'Business-Assistent',
+        'price': '€149',
         'period': '/Monat',
-        'instances': 20,
-        'features': ['20 WhatsApp-Nummern', 'Alle Pro-Features', 'API-Zugang', 'Dedicated Support', 'Custom Branding'],
+        'instances': 3,
+        'features': [
+            '3 WhatsApp-Nummern',
+            'KI-Antworten 24/7',
+            'Wissensbasis (Dokumente)',
+            'Unbegrenzte Gespräche',
+            'Google Kalender & Sheets',
+            'Prioritäts-Support',
+        ],
         'price_id': os.environ.get('STRIPE_PRICE_BUSINESS', ''),
+        'highlight': True,
+    },
+    'agentur': {
+        'name': 'Agentur',
+        'price': '€349',
+        'period': '/Monat',
+        'instances': 15,
+        'features': [
+            '15 WhatsApp-Nummern',
+            'Alle Business-Features',
+            'White-Label-Option',
+            'API-Zugang',
+            'Dedicated Support',
+            'Für Agenturen & Wiederverkauf',
+        ],
+        'price_id': os.environ.get('STRIPE_PRICE_AGENTUR', ''),
         'highlight': False,
-    }
+    },
 }
 
-INSTANCES_BY_PLAN = {'starter': 1, 'pro': 5, 'business': 20}
+INSTANCES_BY_PLAN = {'solo': 1, 'business': 3, 'agentur': 15}
 
 
 @billing_bp.route('/plans')

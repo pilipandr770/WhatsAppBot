@@ -128,11 +128,11 @@ services:
         sync: false
       - key: STRIPE_WEBHOOK_SECRET
         sync: false
-      - key: STRIPE_PRICE_STARTER
-        sync: false
-      - key: STRIPE_PRICE_PRO
+      - key: STRIPE_PRICE_SOLO
         sync: false
       - key: STRIPE_PRICE_BUSINESS
+        sync: false
+      - key: STRIPE_PRICE_AGENTUR
         sync: false
       - key: UPLOAD_FOLDER
         value: /app/uploads
