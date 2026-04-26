@@ -94,7 +94,7 @@ def transcribe_from_evolution(instance_name: str, token: str, message_id: str,
     try:
         resp = requests.post(url, json=body, headers={'apikey': api_key}, timeout=25)
         logger.info(f'STT fallback: status={resp.status_code} body={resp.text[:300]}')
-        if resp.status_code != 200:
+        if resp.status_code >= 400:
             return ''
         data = resp.json()
         b64 = data.get('base64', '')
