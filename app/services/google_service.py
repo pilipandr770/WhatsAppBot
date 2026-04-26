@@ -154,14 +154,19 @@ def get_credentials(instance_id: int):
             client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', ''),
             scopes=scopes,
         )
-        # Set expiry so the library can check if a refresh is needed
+        # Set expiry so the library can check if a refresh is needed.
+        # google-auth uses naive UTC internally (datetime.utcnow()), so we
+        # must NOT make expiry timezone-aware — otherwise the comparison raises
+        # TypeError and get_credentials() silently returns None.
         if token_row.token_expiry:
-            creds.expiry = token_row.token_expiry.replace(tzinfo=timezone.utc)
+            # token_expiry is stored as naive UTC — pass it as-is
+            creds.expiry = token_row.token_expiry
 
         # Refresh if expired or about to expire (within 60 s)
+        now_utc = datetime.utcnow()
         if creds.expired or (
             creds.expiry and
-            creds.expiry - datetime.now(timezone.utc) < timedelta(seconds=60)
+            creds.expiry - now_utc < timedelta(seconds=60)
         ):
             if creds.refresh_token:
                 creds.refresh(Request())
