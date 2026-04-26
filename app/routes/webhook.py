@@ -3,10 +3,11 @@ from datetime import datetime
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models import WhatsAppInstance, Conversation, Message
-from app.services.claude_service import get_ai_response
+from app.services.claude_service import get_ai_response, get_ai_response_with_tools
 from app.services.rag import search_relevant_chunks
 from app.services.evolution import evolution_client
 from app.services.stt import transcribe_audio_base64, transcribe_from_evolution
+from app.services.google_service import GOOGLE_TOOLS, execute_tool as google_execute_tool
 
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
@@ -165,12 +166,30 @@ def _process_single_message(instance_name: str, msg_data: dict):
             '(automatisch transkribiert). Antworte normal, erwähne die Transkription nicht.'
         )
 
-    ai_text = get_ai_response(
-        system_prompt=system_prompt,
-        messages=history,
-        rag_context=rag_context,
-        max_tokens=config.max_tokens
-    )
+    # Use Google tools if this instance has an active Google token
+    has_google = bool(instance.google_token and instance.google_token.access_token)
+
+    if has_google:
+        _inst_id = instance.id  # capture for closure
+
+        def _tool_executor(tool_name: str, tool_input: dict) -> str:
+            return google_execute_tool(tool_name, tool_input, _inst_id)
+
+        ai_text = get_ai_response_with_tools(
+            system_prompt=system_prompt,
+            messages=history,
+            tools=GOOGLE_TOOLS,
+            tool_executor=_tool_executor,
+            rag_context=rag_context,
+            max_tokens=config.max_tokens
+        )
+    else:
+        ai_text = get_ai_response(
+            system_prompt=system_prompt,
+            messages=history,
+            rag_context=rag_context,
+            max_tokens=config.max_tokens
+        )
 
     # Save AI response
     assistant_message = Message(

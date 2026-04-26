@@ -66,4 +66,7 @@ def create_app():
     from app.routes.main import main_bp
     app.register_blueprint(main_bp)
 
+    from app.routes.google_oauth import google_oauth_bp
+    app.register_blueprint(google_oauth_bp, url_prefix='/oauth/google')
+
     return app

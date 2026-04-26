@@ -25,23 +25,29 @@
 </div>
 
 <div class="page-body">
-<form method="post">
+
+  {# Main save form — wraps only the LEFT column content.
+     The right column uses form="config-form" (HTML5) so the submit button works from outside. #}
+  <form method="post" id="config-form">
+    <input type="hidden" name="_csrf_dummy" value="">
+  </form>
+
   <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
 
-    <!-- Left: Main config -->
+    <!-- ═══ LEFT: Main config ═══ -->
     <div style="display:flex;flex-direction:column;gap:16px;">
 
       <div class="card">
         <div class="card-title">🤖 Bot-Identität</div>
         <div class="form-group">
           <label class="form-label">Bot-Name</label>
-          <input type="text" name="bot_name" class="form-input"
+          <input type="text" name="bot_name" form="config-form" class="form-input"
                  value="{{ config.bot_name }}" placeholder="KI-Assistent">
           <div class="form-hint">Wird intern zur Identifikation genutzt.</div>
         </div>
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label">Sprache</label>
-          <select name="language" class="form-select">
+          <select name="language" form="config-form" class="form-select">
             <option value="de" {% if config.language == 'de' %}selected{% endif %}>🇩🇪 Deutsch</option>
             <option value="en" {% if config.language == 'en' %}selected{% endif %}>🇬🇧 Englisch</option>
             <option value="ru" {% if config.language == 'ru' %}selected{% endif %}>🇷🇺 Russisch</option>
@@ -54,7 +60,7 @@
         <div class="card-title">📝 System-Prompt</div>
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label">Anweisungen für den KI-Bot</label>
-          <textarea name="system_prompt" class="form-textarea" rows="10"
+          <textarea name="system_prompt" form="config-form" class="form-textarea" rows="10"
                     placeholder="Beschreibe, wie der Bot sich verhalten soll...">{{ config.system_prompt }}</textarea>
           <div class="form-hint">
             Der System-Prompt definiert Persönlichkeit, Tonalität und Verhalten des Bots.
@@ -63,7 +69,7 @@
         </div>
       </div>
 
-      <!-- Prompt examples -->
+      <!-- Prompt templates -->
       <div class="card" style="border-style:dashed;">
         <div class="card-title" style="color:var(--text-muted);">💡 Prompt-Vorlagen</div>
         <div style="display:flex;flex-direction:column;gap:8px;">
@@ -71,6 +77,8 @@
             ('Kundenservice', 'Du bist ein freundlicher Kundenservice-Assistent für {Firmenname}. Beantworte Fragen höflich auf Deutsch. Wenn du etwas nicht weißt, leite den Kunden an support@firma.de weiter. Öffnungszeiten: Mo–Fr 9–18 Uhr.'),
             ('Restaurant', 'Du bist der digitale Assistent von {Restaurantname}. Beantworte Fragen zur Speisekarte, Reservierungen und Öffnungszeiten. Reservierungen sind telefonisch unter {Telefon} möglich.'),
             ('Immobilien', 'Du bist ein KI-Assistent für {Immobilienbüro}. Beantworte Fragen zu verfügbaren Objekten, Miet- und Kaufpreisen. Für Besichtigungen leite Interessenten an unsere Makler weiter.'),
+            ('📅 Terminbuchung (Google)', 'Du bist ein Terminassistent für {Firmenname}. Wenn ein Kunde einen Termin buchen möchte, frage nach: Name, gewünschtem Datum/Uhrzeit und Anliegen. Erstelle dann den Termin direkt im Google Kalender. Verfügbare Zeiten: Mo–Fr 9–17 Uhr.'),
+            ('📊 Lead-Erfassung (Sheets)', 'Du bist ein Verkaufsassistent für {Firmenname}. Wenn ein Interessent Kontaktdaten hinterlässt, speichere Name, Telefon, E-Mail, Anliegen und heutiges Datum in der Google Tabelle. Spreadsheet-ID: {SPREADSHEET_ID} · Range: Leads!A:E'),
           ] %}
           {% for name, prompt in templates %}
           <button type="button" class="btn btn-ghost btn-sm" style="text-align:left;justify-content:flex-start;"
@@ -80,22 +88,24 @@
           {% endfor %}
         </div>
       </div>
-    </div>
 
-    <!-- Right: Settings -->
+    </div>{# /left column #}
+
+    <!-- ═══ RIGHT: Settings sidebar ═══ -->
     <div style="display:flex;flex-direction:column;gap:16px;">
 
+      <!-- Bot status toggles -->
       <div class="card">
         <div class="card-title">⚡ Status</div>
         <label class="form-check" style="margin-bottom:16px;">
-          <input type="checkbox" name="is_active" {% if config.is_active %}checked{% endif %}>
+          <input type="checkbox" name="is_active" form="config-form" {% if config.is_active %}checked{% endif %}>
           <div>
             <div style="font-weight:500;">Bot aktiv</div>
             <div style="font-size:12px;color:var(--text-muted);">Bot antwortet auf Nachrichten</div>
           </div>
         </label>
         <label class="form-check">
-          <input type="checkbox" name="use_rag" {% if config.use_rag %}checked{% endif %}>
+          <input type="checkbox" name="use_rag" form="config-form" {% if config.use_rag %}checked{% endif %}>
           <div>
             <div style="font-weight:500;">Wissensdatenbank nutzen</div>
             <div style="font-size:12px;color:var(--text-muted);">Antworten aus hochgeladenen Dokumenten</div>
@@ -103,11 +113,12 @@
         </label>
       </div>
 
+      <!-- Tokens -->
       <div class="card">
         <div class="card-title">🎛 Parameter</div>
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label">Max. Tokens pro Antwort</label>
-          <input type="number" name="max_tokens" class="form-input"
+          <input type="number" name="max_tokens" form="config-form" class="form-input"
                  value="{{ config.max_tokens }}" min="100" max="2000" step="100">
           <div class="form-hint">
             100 Tokens ≈ 75 Wörter.<br>
@@ -116,10 +127,70 @@
         </div>
       </div>
 
-      <div class="card" style="background:var(--accent-dim);border-color:rgba(37,211,102,0.2);">
-        <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">
-          📊 Statistiken
+      <!-- ──────────────────────────────────────────── -->
+      <!-- GOOGLE INTEGRATION                          -->
+      <!-- ──────────────────────────────────────────── -->
+      <div class="card" style="border-color:{% if instance.google_token %}rgba(37,211,102,0.4){% else %}#2a2d33{% endif %};">
+
+        <div class="card-title" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+          <!-- Google "G" colour logo (inline SVG, no external requests) -->
+          <svg width="18" height="18" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0;">
+            <path fill="#FFC107" d="M43.6 20.5H42V20H24V28H35.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.2 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.9C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.2 29.3 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z"/>
+            <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.3l-6.2-5.3c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5.1C9.5 39.4 16.2 44 24 44z"/>
+            <path fill="#1976D2" d="M43.6 20.5H42V20H24V28H35.3c-.8 2.2-2.2 4.2-4.1 5.4l6.2 5.3C37 39.1 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+          </svg>
+          Google-Integration
         </div>
+
+        {% if instance.google_token %}
+          <!-- CONNECTED state -->
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+            <span style="width:8px;height:8px;background:#25D366;border-radius:50%;display:inline-block;"></span>
+            <span style="font-size:13px;color:#25D366;font-weight:600;">Verbunden</span>
+          </div>
+          {% if instance.google_token.google_email %}
+          <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+            📧 {{ instance.google_token.google_email }}
+          </div>
+          {% endif %}
+          <div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:14px;">
+            ✅ Kalender-Termine anlegen &amp; lesen<br>
+            ✅ Google Tabellen lesen &amp; befüllen
+          </div>
+          <form method="post" action="{{ url_for('google_oauth.disconnect', instance_id=instance.id) }}"
+                onsubmit="return confirm('Google-Verbindung wirklich trennen?')">
+            <button type="submit" class="btn btn-ghost btn-sm"
+                    style="width:100%;justify-content:center;color:#ef4444;border-color:rgba(239,68,68,0.4);">
+              🔌 Google trennen
+            </button>
+          </form>
+
+        {% else %}
+          <!-- NOT CONNECTED state -->
+          <div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:14px;">
+            Verbinde Google, damit der Bot:<br>
+            📅 Kalender-Termine buchen &amp; abfragen kann<br>
+            📊 Google Tabellen lesen &amp; ausfüllen kann
+          </div>
+          <a href="{{ url_for('google_oauth.authorize', instance_id=instance.id) }}"
+             class="btn btn-secondary"
+             style="width:100%;justify-content:center;display:flex;align-items:center;gap:8px;">
+            <svg width="15" height="15" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+              <path fill="#FFC107" d="M43.6 20.5H42V20H24V28H35.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.2 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+              <path fill="#FF3D00" d="M6.3 14.7l6.6 4.9C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.2 29.3 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z"/>
+              <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.3l-6.2-5.3c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5.1C9.5 39.4 16.2 44 24 44z"/>
+              <path fill="#1976D2" d="M43.6 20.5H42V20H24V28H35.3c-.8 2.2-2.2 4.2-4.1 5.4l6.2 5.3C37 39.1 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+            </svg>
+            Mit Google verbinden
+          </a>
+        {% endif %}
+      </div>
+      <!-- /GOOGLE INTEGRATION -->
+
+      <!-- Stats -->
+      <div class="card" style="background:var(--accent-dim);border-color:rgba(37,211,102,0.2);">
+        <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">📊 Statistiken</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
           <div style="display:flex;justify-content:space-between;">
             <span style="color:var(--text-muted);">Gespräche</span>
@@ -136,11 +207,15 @@
         </div>
       </div>
 
-      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+      <!-- Save button — submits the external #config-form via HTML5 form= attribute -->
+      <button type="submit" form="config-form" class="btn btn-primary"
+              style="width:100%;justify-content:center;">
         💾 Konfiguration speichern
       </button>
-    </div>
-  </div>
-</form>
-</div>
+
+    </div>{# /right column #}
+
+  </div>{# /grid #}
+
+</div>{# /page-body #}
 {% endblock %}

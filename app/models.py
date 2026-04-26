@@ -100,6 +100,7 @@ class WhatsAppInstance(db.Model):
     bot_config = db.relationship('BotConfig', backref='instance', uselist=False, cascade='all, delete-orphan')
     documents = db.relationship('Document', backref='instance', lazy=True, cascade='all, delete-orphan')
     conversations = db.relationship('Conversation', backref='instance', lazy=True, cascade='all, delete-orphan')
+    google_token = db.relationship('GoogleToken', backref='instance', uselist=False, cascade='all, delete-orphan')
 
     @property
     def is_connected(self):
@@ -183,3 +184,17 @@ class Message(db.Model):
     role = db.Column(db.String(20), nullable=False)  # user, assistant
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class GoogleToken(db.Model):
+    """Stores Google OAuth 2.0 tokens per WhatsApp instance."""
+    __tablename__ = 'google_tokens'
+    id = db.Column(db.Integer, primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('whatsapp_instances.id'), nullable=False, unique=True)
+    access_token = db.Column(db.Text, nullable=False)
+    refresh_token = db.Column(db.Text)
+    token_expiry = db.Column(db.DateTime)   # UTC expiry of the access token
+    google_email = db.Column(db.String(255))
+    scopes = db.Column(db.Text)             # JSON-encoded list of granted scopes
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
