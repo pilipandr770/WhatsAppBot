@@ -1,64 +1,126 @@
 {% extends 'base.html' %}
-{% block title %}Datenschutz{% endblock %}
+{% block title %}Datenschutzerklärung{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
 {% block public_content %}
 <div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
   <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
   <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Datenschutzerklärung</h1>
-  <p style="color:#6b7280;margin-bottom:32px;">Stand: [DATUM] · gemäß DSGVO</p>
+  <p style="color:#6b7280;margin-bottom:32px;">Stand: April 2026 · gemäß DSGVO (EU) 2016/679</p>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">1. Verantwortlicher</h2>
-  <p>Andrii Pylypchuk<br>Bergmannweg 16, 65934 Frankfurt am Main<br>E-Mail: <a href="mailto:info@andrii-it.de">info@andrii-it.de</a></p>
+  <p>
+    Andrii Pylypchuk<br>
+    Bergmannweg 16, 65934 Frankfurt am Main, Deutschland<br>
+    E-Mail: <a href="mailto:info@andrii-it.de">info@andrii-it.de</a><br>
+    Telefon: +49 160 95030120<br>
+    USt-ID: DE456902445
+  </p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">2. Erhobene Daten</h2>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">2. Erhobene und verarbeitete Daten</h2>
   <p>Wir verarbeiten folgende personenbezogene Daten:</p>
   <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
-    <li><strong style="color:#e8eaf0;">Registrierungsdaten:</strong> Name, E-Mail-Adresse, Firmenname</li>
-    <li><strong style="color:#e8eaf0;">Zahlungsdaten:</strong> werden ausschließlich von Stripe verarbeitet; wir speichern nur die Stripe-Kunden-ID</li>
-    <li><strong style="color:#e8eaf0;">WhatsApp-Nachrichten:</strong> Nachrichten werden zur Bearbeitung durch die KI temporär verarbeitet und in unserer Datenbank gespeichert</li>
-    <li><strong style="color:#e8eaf0;">Nutzungsdaten:</strong> Log-Daten, IP-Adressen (nur in Server-Logs, nicht dauerhaft gespeichert)</li>
-    <li><strong style="color:#e8eaf0;">Hochgeladene Dokumente:</strong> vom Nutzer hochgeladene Dateien für die Wissensbasis (RAG)</li>
+    <li><strong style="color:#e8eaf0;">Registrierungsdaten:</strong> Name, E-Mail-Adresse, Firmenname (bei Registrierung)</li>
+    <li><strong style="color:#e8eaf0;">Zahlungsdaten:</strong> werden ausschließlich von Stripe verarbeitet; wir speichern nur die Stripe-Kunden-ID und den Abonnementstatus</li>
+    <li><strong style="color:#e8eaf0;">WhatsApp-Nachrichten:</strong> Textnachrichten und Sprachnachrichten von Endkunden werden zur KI-Verarbeitung übermittelt und in unserer Datenbank gespeichert, um dem Bot Gesprächskontext bereitzustellen</li>
+    <li><strong style="color:#e8eaf0;">Sprachaufnahmen:</strong> Sprachnachrichten werden automatisch transkribiert (OpenAI Whisper) und als Text gespeichert; Audiodateien werden nicht dauerhaft gespeichert</li>
+    <li><strong style="color:#e8eaf0;">Hochgeladene Dokumente:</strong> vom Nutzer hochgeladene Dateien (PDF, DOCX, TXT) für die Wissensdatenbank (RAG)</li>
+    <li><strong style="color:#e8eaf0;">Nutzungsdaten:</strong> Log-Daten, IP-Adressen (in Server-Logs, nicht dauerhaft in der Anwendungsdatenbank gespeichert)</li>
+    <li><strong style="color:#e8eaf0;">Google-Nutzerdaten</strong> (optional, nur wenn Google-Integration aktiviert): Kalender- und Tabellenkalkulationsdaten via Google OAuth 2.0 — nur auf ausdrücklichen Wunsch des Nutzers; Zugriff kann jederzeit widerrufen werden</li>
   </ul>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">3. Zweck der Verarbeitung</h2>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">3. Zweck und Rechtsgrundlage der Verarbeitung</h2>
   <p>Die Daten werden verarbeitet zur:</p>
   <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
-    <li>Bereitstellung und Verbesserung des Dienstes (Art. 6 Abs. 1 lit. b DSGVO)</li>
-    <li>Abwicklung von Zahlungen (Art. 6 Abs. 1 lit. b DSGVO)</li>
-    <li>Einhaltung gesetzlicher Pflichten (Art. 6 Abs. 1 lit. c DSGVO)</li>
+    <li>Bereitstellung und Betrieb des KI-Chatbot-Dienstes (Art. 6 Abs. 1 lit. b DSGVO — Vertragserfüllung)</li>
+    <li>Abwicklung von Zahlungen und Abonnements (Art. 6 Abs. 1 lit. b DSGVO)</li>
+    <li>Einhaltung gesetzlicher Pflichten, z. B. Aufbewahrungspflichten (Art. 6 Abs. 1 lit. c DSGVO)</li>
+    <li>Verbesserung des Dienstes auf Basis berechtigter Interessen (Art. 6 Abs. 1 lit. f DSGVO)</li>
+    <li>Verarbeitung von Google-Nutzerdaten: ausschließlich auf Grundlage der ausdrücklichen Einwilligung (Art. 6 Abs. 1 lit. a DSGVO)</li>
   </ul>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">4. Drittanbieter</h2>
-  <p><strong>Anthropic (Claude AI):</strong> Nachrichten werden zur KI-Verarbeitung an die Anthropic-API übertragen.
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">4. Auftragsverarbeiter und Drittanbieter</h2>
+
+  <p><strong>Anthropic, Inc. (Claude AI)</strong><br>
+  Textnachrichten werden zur KI-Antwortgenerierung an die Anthropic-API (USA) übertragen.
+  Anthropic verarbeitet die Daten gemäß seiner Datenschutzrichtlinie und bietet entsprechende
+  Datenschutzgarantien für EU-Übertragungen.<br>
   Datenschutz: <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a></p>
-  <p><strong>Stripe:</strong> Zahlungsabwicklung. Datenschutz: <a href="https://stripe.com/de/privacy" target="_blank">stripe.com/de/privacy</a></p>
-  <p><strong>Render.com:</strong> Hosting-Anbieter. Datenschutz: <a href="https://render.com/privacy" target="_blank">render.com/privacy</a></p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Speicherdauer</h2>
+  <p><strong>OpenAI, LLC (Whisper — Spracherkennung)</strong><br>
+  Sprachnachrichten werden zur Transkription an die OpenAI-API (USA) übermittelt.
+  OpenAI verarbeitet Audiodaten gemäß seiner Datenschutzrichtlinie.<br>
+  Datenschutz: <a href="https://openai.com/privacy" target="_blank">openai.com/privacy</a></p>
+
+  <p><strong>Stripe, Inc. (Zahlungsabwicklung)</strong><br>
+  Zahlungsdaten werden ausschließlich von Stripe verarbeitet. Wir haben keinen Zugriff auf
+  vollständige Kreditkartendaten.<br>
+  Datenschutz: <a href="https://stripe.com/de/privacy" target="_blank">stripe.com/de/privacy</a></p>
+
+  <p><strong>Render Inc. (Cloud-Hosting)</strong><br>
+  Die Webanwendung und Datenbank sind auf Servern von Render.com in der EU (Frankfurt, Deutschland)
+  gehostet.<br>
+  Datenschutz: <a href="https://render.com/privacy" target="_blank">render.com/privacy</a></p>
+
+  <p><strong>Hostinger International Ltd. (VPS-Hosting)</strong><br>
+  Der WhatsApp-Gateway-Dienst (Evolution API) läuft auf einem VPS von Hostinger in
+  Deutschland (Frankfurt).<br>
+  Datenschutz: <a href="https://www.hostinger.de/datenschutzerklaerung" target="_blank">hostinger.de/datenschutzerklaerung</a></p>
+
+  <p><strong>Google LLC (Google API-Integration — optional)</strong><br>
+  Wenn der Nutzer die Google-Integration aktiviert (z. B. Google Calendar, Google Sheets),
+  erfolgt der Datenzugriff über OAuth 2.0 ausschließlich mit expliziter Einwilligung des Nutzers.
+  Wir verwenden Google-Nutzerdaten nur für den vom Nutzer konfigurierten Zweck (z. B. Termine
+  eintragen, Tabellen lesen). Wir verkaufen keine Google-Nutzerdaten und nutzen sie nicht für
+  Werbezwecke. Der Zugriff kann jederzeit unter
+  <a href="https://myaccount.google.com/permissions" target="_blank">myaccount.google.com/permissions</a> widerrufen werden.<br>
+  Google Datenschutz: <a href="https://policies.google.com/privacy" target="_blank">policies.google.com/privacy</a></p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Datenübertragung in Drittländer</h2>
+  <p>Einige der oben genannten Dienste (Anthropic, OpenAI, Stripe) verarbeiten Daten in den USA.
+  Diese Übertragungen erfolgen auf Grundlage der EU-Standardvertragsklauseln (SCC) gemäß
+  Art. 46 DSGVO oder eines angemessenen Schutzniveaus.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">6. Speicherdauer</h2>
   <p>Personenbezogene Daten werden gelöscht, sobald sie für den Verarbeitungszweck nicht mehr
-  erforderlich sind. Buchhaltungsrelevante Daten werden entsprechend der gesetzlichen
-  Aufbewahrungsfristen (10 Jahre) gespeichert. Nutzer können die Löschung ihres Kontos
-  jederzeit selbst veranlassen.</p>
+  erforderlich sind:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li>Kontodaten und Chatverläufe: bis zur Kontolöschung durch den Nutzer</li>
+    <li>Hochgeladene Dokumente: bis zur manuellen Löschung durch den Nutzer</li>
+    <li>Rechnungsdaten: 10 Jahre gemäß gesetzlicher Aufbewahrungspflicht (§ 147 AO)</li>
+    <li>Server-Logs: max. 30 Tage</li>
+  </ul>
+  <p>Nutzer können ihr Konto und alle damit verbundenen Daten jederzeit selbst über
+  „Konto löschen" im Dashboard löschen.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">6. Rechte der betroffenen Person</h2>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">7. Rechte der betroffenen Person</h2>
   <p>Sie haben das Recht auf:</p>
   <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
     <li>Auskunft über gespeicherte Daten (Art. 15 DSGVO)</li>
     <li>Berichtigung unrichtiger Daten (Art. 16 DSGVO)</li>
-    <li>Löschung Ihrer Daten (Art. 17 DSGVO) — über „Konto löschen" im Dashboard</li>
+    <li>Löschung Ihrer Daten (Art. 17 DSGVO) — über „Konto löschen" im Dashboard oder per E-Mail</li>
     <li>Einschränkung der Verarbeitung (Art. 18 DSGVO)</li>
     <li>Datenübertragbarkeit (Art. 20 DSGVO)</li>
     <li>Widerspruch gegen die Verarbeitung (Art. 21 DSGVO)</li>
-    <li>Beschwerde bei der zuständigen Datenschutzbehörde</li>
+    <li>Widerruf erteilter Einwilligungen (Art. 7 Abs. 3 DSGVO)</li>
+    <li>Beschwerde bei der zuständigen Datenschutzbehörde (Hessischer Beauftragter für Datenschutz und Informationsfreiheit, <a href="https://datenschutz.hessen.de" target="_blank">datenschutz.hessen.de</a>)</li>
   </ul>
-  <p>Zur Ausübung Ihrer Rechte wenden Sie sich an: <a href="mailto:[EMAIL]">[EMAIL]</a></p>
+  <p>Zur Ausübung Ihrer Rechte wenden Sie sich an:
+  <a href="mailto:info@andrii-it.de">info@andrii-it.de</a></p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">7. Cookies</h2>
-  <p>Wir verwenden ausschließlich technisch notwendige Cookies (Session-Cookie für die Anmeldung).
-  Es werden keine Tracking- oder Werbe-Cookies eingesetzt.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">8. Cookies</h2>
+  <p>Wir verwenden ausschließlich technisch notwendige Cookies (Session-Cookie für die Anmeldung,
+  Lebensdauer: Browsersitzung). Es werden keine Tracking-, Analyse- oder Werbe-Cookies eingesetzt.
+  Kein Google Analytics, kein Facebook Pixel.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">8. Sicherheit</h2>
-  <p>Alle Datenübertragungen erfolgen verschlüsselt via HTTPS/TLS. Passwörter werden
-  ausschließlich als Bcrypt-Hash gespeichert.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">9. Sicherheit</h2>
+  <p>Alle Datenübertragungen erfolgen verschlüsselt via HTTPS/TLS (TLS 1.2+). Passwörter werden
+  ausschließlich als Bcrypt-Hash gespeichert. Der Datenbankzugriff ist auf autorisierte
+  Anwendungskomponenten beschränkt.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">10. Änderungen dieser Erklärung</h2>
+  <p>Wir behalten uns vor, diese Datenschutzerklärung bei Bedarf anzupassen. Die aktuelle Version
+  ist stets unter <a href="https://whatsappbothelfer.de/datenschutz">whatsappbothelfer.de/datenschutz</a>
+  abrufbar. Bei wesentlichen Änderungen werden registrierte Nutzer per E-Mail informiert.</p>
 
   <div style="margin-top:48px;padding-top:24px;border-top:1px solid #2a2d33;font-size:12px;color:#6b7280;">
     <a href="{{ url_for('main.impressum') }}" style="color:#6b7280;margin-right:20px;">Impressum</a>

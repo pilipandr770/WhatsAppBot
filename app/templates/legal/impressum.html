@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Impressum{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
 {% block public_content %}
 <div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
   <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>

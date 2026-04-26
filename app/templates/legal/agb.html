@@ -1,64 +1,127 @@
 {% extends 'base.html' %}
 {% block title %}AGB{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
 {% block public_content %}
 <div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
   <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
   <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Allgemeine Geschäftsbedingungen</h1>
-  <p style="color:#6b7280;margin-bottom:32px;">Stand: [DATUM]</p>
+  <p style="color:#6b7280;margin-bottom:32px;">Stand: April 2026</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 1 Geltungsbereich</h2>
-  <p>Diese AGB gelten für alle Verträge zwischen Andrii Pylypchuk (nachfolgend „Anbieter") und den Nutzern
-  der SaaS-Plattform WA.AI (nachfolgend „Dienst"). Abweichende Bedingungen des Nutzers werden nicht
-  anerkannt, es sei denn, der Anbieter stimmt ihrer Geltung ausdrücklich schriftlich zu.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 1 Geltungsbereich und Anbieter</h2>
+  <p>Diese Allgemeinen Geschäftsbedingungen (AGB) gelten für alle Verträge zwischen</p>
+  <p style="margin:8px 0;padding:12px 16px;background:#141618;border-left:3px solid #25D366;border-radius:4px;">
+    Andrii Pylypchuk<br>
+    Bergmannweg 16, 65934 Frankfurt am Main, Deutschland<br>
+    E-Mail: info@andrii-it.de · USt-ID: DE456902445<br>
+    (nachfolgend „<strong>Anbieter</strong>")
+  </p>
+  <p>und den Nutzern der SaaS-Plattform <strong>WhatsApp Bot Helfer</strong> unter
+  whatsappbothelfer.de (nachfolgend „<strong>Dienst</strong>" oder „<strong>Plattform</strong>").</p>
+  <p>Abweichende Bedingungen des Nutzers werden nicht anerkannt, es sei denn, der Anbieter stimmt
+  ihrer Geltung ausdrücklich schriftlich zu.</p>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 2 Leistungsbeschreibung</h2>
   <p>Der Anbieter stellt einen KI-gestützten WhatsApp-Chatbot-Dienst bereit, der es Unternehmen
-  ermöglicht, automatisierte Antworten auf WhatsApp-Nachrichten zu konfigurieren und zu betreiben.
-  Der Dienst wird als Software-as-a-Service (SaaS) über das Internet bereitgestellt.</p>
+  ermöglicht:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li>WhatsApp-Nachrichten automatisch durch KI (Anthropic Claude) beantworten zu lassen</li>
+    <li>Eine Wissensdatenbank aus eigenen Dokumenten (PDF, DOCX, TXT) aufzubauen</li>
+    <li>Sprachnachrichten automatisch zu transkribieren und zu beantworten</li>
+    <li>Mehrere WhatsApp-Nummern über ein Dashboard zu verwalten</li>
+    <li>Chatverläufe einzusehen und den Bot zu konfigurieren</li>
+  </ul>
+  <p>Der Dienst wird als Software-as-a-Service (SaaS) über das Internet bereitgestellt.
+  Ein lokaler Download oder eine Installation ist nicht erforderlich.</p>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 3 Kostenlose Testphase</h2>
-  <p>Neue Nutzer erhalten nach der Registrierung eine kostenlose Testphase von 3 Tagen.
-  Nach Ablauf der Testphase ist zur weiteren Nutzung der Abschluss eines kostenpflichtigen
-  Abonnements erforderlich. Eine Kreditkarte ist für die Testphase nicht erforderlich.</p>
+  <p>Neue Nutzer erhalten nach der Registrierung eine kostenlose Testphase von <strong>3 Tagen</strong>.
+  Während dieser Zeit stehen alle Funktionen des Solo-Plans zur Verfügung (1 WhatsApp-Nummer).
+  Eine Kreditkarte ist für die Testphase <strong>nicht</strong> erforderlich. Nach Ablauf der
+  Testphase ist zur weiteren Nutzung der Abschluss eines kostenpflichtigen Abonnements erforderlich.
+  Nicht genutzte Testtage verfallen und können nicht übertragen werden.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 4 Vertragsschluss und Abonnement</h2>
-  <p>Der Vertrag kommt durch die Registrierung und Buchung eines Abonnements zustande.
-  Abonnements werden monatlich abgerechnet und verlängern sich automatisch, sofern sie nicht
-  rechtzeitig gekündigt werden. Die Abrechnung erfolgt über den Zahlungsdienstleister Stripe.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 4 Vertragsschluss</h2>
+  <p>Der Vertrag kommt zustande durch:</p>
+  <ol style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li>Die Registrierung auf der Plattform (Testphase)</li>
+    <li>Die Buchung eines kostenpflichtigen Abonnements über die Zahlungsseite</li>
+  </ol>
+  <p>Mit der Registrierung bestätigt der Nutzer, diese AGB und die
+  <a href="{{ url_for('main.datenschutz') }}">Datenschutzerklärung</a> gelesen und akzeptiert
+  zu haben.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 5 Preise und Zahlung</h2>
-  <p>Die aktuellen Preise sind auf der Preisseite der Plattform einsehbar. Alle Preise verstehen
-  sich zuzüglich der gesetzlichen Umsatzsteuer. Die Zahlung erfolgt im Voraus per Kreditkarte
-  über Stripe.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 5 Preise, Abonnement und Zahlung</h2>
+  <p>Die aktuellen Preise sind auf der Preisseite der Plattform einsehbar. Es gelten folgende Tarife:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li><strong style="color:#e8eaf0;">Solo:</strong> 59,00 €/Monat — 1 WhatsApp-Nummer</li>
+    <li><strong style="color:#e8eaf0;">Business:</strong> 149,00 €/Monat — 3 WhatsApp-Nummern</li>
+    <li><strong style="color:#e8eaf0;">Agentur:</strong> 349,00 €/Monat — 10 WhatsApp-Nummern</li>
+  </ul>
+  <p>Alle Preise verstehen sich zzgl. der gesetzlichen Umsatzsteuer (MwSt.). Abonnements werden
+  monatlich im Voraus per Kreditkarte über den Zahlungsdienstleister Stripe abgerechnet.
+  Abonnements verlängern sich automatisch um einen weiteren Monat, sofern sie nicht rechtzeitig
+  vor dem nächsten Abrechnungstag gekündigt werden.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 6 Kündigung</h2>
-  <p>Der Nutzer kann sein Abonnement jederzeit über das Kundenportal kündigen. Die Kündigung
-  wird zum Ende des laufenden Abrechnungszeitraums wirksam. Der Anbieter kann den Vertrag
-  bei schwerwiegenden Verstößen gegen diese AGB fristlos kündigen.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 6 Kündigung und Widerruf</h2>
+  <p>Der Nutzer kann sein Abonnement jederzeit über das Dashboard kündigen. Die Kündigung wird zum
+  Ende des laufenden Abrechnungszeitraums wirksam; bereits bezahlte Zeiträume werden nicht
+  erstattet.</p>
+  <p>Bei Verbrauchern gilt ein gesetzliches Widerrufsrecht von 14 Tagen ab Vertragsschluss,
+  sofern die Leistung noch nicht vollständig in Anspruch genommen wurde. Der Anbieter kann
+  den Vertrag bei schwerwiegenden Verstößen gegen diese AGB mit sofortiger Wirkung kündigen.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 7 Nutzerpflichten</h2>
-  <p>Der Nutzer verpflichtet sich, den Dienst nur im Rahmen der geltenden Gesetze zu nutzen.
-  Insbesondere ist es untersagt, den Dienst für Spam, unzulässige Werbung oder die Verarbeitung
-  von Daten ohne entsprechende Rechtsgrundlage zu verwenden. Der Nutzer ist für die Einhaltung
-  des WhatsApp-Nutzungsvertrags selbst verantwortlich.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 7 Nutzerpflichten und verbotene Nutzung</h2>
+  <p>Der Nutzer verpflichtet sich:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li>Den Dienst nur im Rahmen der geltenden Gesetze zu nutzen</li>
+    <li>Keine Spam-Nachrichten, unzulässige Werbung oder Massenanfragen zu versenden</li>
+    <li>Personenbezogene Daten von WhatsApp-Kontakten nur mit deren Einwilligung zu verarbeiten</li>
+    <li>Die WhatsApp-Nutzungsbedingungen (Terms of Service) einzuhalten</li>
+    <li>Zugangsdaten sicher aufzubewahren und nicht an Dritte weiterzugeben</li>
+    <li>Den Dienst nicht für illegale, diskriminierende oder schädigende Zwecke einzusetzen</li>
+  </ul>
+  <p>Der Nutzer ist für alle Aktivitäten unter seinem Konto verantwortlich. Verstöße können zur
+  sofortigen Sperrung des Kontos führen.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 8 Verfügbarkeit und Haftung</h2>
-  <p>Der Anbieter strebt eine Verfügbarkeit von 99 % an, übernimmt jedoch keine Garantie für
-  ununterbrochene Verfügbarkeit. Die Haftung für leichte Fahrlässigkeit ist, soweit gesetzlich
-  zulässig, ausgeschlossen. Die Haftung bei Vorsatz und grober Fahrlässigkeit sowie für
-  Schäden aus der Verletzung von Leben, Körper und Gesundheit bleibt unberührt.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 8 Verfügbarkeit</h2>
+  <p>Der Anbieter strebt eine Verfügbarkeit von 99 % pro Monat an. Geplante Wartungsarbeiten
+  werden nach Möglichkeit angekündigt. Ausfälle durch höhere Gewalt, Drittanbieter (WhatsApp,
+  Anthropic, Stripe, Hostinger, Render) oder Cyberangriffe begründen keinen Anspruch auf
+  Entschädigung.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 9 Datenschutz</h2>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 9 Haftungsbeschränkung</h2>
+  <p>Der Anbieter haftet unbeschränkt für Schäden aus der Verletzung des Lebens, des Körpers
+  oder der Gesundheit sowie für Vorsatz und grobe Fahrlässigkeit. Im Übrigen ist die Haftung
+  für leichte Fahrlässigkeit auf vorhersehbare, vertragstypische Schäden begrenzt. Der Anbieter
+  haftet nicht für Fehler oder Ausfälle von KI-Antworten, WhatsApp-Sperrungen oder
+  Datenverluste beim Nutzer.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 10 Datenschutz</h2>
   <p>Die Verarbeitung personenbezogener Daten erfolgt gemäß unserer
-  <a href="{{ url_for('main.datenschutz') }}">Datenschutzerklärung</a>.</p>
+  <a href="{{ url_for('main.datenschutz') }}">Datenschutzerklärung</a>, die Bestandteil
+  dieser AGB ist.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 10 Änderungen der AGB</h2>
-  <p>Der Anbieter behält sich vor, diese AGB mit einer Frist von 30 Tagen zu ändern.
-  Nutzer werden per E-Mail über Änderungen informiert. Widerspricht der Nutzer nicht innerhalb
-  von 30 Tagen, gelten die neuen AGB als akzeptiert.</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 11 Geistiges Eigentum</h2>
+  <p>Alle Rechte an der Plattform, dem Code und den Markenzeichen verbleiben beim Anbieter.
+  Der Nutzer erhält ein einfaches, nicht übertragbares Nutzungsrecht für die Dauer des
+  Abonnements. Inhalte, die der Nutzer hochlädt (Dokumente, etc.), verbleiben im Eigentum
+  des Nutzers.</p>
 
-  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 11 Anwendbares Recht</h2>
-  <p>Es gilt das Recht der Bundesrepublik Deutschland. Gerichtsstand ist [ORT].</p>
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 12 Änderungen der AGB</h2>
+  <p>Der Anbieter behält sich vor, diese AGB mit einer Ankündigungsfrist von 30 Tagen zu ändern.
+  Nutzer werden per E-Mail über wesentliche Änderungen informiert. Widerspricht der Nutzer nicht
+  innerhalb von 30 Tagen nach Zugang der Änderungsmitteilung, gelten die neuen AGB als
+  akzeptiert. Im Falle des Widerspruchs ist der Anbieter berechtigt, das Vertragsverhältnis
+  zum Zeitpunkt des Inkrafttretens der Änderungen ordentlich zu kündigen.</p>
+
+  <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">§ 13 Anwendbares Recht und Gerichtsstand</h2>
+  <p>Es gilt das Recht der Bundesrepublik Deutschland unter Ausschluss des UN-Kaufrechts (CISG).
+  Gerichtsstand für alle Streitigkeiten aus oder im Zusammenhang mit diesem Vertrag ist,
+  soweit gesetzlich zulässig, <strong>Frankfurt am Main</strong>.</p>
+  <p>Die EU-Kommission stellt eine Plattform zur Online-Streitbeilegung bereit:
+  <a href="https://ec.europa.eu/consumers/odr" target="_blank">ec.europa.eu/consumers/odr</a>.
+  Wir sind nicht verpflichtet und nicht bereit, an einem Streitbeilegungsverfahren vor einer
+  Verbraucherschlichtungsstelle teilzunehmen.</p>
 
   <div style="margin-top:48px;padding-top:24px;border-top:1px solid #2a2d33;font-size:12px;color:#6b7280;">
     <a href="{{ url_for('main.impressum') }}" style="color:#6b7280;margin-right:20px;">Impressum</a>
