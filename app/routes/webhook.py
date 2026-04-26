@@ -6,6 +6,7 @@ from app.models import WhatsAppInstance, Conversation, Message
 from app.services.claude_service import get_ai_response
 from app.services.rag import search_relevant_chunks
 from app.services.evolution import evolution_client
+from app.services.stt import transcribe_audio_base64, transcribe_from_evolution
 
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
@@ -68,7 +69,30 @@ def _process_single_message(instance_name: str, msg_data: dict):
         ''
     ).strip()
 
-    logger.info(f"MSG key={key} text_len={len(text)}")
+    # Handle voice messages (ptt = push-to-talk / voice note)
+    is_voice = False
+    if not text:
+        audio_msg = message_obj.get('audioMessage', {})
+        if audio_msg:
+            is_voice = True
+            # Evolution includes base64 when webhook was created with base64:true
+            audio_b64 = audio_msg.get('base64', '')
+            mime = audio_msg.get('mimetype', 'audio/ogg')
+            if audio_b64:
+                text = transcribe_audio_base64(audio_b64, mime)
+            else:
+                # Fallback: ask Evolution to download the media
+                msg_id = key.get('id', '')
+                text = transcribe_from_evolution(
+                    instance_name=instance_name,
+                    token=None,
+                    message_id=msg_id,
+                    evolution_base_url=evolution_client.base_url,
+                    evolution_key=evolution_client.global_key,
+                )
+            logger.info(f"VOICE transcribed: {text[:80]!r}")
+
+    logger.info(f"MSG key={key} text_len={len(text)} is_voice={is_voice}")
 
     if not text:
         return  # Skip media, stickers, etc.
@@ -104,11 +128,12 @@ def _process_single_message(instance_name: str, msg_data: dict):
         db.session.add(conversation)
         db.session.flush()
 
-    # Save incoming message
+    # Save incoming message (mark voice transcriptions for clarity in history)
+    stored_content = f'[Sprachnachricht]: {text}' if is_voice else text
     user_message = Message(
         conversation_id=conversation.id,
         role='user',
-        content=text
+        content=stored_content
     )
     db.session.add(user_message)
     db.session.flush()
@@ -128,9 +153,17 @@ def _process_single_message(instance_name: str, msg_data: dict):
     if config.use_rag:
         rag_context = search_relevant_chunks(instance.id, text)
 
-    # Generate AI response
+    # Generate AI response (add voice hint to system prompt if needed)
+    system_prompt = config.system_prompt
+    if is_voice:
+        system_prompt = (
+            system_prompt +
+            '\n\nHINWEIS: Die letzte Nachricht des Nutzers war eine Sprachnachricht '
+            '(automatisch transkribiert). Antworte normal, erwähne die Transkription nicht.'
+        )
+
     ai_text = get_ai_response(
-        system_prompt=config.system_prompt,
+        system_prompt=system_prompt,
         messages=history,
         rag_context=rag_context,
         max_tokens=config.max_tokens
