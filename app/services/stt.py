@@ -72,25 +72,38 @@ def transcribe_audio_base64(audio_base64: str, mimetype: str = 'audio/ogg') -> s
 
 
 def transcribe_from_evolution(instance_name: str, token: str, message_id: str,
-                               evolution_base_url: str, evolution_key: str) -> str:
+                               evolution_base_url: str, evolution_key: str,
+                               remote_jid: str = '') -> str:
     """
     Fallback: ask Evolution API to download & encode the media, then transcribe.
-    Used when webhook payload doesn't include base64 audio directly.
+    Used when webhook payload doesn't include base64 audio directly (v2.3.x).
     """
+    api_key = token or evolution_key
+    url = f'{evolution_base_url}/chat/getBase64FromMediaMessage/{instance_name}'
+    body = {
+        'message': {
+            'key': {
+                'id': message_id,
+                'remoteJid': remote_jid,
+                'fromMe': False,
+            }
+        },
+        'convertToMp4': False,
+    }
+    logger.info(f'STT fallback: POST {url} key_id={message_id}')
     try:
-        resp = requests.post(
-            f'{evolution_base_url}/chat/getBase64FromMediaMessage/{instance_name}',
-            json={'message': {'key': {'id': message_id}}, 'convertToMp4': False},
-            headers={'apikey': token or evolution_key},
-            timeout=20,
-        )
+        resp = requests.post(url, json=body, headers={'apikey': api_key}, timeout=25)
+        logger.info(f'STT fallback: status={resp.status_code} body={resp.text[:300]}')
         if resp.status_code != 200:
             return ''
         data = resp.json()
         b64 = data.get('base64', '')
-        mime = data.get('mimetype', 'audio/ogg')
+        mime = data.get('mimetype', 'audio/ogg; codecs=opus')
         if b64:
+            logger.info(f'STT fallback: got {len(b64)} base64 chars, mime={mime}')
             return transcribe_audio_base64(b64, mime)
+        else:
+            logger.warning(f'STT fallback: no base64 in response. keys={list(data.keys())}')
     except Exception as e:
-        logger.error(f'STT: evolution media download error: {e}')
+        logger.error(f'STT fallback: error: {e}')
     return ''

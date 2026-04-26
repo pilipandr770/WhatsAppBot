@@ -75,22 +75,25 @@ def _process_single_message(instance_name: str, msg_data: dict):
         audio_msg = message_obj.get('audioMessage', {})
         if audio_msg:
             is_voice = True
-            # Evolution includes base64 when webhook was created with base64:true
             audio_b64 = audio_msg.get('base64', '')
-            mime = audio_msg.get('mimetype', 'audio/ogg')
+            mime = audio_msg.get('mimetype', 'audio/ogg; codecs=opus')
+            logger.info(f"VOICE audio_msg keys={list(audio_msg.keys())} mime={mime} has_b64={bool(audio_b64)}")
             if audio_b64:
                 text = transcribe_audio_base64(audio_b64, mime)
             else:
-                # Fallback: ask Evolution to download the media
+                # Evolution v2.3.x doesn't embed base64 in webhook —
+                # fetch media via Evolution's download endpoint
                 msg_id = key.get('id', '')
+                remote_jid = key.get('remoteJid', '')
                 text = transcribe_from_evolution(
                     instance_name=instance_name,
                     token=None,
                     message_id=msg_id,
+                    remote_jid=remote_jid,
                     evolution_base_url=evolution_client.base_url,
                     evolution_key=evolution_client.global_key,
                 )
-            logger.info(f"VOICE transcribed: {text[:80]!r}")
+            logger.info(f"VOICE transcribed ({len(text)} chars): {text[:80]!r}")
 
     logger.info(f"MSG key={key} text_len={len(text)} is_voice={is_voice}")
 
