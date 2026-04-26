@@ -1,0 +1,164 @@
+{% extends 'base.html' %}
+{% block title %}Einstellungen{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Einstellungen</div>
+    <div class="page-sub">Konto, Abonnement und Datenschutz</div>
+  </div>
+</div>
+
+<div class="page-body">
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:860px;">
+
+  <!-- ── Profil ── -->
+  <div class="card">
+    <div class="card-title">👤 Profil</div>
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;">
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">Name</span>
+        <span style="font-weight:500;">{{ current_user.name }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">E-Mail</span>
+        <span style="font-family:'DM Mono',monospace;font-size:12.5px;">{{ current_user.email }}</span>
+      </div>
+      {% if current_user.company %}
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">Unternehmen</span>
+        <span>{{ current_user.company }}</span>
+      </div>
+      {% endif %}
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">Registriert am</span>
+        <span>{{ current_user.created_at.strftime('%d.%m.%Y') }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Abonnement ── -->
+  <div class="card">
+    <div class="card-title">💳 Abonnement</div>
+
+    {% set sub = current_user.subscription %}
+    {% if sub and sub.is_active %}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <span style="width:8px;height:8px;background:#25D366;border-radius:50%;display:inline-block;"></span>
+        <span style="color:#25D366;font-weight:600;font-size:13px;">Aktiv — {{ sub.plan|capitalize }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--text-muted);">Plan</span>
+          <span style="font-weight:500;">
+            {% if sub.plan == 'solo' %}Solo — €59/Monat
+            {% elif sub.plan == 'business' %}Business — €149/Monat
+            {% elif sub.plan == 'agentur' %}Agentur — €349/Monat
+            {% else %}{{ sub.plan|capitalize }}{% endif %}
+          </span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--text-muted);">WhatsApp-Nummern</span>
+          <span>{{ current_user.instances_limit }}</span>
+        </div>
+        {% if sub.current_period_end %}
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--text-muted);">Nächste Zahlung</span>
+          <span>{{ sub.current_period_end.strftime('%d.%m.%Y') }}</span>
+        </div>
+        {% endif %}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;">
+        <a href="{{ url_for('billing.portal') }}" class="btn btn-secondary btn-sm"
+           style="justify-content:center;">
+          🔧 Abo verwalten (Stripe Portal)
+        </a>
+        <form method="post" action="{{ url_for('billing.cancel_subscription') }}"
+              onsubmit="return confirm('Abo zum Periodenende kündigen?')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button type="submit" class="btn btn-ghost btn-sm"
+                  style="width:100%;justify-content:center;color:var(--warning);">
+            Abo kündigen
+          </button>
+        </form>
+      </div>
+
+    {% elif current_user.is_in_trial %}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <span style="width:8px;height:8px;background:var(--warning);border-radius:50%;display:inline-block;"></span>
+        <span style="color:var(--warning);font-weight:600;font-size:13px;">
+          Testphase — noch {{ current_user.trial_days_left }} Tag(e)
+        </span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;line-height:1.6;">
+        Alle Funktionen des Solo-Plans (1 Nummer) kostenlos testen.
+        Nach Ablauf ist ein Abonnement erforderlich.
+      </div>
+      <a href="{{ url_for('billing.plans') }}" class="btn btn-primary btn-sm"
+         style="width:100%;justify-content:center;color:#000;">
+        Jetzt upgraden →
+      </a>
+
+    {% elif sub and sub.status == 'past_due' %}
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
+        <span style="width:8px;height:8px;background:var(--danger);border-radius:50%;display:inline-block;"></span>
+        <span style="color:var(--danger);font-weight:600;font-size:13px;">Zahlung ausstehend</span>
+      </div>
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">
+        Bitte Zahlungsmethode aktualisieren.
+      </div>
+      <a href="{{ url_for('billing.portal') }}" class="btn btn-danger btn-sm"
+         style="width:100%;justify-content:center;">
+        Zahlung aktualisieren →
+      </a>
+
+    {% else %}
+      <div style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+        Kein aktives Abonnement.
+      </div>
+      <a href="{{ url_for('billing.plans') }}" class="btn btn-primary btn-sm"
+         style="width:100%;justify-content:center;color:#000;">
+        Plan wählen →
+      </a>
+    {% endif %}
+  </div>
+
+  <!-- ── Nutzung ── -->
+  <div class="card">
+    <div class="card-title">📊 Nutzung</div>
+    <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;">
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">WhatsApp-Instanzen</span>
+        <span><strong>{{ current_user.active_instances_count }}</strong> / {{ current_user.instances_limit }}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">Gespräche gesamt</span>
+        <span><strong>{{ total_conversations }}</strong></span>
+      </div>
+      <div style="display:flex;justify-content:space-between;">
+        <span style="color:var(--text-muted);">Nachrichten gesamt</span>
+        <span><strong>{{ total_messages }}</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Datenschutz / Konto löschen ── -->
+  <div class="card" style="border-color:rgba(239,68,68,0.2);">
+    <div class="card-title" style="color:var(--danger);">⚠ Gefahrenzone</div>
+    <div style="font-size:13px;color:var(--text-muted);margin-bottom:16px;line-height:1.6;">
+      Beim Löschen des Kontos werden <strong style="color:var(--text-dim);">alle Daten unwiderruflich gelöscht</strong>:
+      WhatsApp-Verbindungen, Chatverläufe, Dokumente und Google-Tokens.
+      Ein aktives Abonnement wird sofort bei Stripe gekündigt.
+    </div>
+    <form method="post" action="{{ url_for('auth.delete_account') }}"
+          onsubmit="return confirm('Konto wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.')">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">
+        🗑 Konto dauerhaft löschen
+      </button>
+    </form>
+  </div>
+
+</div>
+</div>
+{% endblock %}

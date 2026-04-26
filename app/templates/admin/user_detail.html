@@ -83,6 +83,7 @@
       <div class="card">
         <div class="card-title">Plan manuell setzen</div>
         <form method="post" action="{{ url_for('admin.set_plan', user_id=user.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="activate">
           <div class="form-group">
             <label class="form-label">Plan</label>
@@ -102,6 +103,7 @@
         <div class="divider"></div>
 
         <form method="post" action="{{ url_for('admin.set_plan', user_id=user.id) }}" style="margin-bottom:12px;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="deactivate">
           <button type="submit" class="btn btn-danger" style="width:100%;justify-content:center;">
             Zugang deaktivieren
@@ -113,6 +115,7 @@
       <div class="card">
         <div class="card-title">Trial verlängern</div>
         <form method="post" action="{{ url_for('admin.set_plan', user_id=user.id) }}" style="display:flex;gap:8px;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <input type="hidden" name="action" value="extend_trial">
           <input type="number" name="trial_days" value="7" min="1" max="90" class="form-input" style="width:80px;">
           <button type="submit" class="btn btn-secondary" style="flex:1;justify-content:center;">
@@ -125,6 +128,7 @@
       <div class="card">
         <div class="card-title">Admin-Rechte</div>
         <form method="post" action="{{ url_for('admin.toggle_admin', user_id=user.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn {% if user.is_admin %}btn-danger{% else %}btn-secondary{% endif %}" style="width:100%;justify-content:center;">
             {% if user.is_admin %}Admin-Rechte entziehen{% else %}Zum Admin machen{% endif %}
           </button>

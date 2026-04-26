@@ -8,7 +8,7 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message
+from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message, Subscription
 from app.services.evolution import evolution_client
 from app.tasks import process_document
 
@@ -17,9 +17,26 @@ logger = logging.getLogger(__name__)
 
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
 
+# Magic bytes: first bytes that identify a file type regardless of extension
+_MAGIC_BYTES = {
+    'pdf':  b'%PDF',
+    'docx': b'PK\x03\x04',   # ZIP-based (Office Open XML)
+    'txt':  None,              # plain text has no magic bytes — skip check
+}
+
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def allowed_file_content(file_storage, ext: str) -> bool:
+    """Check magic bytes to verify file content matches the declared extension."""
+    magic = _MAGIC_BYTES.get(ext)
+    if magic is None:
+        return True   # txt — no check
+    header = file_storage.read(len(magic))
+    file_storage.seek(0)   # rewind for subsequent read/save
+    return header == magic
 
 
 # ─── Main dashboard ──────────────────────────────────────────────────────────
@@ -278,8 +295,12 @@ def upload_document(instance_id):
         flash('Nur PDF, DOCX und TXT Dateien erlaubt.', 'error')
         return redirect(url_for('dashboard.documents', instance_id=instance_id))
 
-    # Save file
     ext = file.filename.rsplit('.', 1)[1].lower()
+    if not allowed_file_content(file, ext):
+        flash('Dateiinhalt stimmt nicht mit der Dateiendung überein.', 'error')
+        return redirect(url_for('dashboard.documents', instance_id=instance_id))
+
+    # Save file
     unique_name = f"{uuid.uuid4().hex}.{ext}"
     upload_folder = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
     os.makedirs(upload_folder, exist_ok=True)
@@ -356,6 +377,32 @@ def conversation_detail(instance_id, conv_id):
         instance=instance,
         conversation=conversation,
         messages=messages
+    )
+
+
+# ─── Settings ────────────────────────────────────────────────────────────────
+
+@dashboard_bp.route('/settings')
+@login_required
+def settings():
+    from sqlalchemy import func
+    total_conversations = (
+        db.session.query(func.count(Conversation.id))
+        .join(WhatsAppInstance, Conversation.instance_id == WhatsAppInstance.id)
+        .filter(WhatsAppInstance.user_id == current_user.id)
+        .scalar() or 0
+    )
+    total_messages = (
+        db.session.query(func.count(Message.id))
+        .join(Conversation, Message.conversation_id == Conversation.id)
+        .join(WhatsAppInstance, Conversation.instance_id == WhatsAppInstance.id)
+        .filter(WhatsAppInstance.user_id == current_user.id)
+        .scalar() or 0
+    )
+    return render_template(
+        'dashboard/settings.html',
+        total_conversations=total_conversations,
+        total_messages=total_messages,
     )
 
 

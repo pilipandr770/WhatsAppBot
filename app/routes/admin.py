@@ -89,7 +89,10 @@ def set_plan(user_id):
         user.subscription.instances_limit = 0
         flash(f'Zugang für {user.email} deaktiviert.', 'info')
     elif action == 'extend_trial':
-        days = int(request.form.get('trial_days', TRIAL_DAYS))
+        try:
+            days = max(1, min(int(request.form.get('trial_days', TRIAL_DAYS)), 365))
+        except (ValueError, TypeError):
+            days = TRIAL_DAYS
         user.trial_ends_at = datetime.utcnow() + timedelta(days=days)
         flash(f'Trial für {user.email} um {days} Tage verlängert.', 'success')
     else:

@@ -84,6 +84,7 @@
         <a href="{{ url_for('dashboard.documents', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">📄 Docs</a>
         <form method="post" action="{{ url_for('dashboard.delete_instance', instance_id=inst.id) }}"
               onsubmit="return confirm('Instanz löschen?')" style="display:inline;">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
           <button type="submit" class="btn btn-danger btn-sm">✕</button>
         </form>
       </div>
@@ -114,6 +115,7 @@
   <div class="modal">
     <div class="modal-title">Neue WhatsApp-Instanz</div>
     <form method="post" action="{{ url_for('dashboard.create_instance') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="form-label">Name der Instanz</label>
         <input type="text" name="display_name" class="form-input"

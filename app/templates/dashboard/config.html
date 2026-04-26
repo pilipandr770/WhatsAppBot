@@ -29,7 +29,7 @@
   {# Main save form — wraps only the LEFT column content.
      The right column uses form="config-form" (HTML5) so the submit button works from outside. #}
   <form method="post" id="config-form">
-    <input type="hidden" name="_csrf_dummy" value="">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   </form>
 
   <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
@@ -160,6 +160,7 @@
           </div>
           <form method="post" action="{{ url_for('google_oauth.disconnect', instance_id=instance.id) }}"
                 onsubmit="return confirm('Google-Verbindung wirklich trennen?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <button type="submit" class="btn btn-ghost btn-sm"
                     style="width:100%;justify-content:center;color:#ef4444;border-color:rgba(239,68,68,0.4);">
               🔌 Google trennen

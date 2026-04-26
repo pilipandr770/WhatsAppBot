@@ -1,13 +1,35 @@
 from datetime import datetime, timedelta
+from urllib.parse import urlparse
 from flask import Blueprint, render_template, redirect, url_for, flash, request
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db
+from werkzeug.exceptions import TooManyRequests
+from app import db, limiter
 from app.models import User, Subscription, TRIAL_DAYS
 
 auth_bp = Blueprint('auth', __name__)
 
 
+@auth_bp.errorhandler(429)
+def ratelimit_handler(e):
+    flash('Zu viele Versuche. Bitte warte kurz und versuche es erneut.', 'error')
+    return redirect(url_for('auth.login')), 429
+
+
+def _safe_next(next_url: str) -> str:
+    """Return next_url only if it is a relative path on the same host.
+    Prevents open redirect: /auth/login?next=https://evil.com
+    """
+    if not next_url:
+        return ''
+    parsed = urlparse(next_url)
+    # Allow only relative URLs (no scheme, no netloc)
+    if parsed.scheme or parsed.netloc:
+        return ''
+    return next_url
+
+
 @auth_bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit('10 per hour')   # max 10 registrations per IP per hour
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
@@ -18,6 +40,11 @@ def register():
         company = request.form.get('company', '').strip()
         password = request.form.get('password', '')
         password2 = request.form.get('password2', '')
+
+        consent = request.form.get('consent')
+        if not consent:
+            flash('Bitte akzeptiere die AGB und Datenschutzerklärung, um fortzufahren.', 'error')
+            return render_template('auth/register.html')
 
         if not all([name, email, password]):
             flash('Bitte alle Pflichtfelder ausfüllen.', 'error')
@@ -55,6 +82,7 @@ def register():
 
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit('20 per minute;100 per hour')  # brute-force protection
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
@@ -68,9 +96,11 @@ def login():
 
         if user and user.check_password(password):
             login_user(user, remember=remember)
-            next_page = request.args.get('next')
+            # Fix open redirect: only allow relative same-site URLs
+            next_page = _safe_next(request.args.get('next', ''))
             return redirect(next_page or url_for('dashboard.index'))
         else:
+            # Generic message — don't reveal whether email exists
             flash('Ungültige E-Mail oder Passwort.', 'error')
 
     return render_template('auth/login.html')

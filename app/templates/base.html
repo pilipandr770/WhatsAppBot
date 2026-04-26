@@ -319,8 +319,12 @@
 
     <div class="nav-section">Konto</div>
     <a href="{{ url_for('billing.plans') }}"
-       class="nav-item {% if 'billing' in request.endpoint %}active{% endif %}">
+       class="nav-item {% if request.endpoint and 'billing' in request.endpoint %}active{% endif %}">
       💳 Abonnement
+    </a>
+    <a href="{{ url_for('dashboard.settings') }}"
+       class="nav-item {% if request.endpoint == 'dashboard.settings' %}active{% endif %}">
+      ⚙ Einstellungen
     </a>
 
     {% if current_user.is_admin %}
@@ -390,16 +394,8 @@
         <a href="{{ url_for('main.impressum') }}">Impressum</a>
         <a href="{{ url_for('main.agb') }}">AGB</a>
         <a href="{{ url_for('main.datenschutz') }}">Datenschutz</a>
-        {% if current_user.subscription and current_user.subscription.is_active %}
-        <form method="post" action="{{ url_for('auth.delete_account') }}"
-              onsubmit="return confirm('Konto wirklich löschen? Alle Daten werden gelöscht.');"
-              style="display:inline;">
-          <button type="submit" style="background:none;border:none;color:var(--text-muted);
-                  font-size:12px;cursor:pointer;font-family:inherit;padding:0;">
-            Konto löschen
-          </button>
-        </form>
-        {% endif %}
+        <a href="{{ url_for('dashboard.settings') }}"
+           style="color:var(--text-muted);font-size:12px;">Einstellungen</a>
       </div>
     </footer>
 

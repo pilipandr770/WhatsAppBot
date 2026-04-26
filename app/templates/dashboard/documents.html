@@ -80,6 +80,7 @@
             <form method="post"
                   action="{{ url_for('dashboard.delete_document', instance_id=instance.id, doc_id=doc.id) }}"
                   onsubmit="return confirm('Dokument löschen?')" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
               <button type="submit" class="btn btn-danger btn-sm">✕</button>
             </form>
           </td>
@@ -110,6 +111,7 @@
     <form method="post"
           action="{{ url_for('dashboard.upload_document', instance_id=instance.id) }}"
           enctype="multipart/form-data">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <div class="form-group">
         <label class="form-label">Datei auswählen</label>
         <input type="file" name="file" class="form-input"

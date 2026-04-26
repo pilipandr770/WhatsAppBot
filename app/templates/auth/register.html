@@ -22,6 +22,7 @@
     <div class="card">
       <div class="card-title" style="font-size:16px;">Konto erstellen</div>
       <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
           <label class="form-label">Vollständiger Name *</label>
           <input type="text" name="name" class="form-input" placeholder="Max Mustermann" required>
@@ -43,7 +44,31 @@
           <label class="form-label">Passwort wiederholen *</label>
           <input type="password" name="password2" class="form-input" required>
         </div>
-        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:8px;">
+        <!-- Consent checkbox — DSGVO Art. 7 / App-Store-Compliance -->
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(37,211,102,0.06);
+                    border:1px solid rgba(37,211,102,0.2);border-radius:8px;font-size:12.5px;
+                    color:var(--text-dim);line-height:1.7;">
+          <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;">
+            <input type="checkbox" name="consent" required
+                   style="margin-top:3px;flex-shrink:0;accent-color:var(--accent);">
+            <span>
+              Ich habe die
+              <a href="{{ url_for('main.agb') }}" target="_blank" style="color:var(--accent);">AGB</a>
+              und die
+              <a href="{{ url_for('main.datenschutz') }}" target="_blank" style="color:var(--accent);">Datenschutzerklärung</a>
+              gelesen und akzeptiere sie. Ich bin damit einverstanden, dass meine Daten zur
+              Bereitstellung des Dienstes verarbeitet werden.
+            </span>
+          </label>
+        </div>
+
+        <div style="margin-top:10px;font-size:11.5px;color:var(--text-muted);line-height:1.6;">
+          ℹ Das Abonnement kann jederzeit zum Periodenende gekündigt werden
+          (Dashboard → Einstellungen). Das Konto und alle Daten können jederzeit vollständig
+          gelöscht werden (Dashboard → Einstellungen → Gefahrenzone).
+        </div>
+
+        <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px;">
           Kostenlos registrieren →
         </button>
       </form>

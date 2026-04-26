@@ -3,6 +3,7 @@ flask-sqlalchemy==3.1.1
 flask-login==0.6.3
 flask-migrate==4.0.5
 flask-wtf==1.2.1
+flask-limiter==3.5.0
 psycopg2-binary==2.9.9
 anthropic>=0.40.0
 celery==5.3.6

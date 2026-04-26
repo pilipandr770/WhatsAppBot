@@ -1,3 +1,4 @@
+import os
 import logging
 from datetime import datetime
 from flask import Blueprint, request, jsonify
@@ -12,10 +13,33 @@ from app.services.google_service import GOOGLE_TOOLS, execute_tool as google_exe
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------------------------
+# Webhook authentication
+# ---------------------------------------------------------------------------
+
+def _verify_webhook_token() -> bool:
+    """
+    Verify that the incoming request carries the Evolution API global key.
+    Evolution sends it as the 'apikey' header.
+    If EVOLUTION_WEBHOOK_TOKEN is not set we skip the check (dev mode only).
+    """
+    expected = os.environ.get('EVOLUTION_WEBHOOK_TOKEN', '')
+    if not expected:
+        # Not configured → allow (log a warning so the operator notices)
+        logger.warning("EVOLUTION_WEBHOOK_TOKEN not set — webhook is unauthenticated!")
+        return True
+    provided = request.headers.get('apikey', '') or request.headers.get('Authorization', '')
+    return provided == expected
+
 
 @webhook_bp.route('/<instance_name>', methods=['POST'])
 def handle_webhook(instance_name):
     """Main webhook endpoint for Evolution API events."""
+    # Reject requests that don't carry the correct API key
+    if not _verify_webhook_token():
+        logger.warning(f"Webhook [{instance_name}]: unauthorized request from {request.remote_addr}")
+        return jsonify({'error': 'Unauthorized'}), 401
+
     data = request.get_json(silent=True)
 
     if not data:

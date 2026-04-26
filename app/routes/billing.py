@@ -219,6 +219,12 @@ def stripe_webhook():
         elif etype == 'customer.subscription.deleted':
             _handle_subscription_deleted(obj)
 
+        elif etype == 'customer.subscription.paused':
+            _handle_subscription_paused(obj)
+
+        elif etype == 'customer.subscription.resumed':
+            _handle_subscription_resumed(obj)
+
         elif etype == 'invoice.payment_succeeded':
             _handle_invoice_paid(obj)
 
@@ -312,6 +318,32 @@ def _handle_subscription_deleted(stripe_sub):
         sub.instances_limit = 0
         db.session.commit()
         logger.info(f"Subscription canceled: sub_id={stripe_sub['id']}")
+
+
+def _handle_subscription_paused(stripe_sub):
+    """Subscription paused — remove access but keep record."""
+    sub = Subscription.query.filter_by(
+        stripe_subscription_id=stripe_sub['id']
+    ).first()
+    if sub:
+        sub.status = 'paused'
+        sub.instances_limit = 0
+        db.session.commit()
+        logger.info(f"Subscription paused: sub_id={stripe_sub['id']}")
+
+
+def _handle_subscription_resumed(stripe_sub):
+    """Subscription resumed — restore access."""
+    sub = Subscription.query.filter_by(
+        stripe_subscription_id=stripe_sub['id']
+    ).first()
+    if sub:
+        sub.status = 'active'
+        sub.instances_limit = _instances_for_plan(sub.plan)
+        if stripe_sub.get('current_period_end'):
+            sub.current_period_end = datetime.fromtimestamp(int(stripe_sub['current_period_end']))
+        db.session.commit()
+        logger.info(f"Subscription resumed: sub_id={stripe_sub['id']}")
 
 
 def _handle_invoice_paid(invoice):
