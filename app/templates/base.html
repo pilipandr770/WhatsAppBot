@@ -1,9 +1,44 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" prefix="og: https://ogp.me/ns#">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}WA.AI{% endblock %} — WhatsApp KI-Support</title>
+  <title>{% block title %}WhatsApp Bot Helfer{% endblock %} — KI-Chatbot für WhatsApp</title>
+
+  <!-- SEO Meta -->
+  <meta name="description" content="{% block meta_description %}WhatsApp Bot Helfer: KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Ohne WhatsApp Business API — einfach QR-Code scannen. Jetzt 3 Tage kostenlos testen.{% endblock %}">
+  <meta name="keywords" content="WhatsApp Bot, WhatsApp KI, WhatsApp Chatbot, WhatsApp Automatisierung, Kundenservice automatisieren, KI Chatbot Deutschland">
+  <meta name="author" content="WhatsApp Bot Helfer">
+  <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
+  <link rel="canonical" href="{% block canonical %}https://whatsappbothelfer.de{{ request.path }}{% endblock %}">
+
+  <!-- Geo / Language -->
+  <meta name="geo.region" content="DE">
+  <meta name="geo.country" content="Germany">
+  <meta name="language" content="German">
+  <link rel="alternate" hreflang="de" href="https://whatsappbothelfer.de{{ request.path }}">
+  <link rel="alternate" hreflang="x-default" href="https://whatsappbothelfer.de{{ request.path }}">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}WhatsApp Bot Helfer — KI-Chatbot für WhatsApp{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Sprachnachrichten, Wissensdatenbank, 24/7 Automatisierung. Jetzt kostenlos testen.{% endblock %}">
+  <meta property="og:url" content="https://whatsappbothelfer.de{{ request.path }}">
+  <meta property="og:site_name" content="WhatsApp Bot Helfer">
+  <meta property="og:locale" content="de_DE">
+  <meta property="og:image" content="{% block og_image %}https://whatsappbothelfer.de/static/og-image.png{% endblock %}">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{% block twitter_title %}WhatsApp Bot Helfer — KI-Chatbot für WhatsApp{% endblock %}">
+  <meta name="twitter:description" content="KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Jetzt kostenlos testen.">
+  <meta name="twitter:image" content="https://whatsappbothelfer.de/static/og-image.png">
+
+  <!-- Dashboard: no index -->
+  {% if current_user.is_authenticated %}
+  <meta name="robots" content="noindex, nofollow">
+  {% endif %}
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>

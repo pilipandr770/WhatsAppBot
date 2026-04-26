@@ -1,5 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}WA.AI — WhatsApp KI-Support{% endblock %}
+{% block title %}WhatsApp Bot Helfer — KI-Chatbot für dein Unternehmen{% endblock %}
+{% block meta_description %}WhatsApp Bot Helfer: Automatisiere deinen WhatsApp-Kundenservice mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Jetzt 3 Tage kostenlos testen.{% endblock %}
+{% block og_title %}WhatsApp Bot Helfer — Automatischer KI-Support auf WhatsApp{% endblock %}
+{% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Keine WhatsApp Business API nötig. 3 Tage gratis.{% endblock %}
 
 {% block public_content %}
 <style>
@@ -76,4 +79,156 @@ body { background: #0c0d10; }
     <div class="feat-text">Server in Deutschland (Hetzner, Frankfurt). DSGVO-konformer Betrieb.</div>
   </div>
 </div>
+
+<!-- Footer Landing -->
+<footer style="text-align:center;padding:40px 20px;border-top:1px solid #1c1e22;color:#4b5563;font-size:13px;">
+  <div style="margin-bottom:12px;">
+    <a href="{{ url_for('main.impressum') }}" style="color:#4b5563;margin:0 12px;">Impressum</a>
+    <a href="{{ url_for('main.agb') }}" style="color:#4b5563;margin:0 12px;">AGB</a>
+    <a href="{{ url_for('main.datenschutz') }}" style="color:#4b5563;margin:0 12px;">Datenschutz</a>
+  </div>
+  <div>© 2025–2026 WhatsApp Bot Helfer · 🇩🇪 Deutschland · DSGVO-konform</div>
+</footer>
+{% endblock %}
+
+{% block scripts %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://whatsappbothelfer.de/#website",
+      "url": "https://whatsappbothelfer.de",
+      "name": "WhatsApp Bot Helfer",
+      "description": "KI-gestützter WhatsApp-Chatbot-Service für deutsche Unternehmen",
+      "inLanguage": "de-DE",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://whatsappbothelfer.de/?s={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://whatsappbothelfer.de/#organization",
+      "name": "WhatsApp Bot Helfer",
+      "url": "https://whatsappbothelfer.de",
+      "logo": "https://whatsappbothelfer.de/static/logo.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "info@andrii-it.de",
+        "availableLanguage": ["German", "English"]
+      },
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "DE"
+      },
+      "sameAs": []
+    },
+    {
+      "@type": "SoftwareApplication",
+      "@id": "https://whatsappbothelfer.de/#product",
+      "name": "WhatsApp Bot Helfer",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Web",
+      "url": "https://whatsappbothelfer.de",
+      "description": "Automatisiere deinen WhatsApp-Kundenservice mit KI. Claude AI beantwortet Kundenfragen 24/7 auf Deutsch — mit Wissensdatenbank und Sprachverständnis.",
+      "offers": [
+        {
+          "@type": "Offer",
+          "name": "Solo",
+          "price": "59.00",
+          "priceCurrency": "EUR",
+          "priceSpecification": {
+            "@type": "RecurringCharge",
+            "billingDuration": "P1M"
+          },
+          "description": "1 WhatsApp-Nummer, alle Kernfunktionen"
+        },
+        {
+          "@type": "Offer",
+          "name": "Business",
+          "price": "149.00",
+          "priceCurrency": "EUR",
+          "priceSpecification": {
+            "@type": "RecurringCharge",
+            "billingDuration": "P1M"
+          },
+          "description": "3 WhatsApp-Nummern, Prioritätssupport"
+        },
+        {
+          "@type": "Offer",
+          "name": "Agentur",
+          "price": "349.00",
+          "priceCurrency": "EUR",
+          "priceSpecification": {
+            "@type": "RecurringCharge",
+            "billingDuration": "P1M"
+          },
+          "description": "10 WhatsApp-Nummern, White-Label-Option"
+        }
+      ],
+      "featureList": [
+        "WhatsApp-Chatbot ohne WhatsApp Business API",
+        "KI-Antworten mit Claude (Anthropic)",
+        "Sprachnachrichten verstehen (Whisper STT)",
+        "Wissensdatenbank aus PDF und Word",
+        "Mehrere WhatsApp-Nummern",
+        "Chat-Historie und Analytics",
+        "DSGVO-konform, Server in Deutschland"
+      ],
+      "inLanguage": "de-DE",
+      "availableCountry": ["DE", "AT", "CH"]
+    },
+    {
+      "@type": "FAQPage",
+      "@id": "https://whatsappbothelfer.de/#faq",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Brauche ich die WhatsApp Business API?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Nein. WhatsApp Bot Helfer funktioniert mit jeder normalen WhatsApp-Nummer. Einfach QR-Code scannen — keine API-Genehmigung oder Geschäftskonto nötig."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Welche KI verwendet der Bot?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Der Bot verwendet Claude von Anthropic — eine der fortschrittlichsten KI-Modelle, die auf Deutsch besonders gut funktionieren."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Kann der Bot Sprachnachrichten verstehen?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja. Sprachnachrichten werden automatisch mit OpenAI Whisper transkribiert und dann von der KI beantwortet — genau wie normale Textnachrichten."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Ist der Dienst DSGVO-konform?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Ja. Die Server befinden sich in Deutschland (Frankfurt). Wir verarbeiten keine Daten außerhalb der EU. Eine vollständige Datenschutzerklärung ist verfügbar."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Wie lange dauert der Setup?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Etwa 5 Minuten: Registrieren, QR-Code scannen, fertig. Keine technischen Kenntnisse erforderlich."
+          }
+        }
+      ]
+    }
+  ]
+}
+</script>
 {% endblock %}
