@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Subscription, WhatsAppInstance, Conversation, Message, TRIAL_DAYS
+from app.models import User, Subscription, WhatsAppInstance, Conversation, Message, SiteConfig, TRIAL_DAYS
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -103,6 +103,31 @@ def set_plan(user_id):
 
     db.session.commit()
     return redirect(url_for('admin.user_detail', user_id=user_id))
+
+
+@admin_bp.route('/demo-bot', methods=['GET', 'POST'])
+@login_required
+@admin_required
+def demo_bot():
+    if request.method == 'POST':
+        phone_raw = ''.join(c for c in request.form.get('demo_wa_phone', '') if c.isdigit())
+        message   = request.form.get('demo_wa_message', '').strip()
+        enabled   = '1' if request.form.get('demo_wa_enabled') else '0'
+
+        SiteConfig.set('demo_wa_phone',   phone_raw)
+        SiteConfig.set('demo_wa_message', message)
+        SiteConfig.set('demo_wa_enabled', enabled)
+        db.session.commit()
+        flash('Demo-Bot Einstellungen gespeichert.', 'success')
+        return redirect(url_for('admin.demo_bot'))
+
+    cfg = {
+        'phone':   SiteConfig.get('demo_wa_phone',   ''),
+        'message': SiteConfig.get('demo_wa_message',
+                                  'Hallo! Ich möchte euren WhatsApp Bot ausprobieren 👋'),
+        'enabled': SiteConfig.get('demo_wa_enabled', '0') == '1',
+    }
+    return render_template('admin/demo_bot.html', cfg=cfg)
 
 
 @admin_bp.route('/users/<int:user_id>/toggle-admin', methods=['POST'])

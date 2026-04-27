@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}Demo-Bot — Admin{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">💬 Demo-Bot</div>
+    <div class="page-sub">WhatsApp-Button auf der Landingpage konfigurieren</div>
+  </div>
+  <a href="{{ url_for('admin.index') }}" class="btn btn-secondary">← Zurück</a>
+</div>
+
+<div class="page-body">
+  <div style="max-width:560px;">
+
+    <div class="card" style="margin-bottom:20px;border-color:rgba(37,211,102,0.3);">
+      <div class="card-title" style="display:flex;align-items:center;gap:8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="#25D366">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.12 1.532 5.847L.057 23.882l6.197-1.625C7.88 23.408 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.668-.5-5.217-1.377l-.373-.22-3.872 1.016 1.034-3.775-.241-.387A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        WhatsApp Demo-Button
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);line-height:1.7;margin-bottom:16px;">
+        Wenn aktiviert, erscheint auf der Landingpage ein grüner WhatsApp-Button
+        im Navbar <strong>und</strong> als schwimmende Schaltfläche unten rechts.
+        Besucher können direkt mit deinem Demo-Bot chatten.
+      </p>
+
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+        <div class="form-group">
+          <label class="form-label">Demo-WhatsApp-Nummer</label>
+          <input type="tel" name="demo_wa_phone" class="form-input"
+                 value="{{ cfg.phone }}"
+                 placeholder="4917612345678"
+                 pattern="[0-9]{7,15}"
+                 style="max-width:260px;">
+          <div class="form-hint">
+            International ohne +, z. B. <code>4915212345678</code>.<br>
+            Das ist die Nummer, auf der der Demo-Bot läuft (deine WhatsApp-Instanz).
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Vorausgefüllte Nachricht</label>
+          <input type="text" name="demo_wa_message" class="form-input"
+                 value="{{ cfg.message }}"
+                 placeholder="Hallo! Ich möchte euren WhatsApp Bot ausprobieren 👋"
+                 maxlength="200">
+          <div class="form-hint">
+            Diese Nachricht erscheint beim Öffnen des Chats vorausgefüllt.
+          </div>
+        </div>
+
+        <label class="form-check" style="margin-bottom:20px;">
+          <input type="checkbox" name="demo_wa_enabled" {% if cfg.enabled %}checked{% endif %}>
+          <div>
+            <div style="font-weight:500;">Button auf Landingpage anzeigen</div>
+            <div style="font-size:12px;color:var(--text-muted);">
+              Nur aktiv wenn Nummer gesetzt ist
+            </div>
+          </div>
+        </label>
+
+        <button type="submit" class="btn btn-primary">💾 Speichern</button>
+      </form>
+    </div>
+
+    <!-- Preview -->
+    {% if cfg.phone %}
+    <div class="card" style="border-style:dashed;">
+      <div class="card-title" style="color:var(--text-muted);">👁 Vorschau</div>
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:12px;">
+        So sieht der Link aus:
+      </p>
+      {% set wa_url = 'https://wa.me/' ~ cfg.phone ~ '?text=' ~ (cfg.message | urlencode) %}
+      <a href="{{ wa_url }}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:8px;background:#25D366;color:#fff;
+                padding:10px 20px;border-radius:8px;font-weight:600;font-size:14px;text-decoration:none;">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+          <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+          <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.12 1.532 5.847L.057 23.882l6.197-1.625C7.88 23.408 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.668-.5-5.217-1.377l-.373-.22-3.872 1.016 1.034-3.775-.241-.387A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
+        </svg>
+        Bot ausprobieren
+      </a>
+      <div style="margin-top:10px;font-size:11px;color:var(--text-dim);word-break:break-all;">
+        {{ wa_url }}
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

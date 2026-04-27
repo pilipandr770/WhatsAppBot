@@ -17,7 +17,19 @@ def favicon():
 def index():
     if current_user.is_authenticated:
         return redirect(url_for('dashboard.index'))
-    return render_template('landing.html')
+
+    # Demo-bot WhatsApp button config
+    from app.models import SiteConfig
+    from urllib.parse import quote as _quote
+    demo_phone   = SiteConfig.get('demo_wa_phone',   '')
+    demo_message = SiteConfig.get('demo_wa_message',
+                                  'Hallo! Ich möchte euren WhatsApp Bot ausprobieren 👋')
+    demo_enabled = SiteConfig.get('demo_wa_enabled', '0') == '1'
+    demo_wa_url  = (
+        f"https://wa.me/{demo_phone}?text={_quote(demo_message)}"
+        if demo_enabled and demo_phone else ''
+    )
+    return render_template('landing.html', demo_wa_url=demo_wa_url)
 
 
 @main_bp.route('/impressum')

@@ -189,6 +189,26 @@ class Message(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
+class SiteConfig(db.Model):
+    """Global key-value store for site-wide settings (e.g. demo bot config)."""
+    __tablename__ = 'site_config'
+    key   = db.Column(db.String(100), primary_key=True)
+    value = db.Column(db.Text, default='')
+
+    @classmethod
+    def get(cls, key: str, default: str = '') -> str:
+        row = cls.query.get(key)
+        return row.value if row else default
+
+    @classmethod
+    def set(cls, key: str, value: str):
+        row = cls.query.get(key)
+        if row:
+            row.value = value
+        else:
+            db.session.add(cls(key=key, value=value))
+
+
 class GoogleToken(db.Model):
     """Stores Google OAuth 2.0 tokens per WhatsApp instance."""
     __tablename__ = 'google_tokens'
