@@ -21,23 +21,38 @@ def _verify_webhook_token() -> bool:
     """
     Verify that the incoming request carries the Evolution API global key.
     Evolution sends it as the 'apikey' header.
-    If EVOLUTION_WEBHOOK_TOKEN is not set we skip the check (dev mode only).
+    If EVOLUTION_WEBHOOK_TOKEN is not set we skip the check.
     """
     expected = os.environ.get('EVOLUTION_WEBHOOK_TOKEN', '')
     if not expected:
-        # Not configured → allow (log a warning so the operator notices)
-        logger.warning("EVOLUTION_WEBHOOK_TOKEN not set — webhook is unauthenticated!")
-        return True
-    provided = request.headers.get('apikey', '') or request.headers.get('Authorization', '')
-    return provided == expected
+        return True  # Token not configured — allow all (disable check)
+
+    # Evolution API v2 sends the global key as 'apikey' header
+    provided = (
+        request.headers.get('apikey') or
+        request.headers.get('Authorization', '').replace('Bearer ', '') or
+        ''
+    )
+
+    if provided != expected:
+        # Log ALL headers so we can see what Evolution actually sends
+        safe_headers = {
+            k: v for k, v in request.headers
+            if k.lower() not in ('cookie', 'authorization')
+        }
+        logger.warning(
+            f"Webhook auth failed. Expected token present: {bool(expected)}. "
+            f"Received headers: {safe_headers}"
+        )
+        return False
+    return True
 
 
 @webhook_bp.route('/<instance_name>', methods=['POST'])
 def handle_webhook(instance_name):
     """Main webhook endpoint for Evolution API events."""
-    # Reject requests that don't carry the correct API key
     if not _verify_webhook_token():
-        logger.warning(f"Webhook [{instance_name}]: unauthorized request from {request.remote_addr}")
+        logger.warning(f"Webhook [{instance_name}]: unauthorized from {request.remote_addr}")
         return jsonify({'error': 'Unauthorized'}), 401
 
     data = request.get_json(silent=True)
