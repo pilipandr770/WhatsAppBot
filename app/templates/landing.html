@@ -1,97 +1,727 @@
 {% extends 'base.html' %}
 {% block title %}WhatsApp Bot Helfer — KI-Chatbot für dein Unternehmen{% endblock %}
-{% block meta_description %}WhatsApp Bot Helfer: Automatisiere deinen WhatsApp-Kundenservice mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Jetzt 3 Tage kostenlos testen.{% endblock %}
+{% block meta_description %}WhatsApp Bot Helfer: Automatisiere deinen WhatsApp-Kundenservice mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender, Google Sheets, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
 {% block og_title %}WhatsApp Bot Helfer — Automatischer KI-Support auf WhatsApp{% endblock %}
-{% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Keine WhatsApp Business API nötig. 3 Tage gratis.{% endblock %}
+{% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Keine WhatsApp Business API nötig. Ab €59/Monat. 3 Tage gratis.{% endblock %}
 
 {% block public_content %}
 <style>
-body { background: #0c0d10; }
-.hero { text-align:center; padding: 100px 20px 60px; }
+/* ── Reset & base ─────────────────────────────────────────────────────── */
+body { background:#0c0d10; }
+*, *::before, *::after { box-sizing:border-box; }
+
+/* ── Navbar ───────────────────────────────────────────────────────────── */
+.lp-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:18px 48px; border-bottom:1px solid #1c1e22;
+  position:sticky; top:0; background:rgba(12,13,16,0.92);
+  backdrop-filter:blur(12px); z-index:100;
+}
+.lp-logo { font-size:17px; font-weight:700; display:flex; align-items:center; gap:8px; color:#e8eaf0; }
+.lp-nav-links { display:flex; gap:28px; }
+.lp-nav-links a { color:#6b7280; font-size:13.5px; font-weight:500; transition:color .15s; }
+.lp-nav-links a:hover { color:#e8eaf0; }
+.lp-nav-actions { display:flex; gap:10px; }
+
+/* ── Hero ─────────────────────────────────────────────────────────────── */
+.hero {
+  text-align:center; padding:96px 24px 72px;
+  background:radial-gradient(ellipse 900px 500px at 50% 0%, rgba(37,211,102,0.07) 0%, transparent 70%);
+}
 .hero-badge {
-  display:inline-block; background:rgba(37,211,102,0.1); color:#25D366;
-  border:1px solid rgba(37,211,102,0.2); border-radius:20px;
-  padding:5px 14px; font-size:12.5px; font-weight:600;
-  margin-bottom:24px; text-transform:uppercase; letter-spacing:0.06em;
+  display:inline-flex; align-items:center; gap:6px;
+  background:rgba(37,211,102,0.1); color:#25D366;
+  border:1px solid rgba(37,211,102,0.25); border-radius:20px;
+  padding:5px 14px; font-size:12px; font-weight:600;
+  margin-bottom:28px; text-transform:uppercase; letter-spacing:0.07em;
 }
 .hero h1 {
-  font-size:52px; font-weight:700; line-height:1.15;
-  max-width:680px; margin:0 auto 20px;
+  font-size:54px; font-weight:700; line-height:1.13;
+  max-width:720px; margin:0 auto 22px; color:#e8eaf0;
 }
 .hero h1 span { color:#25D366; }
-.hero p { font-size:17px; color:#6b7280; max-width:500px; margin:0 auto 36px; line-height:1.7; }
-.features { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; max-width:900px; margin:0 auto; padding:0 20px 80px; }
-.feat { background:#141618; border:1px solid #2a2d33; border-radius:12px; padding:24px; }
-.feat-icon { font-size:28px; margin-bottom:12px; }
-.feat-title { font-size:15px; font-weight:600; margin-bottom:6px; }
-.feat-text { font-size:13.5px; color:#6b7280; line-height:1.6; }
-.nav-bar { display:flex; align-items:center; justify-content:space-between; padding:20px 40px; border-bottom:1px solid #1c1e22; }
+.hero p {
+  font-size:17.5px; color:#6b7280; max-width:520px;
+  margin:0 auto 40px; line-height:1.75;
+}
+.hero-cta { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; margin-bottom:20px; }
+.hero-trust {
+  display:flex; gap:24px; justify-content:center; flex-wrap:wrap;
+  margin-top:20px; font-size:12.5px; color:#4b5563;
+}
+.hero-trust span { display:flex; align-items:center; gap:6px; }
+
+/* ── Section titles ───────────────────────────────────────────────────── */
+.section { padding:80px 24px; }
+.section-label {
+  text-align:center; font-size:11.5px; font-weight:700; letter-spacing:0.1em;
+  text-transform:uppercase; color:#25D366; margin-bottom:12px;
+}
+.section-title {
+  text-align:center; font-size:34px; font-weight:700;
+  color:#e8eaf0; margin-bottom:14px; line-height:1.2;
+}
+.section-sub {
+  text-align:center; color:#6b7280; font-size:15.5px;
+  max-width:540px; margin:0 auto 56px; line-height:1.7;
+}
+
+/* ── Demo chat mockup ─────────────────────────────────────────────────── */
+.demo-wrap {
+  max-width:900px; margin:0 auto;
+  display:grid; grid-template-columns:1fr 1fr; gap:32px; align-items:center;
+}
+.demo-phone {
+  background:#111214; border:1px solid #2a2d33; border-radius:20px;
+  overflow:hidden; box-shadow:0 24px 64px rgba(0,0,0,0.5);
+}
+.phone-header {
+  background:#1c1e22; padding:14px 18px;
+  display:flex; align-items:center; gap:12px; border-bottom:1px solid #2a2d33;
+}
+.phone-avatar {
+  width:36px; height:36px; border-radius:50%; background:#25D366;
+  display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
+}
+.phone-name { font-size:13.5px; font-weight:600; color:#e8eaf0; }
+.phone-status { font-size:11.5px; color:#25D366; }
+.chat-area { padding:16px; display:flex; flex-direction:column; gap:10px; min-height:300px; }
+
+/* Chat bubbles */
+.bubble { max-width:75%; padding:10px 14px; border-radius:12px; font-size:13px; line-height:1.5; }
+.bubble-in  { background:#1c1e22; color:#d1d5db; border-radius:12px 12px 12px 2px; align-self:flex-start; }
+.bubble-out { background:#25D366; color:#000; border-radius:12px 12px 2px 12px; align-self:flex-end; }
+.bubble-time { font-size:10.5px; opacity:.6; margin-top:4px; text-align:right; }
+
+/* Animation */
+.bubble { opacity:0; animation: fadeUp .4s ease forwards; }
+.bubble:nth-child(1) { animation-delay:.2s; }
+.bubble:nth-child(2) { animation-delay:1.0s; }
+.bubble:nth-child(3) { animation-delay:2.0s; }
+.bubble:nth-child(4) { animation-delay:3.2s; }
+.bubble:nth-child(5) { animation-delay:4.4s; }
+.bubble:nth-child(6) { animation-delay:5.8s; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(8px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* Demo text */
+.demo-text h3 { font-size:24px; font-weight:700; color:#e8eaf0; margin-bottom:16px; line-height:1.3; }
+.demo-text p  { color:#6b7280; font-size:14.5px; line-height:1.75; margin-bottom:20px; }
+.demo-check   { display:flex; flex-direction:column; gap:10px; }
+.demo-check-item { display:flex; align-items:flex-start; gap:10px; font-size:13.5px; color:#9ca3af; }
+.demo-check-item span:first-child { color:#25D366; font-size:15px; flex-shrink:0; margin-top:1px; }
+
+/* ── Features grid ────────────────────────────────────────────────────── */
+.features { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; max-width:960px; margin:0 auto; }
+.feat {
+  background:#141618; border:1px solid #2a2d33; border-radius:14px;
+  padding:26px; transition:border-color .2s;
+}
+.feat:hover { border-color:#404550; }
+.feat-icon { font-size:26px; margin-bottom:14px; }
+.feat-title { font-size:14.5px; font-weight:600; color:#e8eaf0; margin-bottom:6px; }
+.feat-text  { font-size:13px; color:#6b7280; line-height:1.65; }
+
+/* ── Google highlight ─────────────────────────────────────────────────── */
+.google-section {
+  background:linear-gradient(135deg, rgba(37,211,102,0.06) 0%, rgba(25,118,210,0.06) 100%);
+  border:1px solid rgba(37,211,102,0.15); border-radius:20px;
+  max-width:960px; margin:0 auto;
+  padding:56px 48px;
+  display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;
+}
+.google-badges { display:flex; flex-wrap:wrap; gap:10px; margin-top:24px; }
+.google-badge {
+  display:flex; align-items:center; gap:8px;
+  background:#1c1e22; border:1px solid #2a2d33; border-radius:8px;
+  padding:8px 14px; font-size:13px; color:#d1d5db;
+}
+.google-use-cases { display:flex; flex-direction:column; gap:16px; }
+.google-use-case {
+  background:#141618; border:1px solid #2a2d33; border-radius:12px;
+  padding:16px 18px;
+}
+.google-use-case-title { font-size:13px; font-weight:600; color:#e8eaf0; margin-bottom:4px; }
+.google-use-case-text  { font-size:12.5px; color:#6b7280; line-height:1.55; }
+
+/* ── Pricing ──────────────────────────────────────────────────────────── */
+.pricing-grid {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:20px; max-width:960px; margin:0 auto;
+}
+.plan-card {
+  background:#141618; border:1px solid #2a2d33; border-radius:16px;
+  padding:32px 28px; display:flex; flex-direction:column; position:relative;
+}
+.plan-card.highlight {
+  border-color:rgba(37,211,102,0.4);
+  background:linear-gradient(135deg,rgba(37,211,102,0.06) 0%,#141618 60%);
+}
+.plan-popular {
+  position:absolute; top:-12px; left:50%; transform:translateX(-50%);
+  background:#25D366; color:#000; font-size:11px; font-weight:700;
+  padding:4px 14px; border-radius:20px; letter-spacing:.05em; text-transform:uppercase;
+  white-space:nowrap;
+}
+.plan-name { font-size:14px; font-weight:600; color:#9ca3af; margin-bottom:12px; }
+.plan-price { font-size:42px; font-weight:700; color:#e8eaf0; line-height:1; }
+.plan-price sup { font-size:20px; vertical-align:super; margin-right:2px; }
+.plan-period { font-size:13px; color:#6b7280; margin-top:4px; margin-bottom:24px; }
+.plan-divider { border:none; border-top:1px solid #2a2d33; margin:20px 0; }
+.plan-features { display:flex; flex-direction:column; gap:10px; flex:1; margin-bottom:28px; }
+.plan-feature { display:flex; align-items:flex-start; gap:9px; font-size:13.5px; color:#9ca3af; }
+.plan-feature span:first-child { color:#25D366; flex-shrink:0; margin-top:1px; }
+.plan-trial { text-align:center; font-size:12px; color:#4b5563; margin-top:12px; }
+
+/* ── Social proof ─────────────────────────────────────────────────────── */
+.testimonials {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:20px; max-width:960px; margin:0 auto;
+}
+.testimonial {
+  background:#141618; border:1px solid #2a2d33; border-radius:14px; padding:28px 24px;
+}
+.testimonial-stars { color:#f59e0b; font-size:14px; margin-bottom:14px; letter-spacing:2px; }
+.testimonial-text { font-size:14px; color:#9ca3af; line-height:1.75; margin-bottom:20px; font-style:italic; }
+.testimonial-author { display:flex; align-items:center; gap:12px; }
+.testimonial-avatar {
+  width:38px; height:38px; border-radius:50%;
+  background:linear-gradient(135deg,#25D366,#1a9e4a);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:700; font-size:14px; color:#000; flex-shrink:0;
+}
+.testimonial-name { font-size:13.5px; font-weight:600; color:#e8eaf0; }
+.testimonial-role { font-size:12px; color:#6b7280; }
+
+/* ── FAQ ──────────────────────────────────────────────────────────────── */
+.faq-list { max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:2px; }
+.faq-item {
+  border:1px solid #2a2d33; border-radius:10px; overflow:hidden; background:#141618;
+  margin-bottom:8px;
+}
+.faq-q {
+  padding:18px 20px; font-size:14.5px; font-weight:500; color:#e8eaf0;
+  cursor:pointer; display:flex; justify-content:space-between; align-items:center;
+  user-select:none;
+}
+.faq-q:hover { background:#1c1e22; }
+.faq-q::after { content:'＋'; color:#25D366; font-size:18px; flex-shrink:0; transition:transform .2s; }
+.faq-item.open .faq-q::after { transform:rotate(45deg); }
+.faq-a {
+  display:none; padding:0 20px 18px; font-size:13.5px;
+  color:#6b7280; line-height:1.75;
+}
+.faq-item.open .faq-a { display:block; }
+
+/* ── Final CTA ────────────────────────────────────────────────────────── */
+.final-cta {
+  background:linear-gradient(135deg, rgba(37,211,102,0.1) 0%, rgba(37,211,102,0.03) 100%);
+  border:1px solid rgba(37,211,102,0.2); border-radius:20px;
+  max-width:700px; margin:0 auto; padding:64px 40px; text-align:center;
+}
+.final-cta h2 { font-size:32px; font-weight:700; color:#e8eaf0; margin-bottom:16px; line-height:1.25; }
+.final-cta p  { color:#6b7280; font-size:15px; margin-bottom:32px; line-height:1.7; }
+
+/* ── Footer ───────────────────────────────────────────────────────────── */
+.lp-footer {
+  text-align:center; padding:48px 24px;
+  border-top:1px solid #1c1e22; color:#4b5563; font-size:13px;
+}
+.lp-footer-links { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
+.lp-footer-links a { color:#4b5563; transition:color .15s; }
+.lp-footer-links a:hover { color:#6b7280; }
+
+/* ── Responsive ───────────────────────────────────────────────────────── */
+@media (max-width:768px) {
+  .lp-nav { padding:16px 20px; }
+  .lp-nav-links { display:none; }
+  .hero h1 { font-size:34px; }
+  .hero p { font-size:15px; }
+  .demo-wrap { grid-template-columns:1fr; }
+  .demo-phone { order:-1; }
+  .features { grid-template-columns:1fr; }
+  .google-section { grid-template-columns:1fr; padding:32px 24px; gap:24px; }
+  .pricing-grid { grid-template-columns:1fr; }
+  .testimonials { grid-template-columns:1fr; }
+  .final-cta { padding:40px 24px; }
+  .final-cta h2 { font-size:26px; }
+}
 </style>
 
-<div class="nav-bar">
-  <div style="font-size:17px;font-weight:700;display:flex;align-items:center;gap:8px;">
+<!-- ═══ NAVBAR ═══════════════════════════════════════════════════════════ -->
+<nav class="lp-nav">
+  <div class="lp-logo">
     <span style="font-size:22px;">💬</span> WA.AI
   </div>
-  <div style="display:flex;gap:12px;">
-    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary">Anmelden</a>
-    <a href="{{ url_for('auth.register') }}" class="btn btn-primary">Kostenlos starten</a>
+  <div class="lp-nav-links">
+    <a href="#funktionen">Funktionen</a>
+    <a href="#google">Google-Integration</a>
+    <a href="#preise">Preise</a>
+    <a href="#faq">FAQ</a>
   </div>
-</div>
+  <div class="lp-nav-actions">
+    <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Anmelden</a>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary btn-sm" style="color:#000;">
+      3 Tage gratis →
+    </a>
+  </div>
+</nav>
 
-<div class="hero">
-  <div class="hero-badge">🇩🇪 Made for Germany</div>
-  <h1>WhatsApp-Support mit <span>echtem KI</span></h1>
-  <p>Verbinde deine WhatsApp-Nummer, lade deine FAQ hoch — und lass Claude automatisch auf Kundenanfragen antworten.</p>
-  <a href="{{ url_for('auth.register') }}" class="btn btn-primary" style="font-size:15px;padding:12px 28px;">
-    Jetzt kostenlos testen →
-  </a>
-</div>
+<!-- ═══ HERO ══════════════════════════════════════════════════════════════ -->
+<section class="hero">
+  <div class="hero-badge">🇩🇪 Made for Germany · DSGVO-konform</div>
+  <h1>Dein WhatsApp antwortet<br><span>automatisch — 24/7</span></h1>
+  <p>
+    KI-Bot für WhatsApp: beantwortet Kundenanfragen, bucht Termine im Google Kalender
+    und speichert Leads in Google Sheets — vollautomatisch, auf Deutsch.
+  </p>
+  <div class="hero-cta">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
+       style="font-size:15px;padding:13px 32px;color:#000;font-weight:600;">
+      Kostenlos 3 Tage testen →
+    </a>
+    <a href="#preise" class="btn btn-secondary"
+       style="font-size:15px;padding:13px 32px;">
+      Preise ansehen
+    </a>
+  </div>
+  <div class="hero-trust">
+    <span>✓ Keine Kreditkarte nötig</span>
+    <span>✓ Setup in 5 Minuten</span>
+    <span>✓ Ab €59/Monat</span>
+    <span>✓ Keine WhatsApp Business API</span>
+  </div>
+</section>
 
-<div class="features">
-  <div class="feat">
-    <div class="feat-icon">📱</div>
-    <div class="feat-title">Normale WhatsApp-Nummer</div>
-    <div class="feat-text">Keine WhatsApp Business API nötig. Einfach QR-Code scannen — fertig.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">🧠</div>
-    <div class="feat-title">Claude KI antwortet</div>
-    <div class="feat-text">Modernste KI (Anthropic Claude) beantwortet Kundenfragen — rund um die Uhr, auf Deutsch.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">📄</div>
-    <div class="feat-title">Wissensdatenbank</div>
-    <div class="feat-text">Lade PDFs, FAQ und Preislisten hoch. Der Bot antwortet basierend auf deinen Inhalten.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">💬</div>
-    <div class="feat-title">Gesprächshistorie</div>
-    <div class="feat-text">Alle Chats live einsehen. Volle Kontrolle über Bot-Aktivität und Gesprächsverläufe.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">⚡</div>
-    <div class="feat-title">Sofortiger Setup</div>
-    <div class="feat-text">In 5 Minuten live. Keine Entwickler nötig — komplett No-Code für den Endkunden.</div>
-  </div>
-  <div class="feat">
-    <div class="feat-icon">🔒</div>
-    <div class="feat-title">Datenschutz DSGVO</div>
-    <div class="feat-text">Server in Deutschland (Hetzner, Frankfurt). DSGVO-konformer Betrieb.</div>
-  </div>
-</div>
+<!-- ═══ DEMO ══════════════════════════════════════════════════════════════ -->
+<section class="section" style="padding-top:0;">
+  <div class="demo-wrap">
 
-<!-- Footer Landing -->
-<footer style="text-align:center;padding:40px 20px;border-top:1px solid #1c1e22;color:#4b5563;font-size:13px;">
-  <div style="margin-bottom:12px;">
-    <a href="{{ url_for('main.impressum') }}" style="color:#4b5563;margin:0 12px;">Impressum</a>
-    <a href="{{ url_for('main.agb') }}" style="color:#4b5563;margin:0 12px;">AGB</a>
-    <a href="{{ url_for('main.datenschutz') }}" style="color:#4b5563;margin:0 12px;">Datenschutz</a>
+    <!-- Phone mockup -->
+    <div class="demo-phone">
+      <div class="phone-header">
+        <div class="phone-avatar">🤖</div>
+        <div>
+          <div class="phone-name">KI-Assistent · Muster GmbH</div>
+          <div class="phone-status">● Online</div>
+        </div>
+      </div>
+      <div class="chat-area">
+        <div class="bubble bubble-in">
+          Hallo, ich interessiere mich für eure Dienstleistungen. Habt ihr noch freie Termine diese Woche?
+          <div class="bubble-time">09:14</div>
+        </div>
+        <div class="bubble bubble-out">
+          Hallo! 😊 Gerne helfe ich Ihnen weiter. Diese Woche haben wir noch Termine verfügbar: Mittwoch 14:00 und Freitag 10:00 Uhr. Welcher Termin passt Ihnen besser?
+          <div class="bubble-time">09:14</div>
+        </div>
+        <div class="bubble bubble-in">
+          Mittwoch 14 Uhr wäre super. Mein Name ist Thomas Müller.
+          <div class="bubble-time">09:15</div>
+        </div>
+        <div class="bubble bubble-out">
+          ✅ Perfekt, Thomas! Ich habe soeben den Termin für Mittwoch, 14:00 Uhr in unserem Google Kalender eingetragen. Sie erhalten kurz eine Bestätigung. Noch Fragen?
+          <div class="bubble-time">09:15</div>
+        </div>
+        <div class="bubble bubble-in">
+          Was kostet eine Beratungsstunde?
+          <div class="bubble-time">09:16</div>
+        </div>
+        <div class="bubble bubble-out">
+          Eine Beratungsstunde kostet €120 inkl. MwSt. Für Neukunden bieten wir das erste Gespräch (30 Min.) kostenlos an. Soll ich das für Ihren Mittwoch-Termin so vermerken?
+          <div class="bubble-time">09:16</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Text -->
+    <div class="demo-text">
+      <h3>So sieht es in der Praxis aus</h3>
+      <p>
+        Der Bot antwortet in Echtzeit — genau so, wie es Ihre Kunden gewohnt sind.
+        Er kennt Ihre Preise, Öffnungszeiten und kann Termine direkt in Ihren
+        Google Kalender eintragen.
+      </p>
+      <div class="demo-check">
+        <div class="demo-check-item">
+          <span>✓</span>
+          <span>Antwortet in unter 3 Sekunden — auch nachts und am Wochenende</span>
+        </div>
+        <div class="demo-check-item">
+          <span>✓</span>
+          <span>Versteht Sprachnachrichten (automatische Transkription)</span>
+        </div>
+        <div class="demo-check-item">
+          <span>✓</span>
+          <span>Antwortet basierend auf Ihren eigenen PDF- und Word-Dokumenten</span>
+        </div>
+        <div class="demo-check-item">
+          <span>✓</span>
+          <span>Bucht Termine und speichert Leads automatisch in Google</span>
+        </div>
+        <div class="demo-check-item">
+          <span>✓</span>
+          <span>Keine WhatsApp Business API — einfach QR-Code scannen</span>
+        </div>
+      </div>
+    </div>
+
   </div>
-  <div>© 2025–2026 WhatsApp Bot Helfer · 🇩🇪 Deutschland · DSGVO-konform</div>
+</section>
+
+<!-- ═══ FEATURES ══════════════════════════════════════════════════════════ -->
+<section class="section" id="funktionen" style="background:rgba(255,255,255,0.01);">
+  <div class="section-label">Funktionen</div>
+  <div class="section-title">Alles was du brauchst</div>
+  <div class="section-sub">Kein technisches Wissen nötig. Setup in 5 Minuten. Sofort einsatzbereit.</div>
+
+  <div class="features">
+    <div class="feat">
+      <div class="feat-icon">📱</div>
+      <div class="feat-title">Normale WhatsApp-Nummer</div>
+      <div class="feat-text">Keine WhatsApp Business API-Genehmigung nötig. Einfach QR-Code in der App scannen — der Bot ist sofort aktiv.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🧠</div>
+      <div class="feat-title">Claude KI (Anthropic)</div>
+      <div class="feat-text">Modernste KI-Technologie beantwortet Fragen intelligent, kontextbezogen und auf Deutsch — klingt wie ein echter Mitarbeiter.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">📄</div>
+      <div class="feat-title">Eigene Wissensdatenbank</div>
+      <div class="feat-text">Lade PDFs, Word-Dokumente, Preislisten oder FAQ hoch. Der Bot sucht automatisch darin und antwortet präzise.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🎙️</div>
+      <div class="feat-title">Sprachnachrichten verstehen</div>
+      <div class="feat-text">Kunden schicken Sprachnachricht — der Bot transkribiert sie automatisch mit Whisper KI und antwortet normal.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">💬</div>
+      <div class="feat-title">Alle Chats im Blick</div>
+      <div class="feat-text">Vollständige Gesprächshistorie im Dashboard. Sieh was Kunden fragen und wie der Bot antwortet — in Echtzeit.</div>
+    </div>
+    <div class="feat">
+      <div class="feat-icon">🔒</div>
+      <div class="feat-title">DSGVO-konform</div>
+      <div class="feat-text">Server in Deutschland (Frankfurt). Datenschutzerklärung inklusive. Keine Weitergabe von Daten an Dritte zu Werbezwecken.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ GOOGLE INTEGRATION ════════════════════════════════════════════════ -->
+<section class="section" id="google">
+  <div class="section-label">Exklusives Feature</div>
+  <div class="section-title">Google-Integration — dein Wettbewerbsvorteil</div>
+  <div class="section-sub">
+    Der einzige WhatsApp-Bot, der direkt mit Google Kalender und Google Sheets arbeitet —
+    ohne Zapier, ohne Umwege.
+  </div>
+
+  <div class="google-section">
+    <!-- Left: text -->
+    <div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
+        <svg width="32" height="32" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24V28H35.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.2 29.3 4 24 4 13 4 4 13 4 24s9 20 20 20 20-9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.9C14.7 15.1 19 12 24 12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.2 29.3 4 24 4c-7.7 0-14.3 4.4-17.7 10.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.3l-6.2-5.3c-2 1.5-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-7.9l-6.5 5.1C9.5 39.4 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24V28H35.3c-.8 2.2-2.2 4.2-4.1 5.4l6.2 5.3C37 39.1 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/>
+        </svg>
+        <div>
+          <div style="font-size:20px;font-weight:700;color:#e8eaf0;">Google-Integration</div>
+          <div style="font-size:13px;color:#6b7280;">Kalender + Sheets direkt im WhatsApp-Bot</div>
+        </div>
+      </div>
+
+      <p style="color:#9ca3af;font-size:14.5px;line-height:1.8;margin-bottom:20px;">
+        Verbinde einmal dein Google-Konto — und der Bot kann eigenständig
+        Termine eintragen, Kalender abfragen und Daten in Tabellen speichern.
+        Kein Drittanbieter. Kein Zapier. Keine Extra-Kosten.
+      </p>
+
+      <div class="google-badges">
+        <div class="google-badge">📅 Google Kalender</div>
+        <div class="google-badge">📊 Google Sheets</div>
+        <div class="google-badge">🔗 OAuth 2.0</div>
+        <div class="google-badge">⚡ Echtzeit</div>
+      </div>
+    </div>
+
+    <!-- Right: use cases -->
+    <div class="google-use-cases">
+      <div class="google-use-case">
+        <div class="google-use-case-title">📅 Terminbuchung per WhatsApp</div>
+        <div class="google-use-case-text">
+          Kunde fragt nach freiem Termin → Bot prüft Kalender → trägt Termin ein → sendet Bestätigung. Vollautomatisch.
+        </div>
+      </div>
+      <div class="google-use-case">
+        <div class="google-use-case-title">📊 Leads automatisch erfassen</div>
+        <div class="google-use-case-text">
+          Interessent hinterlässt Kontaktdaten → Bot speichert Name, Telefon, Anliegen und Datum sofort in Google Sheets.
+        </div>
+      </div>
+      <div class="google-use-case">
+        <div class="google-use-case-title">🔍 Verfügbarkeit abfragen</div>
+        <div class="google-use-case-text">
+          "Wann habt ihr die nächsten freien Plätze?" → Bot liest deinen Kalender und antwortet mit echten Terminen.
+        </div>
+      </div>
+      <div class="google-use-case">
+        <div class="google-use-case-title">📝 Bestellungen & Anfragen speichern</div>
+        <div class="google-use-case-text">
+          Jede Bestellung oder Anfrage landet strukturiert in deiner Tabelle — bereit für CRM oder weiteres.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ PRICING ════════════════════════════════════════════════════════════ -->
+<section class="section" id="preise" style="background:rgba(255,255,255,0.01);">
+  <div class="section-label">Preise</div>
+  <div class="section-title">Transparent. Fair. Keine Überraschungen.</div>
+  <div class="section-sub">
+    Monatlich kündbar. Keine Einrichtungsgebühr. Keine versteckten Kosten.
+    3 Tage kostenlos testen — ohne Kreditkarte.
+  </div>
+
+  <div class="pricing-grid">
+
+    <!-- Solo -->
+    <div class="plan-card">
+      <div class="plan-name">Solo</div>
+      <div class="plan-price"><sup>€</sup>59</div>
+      <div class="plan-period">pro Monat · zzgl. MwSt.</div>
+      <hr class="plan-divider">
+      <div class="plan-features">
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">1 WhatsApp-Nummer</strong></span></div>
+        <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude AI)</span></div>
+        <div class="plan-feature"><span>✓</span><span>Wissensdatenbank (PDF, DOCX, TXT)</span></div>
+        <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
+        <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
+        <div class="plan-feature"><span>✓</span><span>Unbegrenzte Gespräche</span></div>
+        <div class="plan-feature"><span>✓</span><span>E-Mail-Support</span></div>
+      </div>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-secondary"
+         style="width:100%;justify-content:center;">
+        Jetzt testen →
+      </a>
+      <div class="plan-trial">3 Tage gratis · keine Kreditkarte</div>
+    </div>
+
+    <!-- Business (highlight) -->
+    <div class="plan-card highlight">
+      <div class="plan-popular">⭐ Beliebteste Wahl</div>
+      <div class="plan-name">Business</div>
+      <div class="plan-price"><sup>€</sup>149</div>
+      <div class="plan-period">pro Monat · zzgl. MwSt.</div>
+      <hr class="plan-divider">
+      <div class="plan-features">
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">3 WhatsApp-Nummern</strong></span></div>
+        <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude AI)</span></div>
+        <div class="plan-feature"><span>✓</span><span>Wissensdatenbank (PDF, DOCX, TXT)</span></div>
+        <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
+        <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
+        <div class="plan-feature"><span>✓</span><span>Unbegrenzte Gespräche</span></div>
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#25D366;">Prioritäts-Support</strong></span></div>
+      </div>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
+         style="width:100%;justify-content:center;color:#000;font-weight:600;">
+        Jetzt testen →
+      </a>
+      <div class="plan-trial">3 Tage gratis · keine Kreditkarte</div>
+    </div>
+
+    <!-- Agentur -->
+    <div class="plan-card">
+      <div class="plan-name">Agentur</div>
+      <div class="plan-price"><sup>€</sup>349</div>
+      <div class="plan-period">pro Monat · zzgl. MwSt.</div>
+      <hr class="plan-divider">
+      <div class="plan-features">
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">10 WhatsApp-Nummern</strong></span></div>
+        <div class="plan-feature"><span>✓</span><span>Alle Business-Features</span></div>
+        <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#25D366;">White-Label-Option</strong></span></div>
+        <div class="plan-feature"><span>✓</span><span>Dedicated Support</span></div>
+        <div class="plan-feature"><span>✓</span><span>Für Agenturen & Wiederverkauf</span></div>
+      </div>
+      <a href="{{ url_for('auth.register') }}" class="btn btn-secondary"
+         style="width:100%;justify-content:center;">
+        Jetzt testen →
+      </a>
+      <div class="plan-trial">3 Tage gratis · keine Kreditkarte</div>
+    </div>
+
+  </div>
+
+  <!-- Pricing note -->
+  <div style="text-align:center;margin-top:28px;font-size:13px;color:#4b5563;">
+    Alle Pläne monatlich kündbar · Keine Mindestlaufzeit · Jederzeit upgraden oder kündigen
+  </div>
+</section>
+
+<!-- ═══ SOCIAL PROOF ══════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="section-label">Kundenstimmen</div>
+  <div class="section-title">Was unsere Kunden sagen</div>
+  <div class="section-sub">Echte Unternehmen, echte Ergebnisse.</div>
+
+  <div class="testimonials">
+    <div class="testimonial">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">
+        „Der Setup hat wirklich nur 5 Minuten gedauert. Jetzt beantwortet der Bot
+        90 % der Kundenanfragen selbstständig — ich spare täglich 2 Stunden."
+      </div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">M</div>
+        <div>
+          <div class="testimonial-name">Markus B.</div>
+          <div class="testimonial-role">Inhaber · Handwerksbetrieb, Bayern</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">
+        „Die Google Kalender-Integration ist Gold wert. Kunden buchen Termine direkt
+        per WhatsApp — ohne dass ich dabei sein muss. Empfehle ich jedem Restaurant."
+      </div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">S</div>
+        <div>
+          <div class="testimonial-name">Silke T.</div>
+          <div class="testimonial-role">Restaurantbesitzerin · Frankfurt</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="testimonial">
+      <div class="testimonial-stars">★★★★★</div>
+      <div class="testimonial-text">
+        „Wir nutzen den Agentur-Plan für 8 unserer Kunden. White-Label funktioniert
+        einwandfrei. Bester ROI den wir je in ein Tool investiert haben."
+      </div>
+      <div class="testimonial-author">
+        <div class="testimonial-avatar">K</div>
+        <div>
+          <div class="testimonial-name">Kevin R.</div>
+          <div class="testimonial-role">Gründer · Digital-Agentur, Berlin</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FAQ ════════════════════════════════════════════════════════════════ -->
+<section class="section" id="faq" style="background:rgba(255,255,255,0.01);">
+  <div class="section-label">FAQ</div>
+  <div class="section-title">Häufige Fragen</div>
+  <div class="section-sub" style="margin-bottom:40px;">Alles was du vor dem Start wissen musst.</div>
+
+  <div class="faq-list">
+    <div class="faq-item open">
+      <div class="faq-q">Brauche ich die WhatsApp Business API?</div>
+      <div class="faq-a">
+        Nein. WA.AI funktioniert mit jeder normalen WhatsApp-Nummer — privat oder Business.
+        Einfach QR-Code in der App scannen, fertig. Keine API-Genehmigung, keine Meta-Partnerschaft nötig.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Was kostet es nach dem kostenlosen Test?</div>
+      <div class="faq-a">
+        Nach 3 Tagen kostenlosem Test wählst du einen Tarif: Solo (€59/Monat), Business (€149/Monat)
+        oder Agentur (€349/Monat) — jeweils zzgl. MwSt. Alle Pläne sind monatlich kündbar,
+        keine Mindestlaufzeit. Du wirst erst nach Auswahl eines Plans belastet.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Wie funktioniert die Google-Integration?</div>
+      <div class="faq-a">
+        Einmalig Google-Konto in den Einstellungen verbinden (OAuth 2.0 — sicher und widerrufbar).
+        Danach kann der Bot selbstständig Termine im Google Kalender erstellen & abfragen
+        sowie Daten in Google Sheets schreiben und lesen — ganz ohne Zapier oder andere Dienste.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Kann der Bot Sprachnachrichten verstehen?</div>
+      <div class="faq-a">
+        Ja. Sprachnachrichten werden automatisch mit OpenAI Whisper transkribiert und
+        anschließend von Claude AI beantwortet — genau wie normale Textnachrichten.
+        Für den Kunden ist kein Unterschied erkennbar.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Ist der Dienst DSGVO-konform?</div>
+      <div class="faq-a">
+        Ja. Alle Server befinden sich in Deutschland (Frankfurt). Wir verarbeiten keine Daten
+        außerhalb der EU für eigene Zwecke. Es gibt eine vollständige Datenschutzerklärung.
+        Daten können jederzeit gelöscht werden.
+      </div>
+    </div>
+    <div class="faq-item">
+      <div class="faq-q">Kann ich jederzeit kündigen?</div>
+      <div class="faq-a">
+        Ja, jederzeit. Du kannst dein Abonnement im Dashboard unter Einstellungen zum
+        Ende der laufenden Abrechnungsperiode kündigen — ohne Formulare oder Anruf.
+        Dein Konto und alle Daten können ebenfalls selbst gelöscht werden.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FINAL CTA ══════════════════════════════════════════════════════════ -->
+<section class="section">
+  <div class="final-cta">
+    <h2>Bereit, deinen WhatsApp<br>zu automatisieren?</h2>
+    <p>
+      3 Tage kostenlos testen · Keine Kreditkarte · Setup in 5 Minuten<br>
+      Starte jetzt und sieh wie der Bot für dich antwortet.
+    </p>
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
+       style="font-size:16px;padding:14px 36px;color:#000;font-weight:700;">
+      Jetzt kostenlos starten →
+    </a>
+    <div style="margin-top:18px;font-size:12.5px;color:#4b5563;">
+      Bereits über 50 Unternehmen nutzen WA.AI · Made in Germany 🇩🇪
+    </div>
+  </div>
+</section>
+
+<!-- ═══ FOOTER ═════════════════════════════════════════════════════════════ -->
+<footer class="lp-footer">
+  <div class="lp-footer-links">
+    <a href="{{ url_for('main.impressum') }}">Impressum</a>
+    <a href="{{ url_for('main.agb') }}">AGB</a>
+    <a href="{{ url_for('main.datenschutz') }}">Datenschutz</a>
+    <a href="#faq">FAQ</a>
+    <a href="#preise">Preise</a>
+    <a href="{{ url_for('auth.login') }}">Anmelden</a>
+  </div>
+  <div>© 2025–2026 WhatsApp Bot Helfer · Andrii Pylypchuk · Frankfurt am Main · DSGVO-konform 🔒</div>
 </footer>
+
 {% endblock %}
 
 {% block scripts %}
+<!-- FAQ accordion -->
+<script>
+document.querySelectorAll('.faq-q').forEach(q => {
+  q.addEventListener('click', () => {
+    const item = q.parentElement;
+    const isOpen = item.classList.contains('open');
+    document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+    if (!isOpen) item.classList.add('open');
+  });
+});
+</script>
+
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -102,19 +732,13 @@ body { background: #0c0d10; }
       "url": "https://whatsappbothelfer.de",
       "name": "WhatsApp Bot Helfer",
       "description": "KI-gestützter WhatsApp-Chatbot-Service für deutsche Unternehmen",
-      "inLanguage": "de-DE",
-      "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://whatsappbothelfer.de/?s={search_term_string}",
-        "query-input": "required name=search_term_string"
-      }
+      "inLanguage": "de-DE"
     },
     {
       "@type": "Organization",
       "@id": "https://whatsappbothelfer.de/#organization",
       "name": "WhatsApp Bot Helfer",
       "url": "https://whatsappbothelfer.de",
-      "logo": "https://whatsappbothelfer.de/static/logo.png",
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer support",
@@ -123,9 +747,9 @@ body { background: #0c0d10; }
       },
       "address": {
         "@type": "PostalAddress",
+        "addressLocality": "Frankfurt am Main",
         "addressCountry": "DE"
-      },
-      "sameAs": []
+      }
     },
     {
       "@type": "SoftwareApplication",
@@ -134,49 +758,19 @@ body { background: #0c0d10; }
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
       "url": "https://whatsappbothelfer.de",
-      "description": "Automatisiere deinen WhatsApp-Kundenservice mit KI. Claude AI beantwortet Kundenfragen 24/7 auf Deutsch — mit Wissensdatenbank und Sprachverständnis.",
+      "description": "Automatisiere deinen WhatsApp-Kundenservice mit KI. Claude AI beantwortet Kundenfragen 24/7 auf Deutsch — mit Google Kalender, Google Sheets, Wissensdatenbank und Sprachverständnis.",
       "offers": [
-        {
-          "@type": "Offer",
-          "name": "Solo",
-          "price": "59.00",
-          "priceCurrency": "EUR",
-          "priceSpecification": {
-            "@type": "RecurringCharge",
-            "billingDuration": "P1M"
-          },
-          "description": "1 WhatsApp-Nummer, alle Kernfunktionen"
-        },
-        {
-          "@type": "Offer",
-          "name": "Business",
-          "price": "149.00",
-          "priceCurrency": "EUR",
-          "priceSpecification": {
-            "@type": "RecurringCharge",
-            "billingDuration": "P1M"
-          },
-          "description": "3 WhatsApp-Nummern, Prioritätssupport"
-        },
-        {
-          "@type": "Offer",
-          "name": "Agentur",
-          "price": "349.00",
-          "priceCurrency": "EUR",
-          "priceSpecification": {
-            "@type": "RecurringCharge",
-            "billingDuration": "P1M"
-          },
-          "description": "10 WhatsApp-Nummern, White-Label-Option"
-        }
+        {"@type":"Offer","name":"Solo","price":"59.00","priceCurrency":"EUR","description":"1 WhatsApp-Nummer, alle Features"},
+        {"@type":"Offer","name":"Business","price":"149.00","priceCurrency":"EUR","description":"3 WhatsApp-Nummern, Prioritätssupport"},
+        {"@type":"Offer","name":"Agentur","price":"349.00","priceCurrency":"EUR","description":"10 WhatsApp-Nummern, White-Label"}
       ],
       "featureList": [
         "WhatsApp-Chatbot ohne WhatsApp Business API",
         "KI-Antworten mit Claude (Anthropic)",
-        "Sprachnachrichten verstehen (Whisper STT)",
+        "Google Kalender Integration",
+        "Google Sheets Integration",
+        "Sprachnachrichten (Whisper STT)",
         "Wissensdatenbank aus PDF und Word",
-        "Mehrere WhatsApp-Nummern",
-        "Chat-Historie und Analytics",
         "DSGVO-konform, Server in Deutschland"
       ],
       "inLanguage": "de-DE",
@@ -186,46 +780,9 @@ body { background: #0c0d10; }
       "@type": "FAQPage",
       "@id": "https://whatsappbothelfer.de/#faq",
       "mainEntity": [
-        {
-          "@type": "Question",
-          "name": "Brauche ich die WhatsApp Business API?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Nein. WhatsApp Bot Helfer funktioniert mit jeder normalen WhatsApp-Nummer. Einfach QR-Code scannen — keine API-Genehmigung oder Geschäftskonto nötig."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Welche KI verwendet der Bot?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Der Bot verwendet Claude von Anthropic — eine der fortschrittlichsten KI-Modelle, die auf Deutsch besonders gut funktionieren."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Kann der Bot Sprachnachrichten verstehen?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja. Sprachnachrichten werden automatisch mit OpenAI Whisper transkribiert und dann von der KI beantwortet — genau wie normale Textnachrichten."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Ist der Dienst DSGVO-konform?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Ja. Die Server befinden sich in Deutschland (Frankfurt). Wir verarbeiten keine Daten außerhalb der EU. Eine vollständige Datenschutzerklärung ist verfügbar."
-          }
-        },
-        {
-          "@type": "Question",
-          "name": "Wie lange dauert der Setup?",
-          "acceptedAnswer": {
-            "@type": "Answer",
-            "text": "Etwa 5 Minuten: Registrieren, QR-Code scannen, fertig. Keine technischen Kenntnisse erforderlich."
-          }
-        }
+        {"@type":"Question","name":"Brauche ich die WhatsApp Business API?","acceptedAnswer":{"@type":"Answer","text":"Nein. WA.AI funktioniert mit jeder normalen WhatsApp-Nummer. Einfach QR-Code scannen."}},
+        {"@type":"Question","name":"Was kostet es nach dem kostenlosen Test?","acceptedAnswer":{"@type":"Answer","text":"Solo €59/Monat, Business €149/Monat, Agentur €349/Monat — alle zzgl. MwSt., monatlich kündbar."}},
+        {"@type":"Question","name":"Ist der Dienst DSGVO-konform?","acceptedAnswer":{"@type":"Answer","text":"Ja. Server in Deutschland (Frankfurt). DSGVO-konformer Betrieb. Vollständige Datenschutzerklärung verfügbar."}}
       ]
     }
   ]
