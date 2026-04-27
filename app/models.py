@@ -130,6 +130,9 @@ class BotConfig(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     # Cooldown: avoid answering too fast (seconds)
     response_delay = db.Column(db.Integer, default=2)
+    # Owner notification: WhatsApp number to notify when a booking/order is made
+    # Format: international without +, e.g. 4917612345678
+    notification_phone = db.Column(db.String(50), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 

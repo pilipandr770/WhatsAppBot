@@ -208,6 +208,34 @@
         </div>
       </div>
 
+      <!-- ──────────────────────────────────────────── -->
+      <!-- OWNER NOTIFICATIONS                        -->
+      <!-- ──────────────────────────────────────────── -->
+      <div class="card" style="border-color:rgba(251,191,36,0.35);">
+        <div class="card-title" style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          🔔 Benachrichtigungen
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
+          Dein WhatsApp erhält eine Nachricht, wenn der Bot
+          einen <strong>Termin gebucht</strong> oder einen
+          <strong>Eintrag in der Tabelle</strong> gespeichert hat.
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Deine WhatsApp-Nummer</label>
+          <input type="tel" name="notification_phone" form="config-form"
+                 class="form-input"
+                 value="{{ config.notification_phone or '' }}"
+                 placeholder="4917612345678"
+                 pattern="[0-9]{7,15}"
+                 title="Nur Ziffern, internationale Schreibweise ohne +">
+          <div class="form-hint">
+            International ohne +, z. B. <code>4917612345678</code>.<br>
+            Leer lassen → keine Benachrichtigungen.
+          </div>
+        </div>
+      </div>
+      <!-- /OWNER NOTIFICATIONS -->
+
       <!-- Save button — submits the external #config-form via HTML5 form= attribute -->
       <button type="submit" form="config-form" class="btn btn-primary"
               style="width:100%;justify-content:center;">

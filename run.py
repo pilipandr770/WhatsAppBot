@@ -15,5 +15,18 @@ with app.app_context():
             conn.commit()
     db.create_all()
 
+    # ── Additive migrations (safe to run repeatedly) ──────────────────────────
+    # Add columns that were introduced after initial deployment.
+    _additive_migrations = [
+        "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS notification_phone VARCHAR(50)",
+    ]
+    with db.engine.connect() as _conn:
+        for _sql in _additive_migrations:
+            try:
+                _conn.execute(text(_sql))
+            except Exception as _e:
+                pass  # column may already exist on fresh DBs created by create_all()
+        _conn.commit()
+
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)

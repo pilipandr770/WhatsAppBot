@@ -208,11 +208,21 @@ def _process_single_message(instance_name: str, msg_data: dict):
     # Use Google tools if this instance has an active Google token
     has_google = bool(instance.google_token and instance.google_token.access_token)
 
+    # Collect write-tool events for owner notifications
+    write_events: list = []
+
+    # Tools that count as "write" operations → trigger owner notification
+    _WRITE_TOOLS = {'google_calendar_create_event', 'google_sheets_append'}
+
     if has_google:
         _inst_id = instance.id  # capture for closure
 
         def _tool_executor(tool_name: str, tool_input: dict) -> str:
-            return google_execute_tool(tool_name, tool_input, _inst_id)
+            result = google_execute_tool(tool_name, tool_input, _inst_id)
+            # Track successful write operations (result starts with ✅)
+            if tool_name in _WRITE_TOOLS and result.startswith('✅'):
+                write_events.append({'tool': tool_name, 'input': tool_input, 'result': result})
+            return result
 
         ai_text = get_ai_response_with_tools(
             system_prompt=system_prompt,
@@ -253,6 +263,71 @@ def _process_single_message(instance_name: str, msg_data: dict):
     )
 
     logger.info(f"Replied to {contact_jid} on {instance_name}: {len(ai_text)} chars")
+
+    # ── Owner notifications for write-tool events ─────────────────────────────
+    if write_events and config.notification_phone:
+        owner_jid = f"{config.notification_phone}@s.whatsapp.net"
+        contact_display = conversation.contact_name or contact_jid.split('@')[0]
+        customer_phone  = contact_jid.split('@')[0]
+
+        for ev in write_events:
+            notif = _build_owner_notification(ev, contact_display, customer_phone)
+            try:
+                evolution_client.send_text(
+                    instance_name=instance_name,
+                    token=instance.api_token,
+                    to_jid=owner_jid,
+                    text=notif
+                )
+                logger.info(
+                    f"Owner notification sent to {owner_jid} "
+                    f"for {ev['tool']} on {instance_name}"
+                )
+            except Exception as notif_err:
+                logger.warning(f"Owner notification failed: {notif_err}")
+
+
+def _build_owner_notification(event: dict, contact_name: str, customer_phone: str) -> str:
+    """Build a human-readable WhatsApp notification for the business owner."""
+    tool  = event['tool']
+    inp   = event['input']
+
+    if tool == 'google_calendar_create_event':
+        summary  = inp.get('summary', '—')
+        start    = inp.get('start_datetime', '—')
+        end      = inp.get('end_datetime', '—')
+        desc     = inp.get('description', '')
+        lines = [
+            "📅 *Neuer Termin gebucht!*",
+            "",
+            f"👤 Kunde: {contact_name}",
+            f"📞 Nummer: +{customer_phone}",
+            f"📌 Termin: {summary}",
+            f"🕐 Start: {start}",
+            f"🕑 Ende:  {end}",
+        ]
+        if desc:
+            lines.append(f"📝 Notiz: {desc}")
+        lines += ["", "— dein WhatsApp Bot 🤖"]
+        return '\n'.join(lines)
+
+    elif tool == 'google_sheets_append':
+        values = inp.get('values', [])
+        value_str = ' | '.join(str(v) for v in values) if values else '—'
+        return (
+            f"📋 *Neuer Eintrag gespeichert!*\n\n"
+            f"👤 Kunde: {contact_name}\n"
+            f"📞 Nummer: +{customer_phone}\n"
+            f"📊 Daten: {value_str}\n\n"
+            "— dein WhatsApp Bot 🤖"
+        )
+
+    # Fallback for other write tools
+    return (
+        f"✅ *Aktion ausgeführt: {tool}*\n\n"
+        f"👤 Kunde: {contact_name} (+{customer_phone})\n\n"
+        "— dein WhatsApp Bot 🤖"
+    )
 
 
 def _process_qr_update(instance_name: str, data: dict):

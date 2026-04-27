@@ -264,6 +264,10 @@ def bot_config(instance_id):
             config.max_tokens = 500
         config.use_rag = request.form.get('use_rag') == 'on'
         config.is_active = request.form.get('is_active') == 'on'
+        # Normalize notification phone: strip spaces, dashes, leading +
+        notif_raw = request.form.get('notification_phone', '').strip()
+        notif_clean = ''.join(c for c in notif_raw if c.isdigit())
+        config.notification_phone = notif_clean or None
         db.session.commit()
         flash('Konfiguration gespeichert.', 'success')
         return redirect(url_for('dashboard.bot_config', instance_id=instance_id))
