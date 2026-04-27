@@ -1,9 +1,16 @@
-from flask import Blueprint, render_template, redirect, url_for, Response
+from flask import Blueprint, render_template, redirect, url_for, Response, send_from_directory
 from flask_login import current_user
+import os
 
 main_bp = Blueprint('main', __name__)
 
 SITE_URL = 'https://whatsappbothelfer.de'
+
+
+@main_bp.route('/favicon.ico')
+def favicon():
+    static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')
+    return send_from_directory(static_dir, 'favicon.ico', mimetype='image/x-icon')
 
 
 @main_bp.route('/')
