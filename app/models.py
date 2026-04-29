@@ -8,7 +8,7 @@ TRIAL_DAYS = 3
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    return db.session.get(User, int(user_id))
 
 
 class User(db.Model, UserMixin):
@@ -197,12 +197,12 @@ class SiteConfig(db.Model):
 
     @classmethod
     def get(cls, key: str, default: str = '') -> str:
-        row = cls.query.get(key)
+        row = db.session.get(cls, key)
         return row.value if row else default
 
     @classmethod
     def set(cls, key: str, value: str):
-        row = cls.query.get(key)
+        row = db.session.get(cls, key)
         if row:
             row.value = value
         else:

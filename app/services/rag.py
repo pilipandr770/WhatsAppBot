@@ -84,7 +84,7 @@ def search_relevant_chunks(instance_id: int, query: str, limit: int = 3) -> Opti
 
     query_words = set(re.findall(r'\w+', query.lower()))
     # Remove very common German/English stop words
-    stop_words = {'der', 'die', 'das', 'und', 'ist', 'ich', 'Sie', 'the', 'is', 'and', 'a', 'in', 'zu', 'von'}
+    stop_words = {'der', 'die', 'das', 'und', 'ist', 'ich', 'sie', 'the', 'is', 'and', 'a', 'in', 'zu', 'von'}
     query_words -= stop_words
 
     if not query_words:
