@@ -1,3 +1,5 @@
+import os
+import stripe
 from datetime import datetime, timedelta
 from urllib.parse import urlparse
 from flask import Blueprint, render_template, redirect, url_for, flash, request
@@ -120,7 +122,6 @@ def delete_account():
 
     # Cancel Stripe subscription if active
     if user.subscription and user.subscription.stripe_subscription_id:
-        import stripe, os
         stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
         try:
             stripe.Subscription.cancel(user.subscription.stripe_subscription_id)

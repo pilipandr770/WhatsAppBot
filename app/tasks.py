@@ -43,7 +43,7 @@ def process_document(self, document_id: int):
     logger = logging.getLogger(__name__)
 
     try:
-        doc = Document.query.get(document_id)
+        doc = db.session.get(Document, document_id)
         if not doc:
             return
 
@@ -82,7 +82,7 @@ def process_document(self, document_id: int):
     except Exception as exc:
         logger.error(f"Document processing failed for {document_id}: {exc}")
         try:
-            doc = Document.query.get(document_id)
+            doc = db.session.get(Document, document_id)
             if doc:
                 doc.status = 'error'
                 doc.error_message = str(exc)[:500]

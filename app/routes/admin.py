@@ -32,7 +32,7 @@ def index():
         ~User.subscription.has(status='active')
     ).count()
     total_instances = WhatsAppInstance.query.count()
-    total_messages = db.session.query(db.func.sum(Message.id)).scalar() or 0
+    total_messages = db.session.query(db.func.count(Message.id)).scalar() or 0
     recent_users = User.query.order_by(User.created_at.desc()).limit(10).all()
 
     return render_template('admin/dashboard.html',
@@ -63,7 +63,7 @@ def users():
 @login_required
 @admin_required
 def user_detail(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     instances = WhatsAppInstance.query.filter_by(user_id=user_id).all()
     return render_template('admin/user_detail.html',
         user=user, instances=instances,
@@ -75,7 +75,7 @@ def user_detail(user_id):
 @login_required
 @admin_required
 def set_plan(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     plan = request.form.get('plan', 'starter')
     action = request.form.get('action', 'activate')
 
@@ -134,7 +134,7 @@ def demo_bot():
 @login_required
 @admin_required
 def toggle_admin(user_id):
-    user = User.query.get_or_404(user_id)
+    user = db.get_or_404(User, user_id)
     if user.id == current_user.id:
         flash('Du kannst deinen eigenen Admin-Status nicht ändern.', 'error')
         return redirect(url_for('admin.user_detail', user_id=user_id))

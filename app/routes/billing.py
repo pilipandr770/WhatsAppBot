@@ -51,9 +51,9 @@ PLANS = {
         'name': 'Agentur',
         'price': '€349',
         'period': '/Monat',
-        'instances': 10,
+        'instances': 15,
         'features': [
-            '10 WhatsApp-Nummern',
+            '15 WhatsApp-Nummern',
             'Alle Business-Features',
             'Google Kalender & Sheets',
             'White-Label-Option',
@@ -255,7 +255,7 @@ def _handle_checkout_completed(session):
         logger.warning(f"checkout.session.completed: missing user_id or subscription")
         return
 
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         logger.warning(f"checkout.session.completed: user {user_id} not found")
         return
@@ -341,7 +341,7 @@ def _handle_subscription_resumed(stripe_sub):
         sub.status = 'active'
         sub.instances_limit = _instances_for_plan(sub.plan)
         if stripe_sub.get('current_period_end'):
-            sub.current_period_end = datetime.fromtimestamp(int(stripe_sub['current_period_end']))
+            sub.current_period_end = datetime.utcfromtimestamp(int(stripe_sub['current_period_end']))
         db.session.commit()
         logger.info(f"Subscription resumed: sub_id={stripe_sub['id']}")
 
@@ -387,7 +387,7 @@ def _upsert_subscription(user, stripe_sub_id, price_id, status, plan_key, period
     sub.plan                   = plan_key
     sub.instances_limit        = _instances_for_plan(plan_key) if status in ('active', 'trialing') else 0
     if period_end:
-        sub.current_period_end = datetime.fromtimestamp(int(period_end))
+        sub.current_period_end = datetime.utcfromtimestamp(int(period_end))
 
     db.session.commit()
 
