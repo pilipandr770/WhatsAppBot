@@ -6,6 +6,7 @@
   <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
   <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Datenschutzerklärung</h1>
   <p style="color:#6b7280;margin-bottom:32px;">Stand: April 2026 · gemäß DSGVO (EU) 2016/679</p>
+  <p style="color:#6b7280;margin-bottom:24px;">Diese Datenschutzerklärung gilt für die Dienste unter https://whatsappbothelfer.de und beschreibt, wie wir Google-Nutzerdaten sowie andere personenbezogene Daten erheben, verwenden, speichern und ggf. weitergeben.</p>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">1. Verantwortlicher</h2>
   <p>
@@ -74,6 +75,15 @@
   Werbezwecke. Der Zugriff kann jederzeit unter
   <a href="https://myaccount.google.com/permissions" target="_blank">myaccount.google.com/permissions</a> widerrufen werden.<br>
   Google Datenschutz: <a href="https://policies.google.com/privacy" target="_blank">policies.google.com/privacy</a></p>
+
+  <p style="font-weight:600;margin-top:8px;">Google API - Berechtigungen und Verwendung</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li><strong>https://www.googleapis.com/auth/calendar.events</strong> — Erlaubt das Erstellen, Lesen und Aktualisieren von Ereignissen im Kalender des Nutzers. Wir verwenden diesen Zugriff ausschließlich, um vom Nutzer beauftragte Termine einzutragen oder zu ändern.</li>
+    <li><strong>https://www.googleapis.com/auth/spreadsheets</strong> — Ermöglicht das Lesen und Schreiben von Google Sheets, nur für vom Nutzer konfigurierte Tabellen (z. B. zur Ablage von Daten oder Vorlagen).</li>
+    <li><strong>openid</strong> und <strong>email</strong> — Standard-OIDC-Bereiche zur Authentifizierung und zur Ermittlung der E-Mail-Adresse des Nutzers; es werden keine weiteren Google-Profilinformationen abgerufen.</li>
+  </ul>
+
+  <p>Technische Details zur Speicherung: Zugriffstoken und (falls ausgestellt) Refresh-Tokens werden verschlüsselt/geschützt in unserer Datenbank gespeichert und sind nur mit dem verbundenen Nutzerkonto verknüpft. Tokens werden ausschließlich zur Aufrechterhaltung der Integration verwendet (z. B. Token-Refresh) und nicht an unbeteiligte Dritte weitergegeben. Nutzer können die Verbindung jederzeit über die Dashboard‑Einstellungen trennen; beim Trennen werden die Token bei uns widerrufen und gelöscht.</p>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Datenübertragung in Drittländer</h2>
   <p>Einige der oben genannten Dienste (Anthropic, OpenAI, Stripe) verarbeiten Daten in den USA.
