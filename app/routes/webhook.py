@@ -205,6 +205,19 @@ def _process_single_message(instance_name: str, msg_data: dict):
             '(automatisch transkribiert). Antworte normal, erwähne die Transkription nicht.'
         )
 
+    # Inject current date/time so Claude can resolve relative times ("tomorrow", "next Monday")
+    from datetime import timezone as _tz
+    import zoneinfo
+    _local_tz = zoneinfo.ZoneInfo(os.environ.get('CALENDAR_TIMEZONE', 'Europe/Berlin'))
+    _now = datetime.now(_local_tz)
+    _datetime_hint = (
+        f"\n\nAktuelles Datum und Uhrzeit: "
+        f"{_now.strftime('%A, %d.%m.%Y %H:%M')} "
+        f"(Zeitzone: {os.environ.get('CALENDAR_TIMEZONE', 'Europe/Berlin')}). "
+        "Verwende diese Information, wenn Terminzeiten berechnet werden müssen."
+    )
+    system_prompt = system_prompt + _datetime_hint
+
     # Use Google tools if this instance has an active Google token
     has_google = bool(instance.google_token and instance.google_token.access_token)
 
@@ -224,13 +237,14 @@ def _process_single_message(instance_name: str, msg_data: dict):
                 write_events.append({'tool': tool_name, 'input': tool_input, 'result': result})
             return result
 
+        # Ensure enough tokens for tool-use reasoning + final answer (min 1500)
         ai_text = get_ai_response_with_tools(
             system_prompt=system_prompt,
             messages=history,
             tools=GOOGLE_TOOLS,
             tool_executor=_tool_executor,
             rag_context=rag_context,
-            max_tokens=config.max_tokens
+            max_tokens=max(config.max_tokens, 1500)
         )
     else:
         ai_text = get_ai_response(

@@ -202,10 +202,13 @@ def create_calendar_event(
     from googleapiclient.discovery import build
 
     service = build('calendar', 'v3', credentials=creds, cache_discovery=False)
+    # Always specify timeZone — required when dateTime has no UTC offset,
+    # and harmless (ignored) when an explicit offset like +02:00 is present.
+    tz = os.environ.get('CALENDAR_TIMEZONE', 'Europe/Berlin')
     event_body = {
         'summary': summary,
-        'start': {'dateTime': start_datetime},
-        'end': {'dateTime': end_datetime},
+        'start': {'dateTime': start_datetime, 'timeZone': tz},
+        'end':   {'dateTime': end_datetime,   'timeZone': tz},
     }
     if description:
         event_body['description'] = description
