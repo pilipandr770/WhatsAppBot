@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
-{% block title %}Datenschutzerklärung{% endblock %}
-{% block meta_robots %}noindex, follow{% endblock %}
+{% block title %}Datenschutzerklärung — WhatsApp Bot Helfer{% endblock %}
+{% block meta_robots %}index, follow{% endblock %}
 {% block public_content %}
 <div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
   <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
@@ -68,22 +68,68 @@
   Datenschutz: <a href="https://www.hostinger.de/datenschutzerklaerung" target="_blank">hostinger.de/datenschutzerklaerung</a></p>
 
   <p><strong>Google LLC (Google API-Integration — optional)</strong><br>
-  Wenn der Nutzer die Google-Integration aktiviert (z. B. Google Calendar, Google Sheets),
-  erfolgt der Datenzugriff über OAuth 2.0 ausschließlich mit expliziter Einwilligung des Nutzers.
-  Wir verwenden Google-Nutzerdaten nur für den vom Nutzer konfigurierten Zweck (z. B. Termine
-  eintragen, Tabellen lesen). Wir verkaufen keine Google-Nutzerdaten und nutzen sie nicht für
-  Werbezwecke. Der Zugriff kann jederzeit unter
-  <a href="https://myaccount.google.com/permissions" target="_blank">myaccount.google.com/permissions</a> widerrufen werden.<br>
+  Wenn der Nutzer die Google-Integration aktiviert, erfolgt der Datenzugriff über OAuth 2.0
+  ausschließlich mit expliziter Einwilligung des Nutzers.<br>
   Google Datenschutz: <a href="https://policies.google.com/privacy" target="_blank">policies.google.com/privacy</a></p>
 
-  <p style="font-weight:600;margin-top:8px;">Google API - Berechtigungen und Verwendung</p>
-  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
-    <li><strong>https://www.googleapis.com/auth/calendar.events</strong> — Erlaubt das Erstellen, Lesen und Aktualisieren von Ereignissen im Kalender des Nutzers. Wir verwenden diesen Zugriff ausschließlich, um vom Nutzer beauftragte Termine einzutragen oder zu ändern.</li>
-    <li><strong>https://www.googleapis.com/auth/spreadsheets</strong> — Ermöglicht das Lesen und Schreiben von Google Sheets, nur für vom Nutzer konfigurierte Tabellen (z. B. zur Ablage von Daten oder Vorlagen).</li>
-    <li><strong>openid</strong> und <strong>email</strong> — Standard-OIDC-Bereiche zur Authentifizierung und zur Ermittlung der E-Mail-Adresse des Nutzers; es werden keine weiteren Google-Profilinformationen abgerufen.</li>
-  </ul>
+  <!-- ── Dedicated Google User Data Section (required for Google OAuth verification) ── -->
+  <div style="margin:24px 0;padding:20px;border:1px solid #2a2d33;border-radius:8px;background:#141618;">
+    <h3 style="font-size:15px;font-weight:700;margin:0 0 14px;color:#e8eaf0;">
+      Google User Data — Disclosure (Google API Services User Data Policy)
+    </h3>
 
-  <p>Technische Details zur Speicherung: Zugriffstoken und (falls ausgestellt) Refresh-Tokens werden verschlüsselt/geschützt in unserer Datenbank gespeichert und sind nur mit dem verbundenen Nutzerkonto verknüpft. Tokens werden ausschließlich zur Aufrechterhaltung der Integration verwendet (z. B. Token-Refresh) und nicht an unbeteiligte Dritte weitergegeben. Nutzer können die Verbindung jederzeit über die Dashboard‑Einstellungen trennen; beim Trennen werden die Token bei uns widerrufen und gelöscht.</p>
+    <p style="margin-bottom:10px;"><strong>1. What Google user data is accessed</strong><br>
+    When a user explicitly connects the Google integration in the dashboard, the app requests
+    access to the following Google user data via OAuth 2.0:</p>
+    <ul style="margin:0 0 14px 24px;color:var(--text-dim);">
+      <li><code>calendar.events</code> — read, create, and update calendar events in the user's primary Google Calendar</li>
+      <li><code>spreadsheets</code> — read and write data in Google Sheets spreadsheets configured by the user</li>
+      <li><code>email</code> / <code>openid</code> — the user's Google email address, used only to identify the connected account in the dashboard</li>
+    </ul>
+
+    <p style="margin-bottom:10px;"><strong>2. How Google user data is used</strong><br>
+    Google user data is used <em>solely</em> to provide the features the user has explicitly requested:
+    booking appointments in Google Calendar via the AI WhatsApp bot, and reading/writing data
+    in Google Sheets (e.g. logging leads or reading price lists). The data is not used for any
+    other purpose, including advertising, analytics, or profiling.</p>
+
+    <p style="margin-bottom:10px;"><strong>3. Storage of Google user data</strong><br>
+    OAuth access tokens and refresh tokens are stored in an encrypted, access-controlled database
+    hosted in Germany (Frankfurt). Tokens are linked exclusively to the user's account and are
+    accessible only to the application's core services. Calendar event content and spreadsheet
+    data are processed in real time and are <em>not</em> stored permanently by this application —
+    only the token required to maintain the integration is retained.</p>
+
+    <p style="margin-bottom:10px;"><strong>4. Sharing and transfer of Google user data</strong><br>
+    Google user data is <strong>not sold, rented, or shared</strong> with any third party.
+    It is <strong>not transferred</strong> to third parties for advertising, marketing, or any
+    purpose unrelated to providing this application's functionality. The only data flow is between
+    this application and the Google API on behalf of the authenticated user.</p>
+
+    <p style="margin-bottom:10px;"><strong>5. Data protection mechanisms</strong><br>
+    All communication with Google APIs uses HTTPS/TLS 1.2+. OAuth tokens are stored in an
+    encrypted database with restricted access. Tokens are automatically refreshed and never
+    exposed to end-users or third parties. The application uses the principle of least privilege
+    — only the minimum required scopes are requested.</p>
+
+    <p style="margin-bottom:10px;"><strong>6. Retention and deletion of Google user data</strong><br>
+    Google OAuth tokens are deleted immediately when the user disconnects the Google integration
+    via the dashboard ("Google trennen") or deletes their account. Tokens are also revoked at
+    Google's authorization server at the time of disconnection. No Google user data is retained
+    after account or integration deletion.</p>
+
+    <p style="margin-bottom:10px;"><strong>7. User control and revocation</strong><br>
+    Users can revoke Google access at any time:
+    <br>— Via the app dashboard → Bot configuration → Google-Integration → "Trennen"
+    <br>— Directly at <a href="https://myaccount.google.com/permissions" target="_blank" style="color:#9ca3af;">myaccount.google.com/permissions</a>
+    </p>
+
+    <p style="margin-bottom:0;"><strong>8. Compliance with Google API Services User Data Policy</strong><br>
+    The use and transfer of information received from Google APIs adheres to the
+    <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" style="color:#9ca3af;">Google API Services User Data Policy</a>,
+    including the Limited Use requirements. This application does not use Google data to develop,
+    improve, or train generalized AI/ML models.</p>
+  </div>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Datenübertragung in Drittländer</h2>
   <p>Einige der oben genannten Dienste (Anthropic, OpenAI, Stripe) verarbeiten Daten in den USA.

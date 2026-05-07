@@ -230,8 +230,8 @@ body { background:#0c0d10; }
   border-top:1px solid #1c1e22; color:#4b5563; font-size:13px;
 }
 .lp-footer-links { display:flex; gap:20px; justify-content:center; flex-wrap:wrap; margin-bottom:14px; }
-.lp-footer-links a { color:#4b5563; transition:color .15s; }
-.lp-footer-links a:hover { color:#6b7280; }
+.lp-footer-links a { color:#9ca3af; font-size:14px; transition:color .15s; }
+.lp-footer-links a:hover { color:#e8eaf0; }
 
 /* ── Responsive ───────────────────────────────────────────────────────── */
 @media (max-width:768px) {
@@ -260,6 +260,7 @@ body { background:#0c0d10; }
     <a href="#google">Google-Integration</a>
     <a href="#preise">Preise</a>
     <a href="#faq">FAQ</a>
+    <a href="{{ url_for('main.datenschutz') }}" style="color:#9ca3af;">Datenschutz</a>
   </div>
   <div class="lp-nav-actions">
     {% if demo_wa_url %}
@@ -488,9 +489,12 @@ body { background:#0c0d10; }
       </div>
     </div>
   </div>
+  <div style="margin-top:20px;padding:12px 16px;border:1px solid #2a2d33;border-radius:8px;
+              font-size:13px;color:#6b7280;text-align:center;">
+    🔒 Google-Nutzerdaten werden ausschließlich für die vom Nutzer konfigurierten Funktionen verwendet und niemals an Dritte weitergegeben.
+    <a href="{{ url_for('main.datenschutz') }}" style="color:#9ca3af;margin-left:6px;">Datenschutzrichtlinie →</a>
+  </div>
 </section>
-
-<!-- ═══ PRICING ════════════════════════════════════════════════════════════ -->
 <section class="section" id="preise" style="background:rgba(255,255,255,0.01);">
   <div class="section-label">Preise</div>
   <div class="section-title">Transparent. Fair. Keine Überraschungen.</div>
