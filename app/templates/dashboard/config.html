@@ -130,7 +130,7 @@
       <!-- ──────────────────────────────────────────── -->
       <!-- GOOGLE INTEGRATION                          -->
       <!-- ──────────────────────────────────────────── -->
-      <div class="card" style="border-color:{% if instance.google_token %}rgba(37,211,102,0.4){% else %}#2a2d33{% endif %};">
+      <div class="card" style="border-color:{% if instance.google_token %}rgba(99,102,241,0.4){% else %}#2a2d33{% endif %};">
 
         <div class="card-title" style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
           <!-- Google "G" colour logo (inline SVG, no external requests) -->
@@ -146,8 +146,8 @@
         {% if instance.google_token %}
           <!-- CONNECTED state -->
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-            <span style="width:8px;height:8px;background:#25D366;border-radius:50%;display:inline-block;"></span>
-            <span style="font-size:13px;color:#25D366;font-weight:600;">Verbunden</span>
+            <span style="width:8px;height:8px;background:#6366F1;border-radius:50%;display:inline-block;"></span>
+            <span style="font-size:13px;color:#6366F1;font-weight:600;">Verbunden</span>
           </div>
           {% if instance.google_token.google_email %}
           <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
@@ -190,7 +190,7 @@
       <!-- /GOOGLE INTEGRATION -->
 
       <!-- Stats -->
-      <div class="card" style="background:var(--accent-dim);border-color:rgba(37,211,102,0.2);">
+      <div class="card" style="background:var(--accent-dim);border-color:rgba(99,102,241,0.2);">
         <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">📊 Statistiken</div>
         <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;">
           <div style="display:flex;justify-content:space-between;">
@@ -248,3 +248,4 @@
 
 </div>{# /page-body #}
 {% endblock %}
+

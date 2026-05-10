@@ -44,8 +44,8 @@
     {% set sub = current_user.subscription %}
     {% if sub and sub.is_active %}
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px;">
-        <span style="width:8px;height:8px;background:#25D366;border-radius:50%;display:inline-block;"></span>
-        <span style="color:#25D366;font-weight:600;font-size:13px;">Aktiv — {{ sub.plan|capitalize }}</span>
+        <span style="width:8px;height:8px;background:#6366F1;border-radius:50%;display:inline-block;"></span>
+        <span style="color:#6366F1;font-weight:600;font-size:13px;">Aktiv — {{ sub.plan|capitalize }}</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:16px;">
         <div style="display:flex;justify-content:space-between;">
@@ -162,3 +162,4 @@
 </div>
 </div>
 {% endblock %}
+

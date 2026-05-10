@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
-{% block title %}WhatsApp Bot Helfer — KI-Chatbot für dein Unternehmen{% endblock %}
-{% block meta_description %}WhatsApp Bot Helfer: Automatisiere deinen WhatsApp-Kundenservice mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender, Google Sheets, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
-{% block og_title %}WhatsApp Bot Helfer — Automatischer KI-Support auf WhatsApp{% endblock %}
+{% block title %}AI Chat Pro — KI-Chatbot für dein Unternehmen{% endblock %}
+{% block meta_description %}AI Chat Pro: Automatisiere deinen Customer Service mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender, Google Sheets, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
+{% block og_title %}AI Chat Pro — Automatischer AI Support auf WhatsApp{% endblock %}
 {% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Keine WhatsApp Business API nötig. Ab €59/Monat. 3 Tage gratis.{% endblock %}
 
 {% block public_content %}
@@ -26,12 +26,12 @@ body { background:#0c0d10; }
 /* ── Hero ─────────────────────────────────────────────────────────────── */
 .hero {
   text-align:center; padding:96px 24px 72px;
-  background:radial-gradient(ellipse 900px 500px at 50% 0%, rgba(37,211,102,0.07) 0%, transparent 70%);
+  background:radial-gradient(ellipse 900px 500px at 50% 0%, rgba(99,102,241,0.07) 0%, transparent 70%);
 }
 .hero-badge {
   display:inline-flex; align-items:center; gap:6px;
-  background:rgba(37,211,102,0.1); color:#25D366;
-  border:1px solid rgba(37,211,102,0.25); border-radius:20px;
+  background:rgba(99,102,241,0.1); color:#6366F1;
+  border:1px solid rgba(99,102,241,0.25); border-radius:20px;
   padding:5px 14px; font-size:12px; font-weight:600;
   margin-bottom:28px; text-transform:uppercase; letter-spacing:0.07em;
 }
@@ -39,7 +39,7 @@ body { background:#0c0d10; }
   font-size:54px; font-weight:700; line-height:1.13;
   max-width:720px; margin:0 auto 22px; color:#e8eaf0;
 }
-.hero h1 span { color:#25D366; }
+.hero h1 span { color:#6366F1; }
 .hero p {
   font-size:17.5px; color:#6b7280; max-width:520px;
   margin:0 auto 40px; line-height:1.75;
@@ -55,7 +55,7 @@ body { background:#0c0d10; }
 .section { padding:80px 24px; }
 .section-label {
   text-align:center; font-size:11.5px; font-weight:700; letter-spacing:0.1em;
-  text-transform:uppercase; color:#25D366; margin-bottom:12px;
+  text-transform:uppercase; color:#6366F1; margin-bottom:12px;
 }
 .section-title {
   text-align:center; font-size:34px; font-weight:700;
@@ -80,17 +80,17 @@ body { background:#0c0d10; }
   display:flex; align-items:center; gap:12px; border-bottom:1px solid #2a2d33;
 }
 .phone-avatar {
-  width:36px; height:36px; border-radius:50%; background:#25D366;
+  width:36px; height:36px; border-radius:50%; background:#6366F1;
   display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0;
 }
 .phone-name { font-size:13.5px; font-weight:600; color:#e8eaf0; }
-.phone-status { font-size:11.5px; color:#25D366; }
+.phone-status { font-size:11.5px; color:#6366F1; }
 .chat-area { padding:16px; display:flex; flex-direction:column; gap:10px; min-height:300px; }
 
 /* Chat bubbles */
 .bubble { max-width:75%; padding:10px 14px; border-radius:12px; font-size:13px; line-height:1.5; }
 .bubble-in  { background:#1c1e22; color:#d1d5db; border-radius:12px 12px 12px 2px; align-self:flex-start; }
-.bubble-out { background:#25D366; color:#000; border-radius:12px 12px 2px 12px; align-self:flex-end; }
+.bubble-out { background:#6366F1; color:#fff; border-radius:12px 12px 2px 12px; align-self:flex-end; }
 .bubble-time { font-size:10.5px; opacity:.6; margin-top:4px; text-align:right; }
 
 /* Animation */
@@ -111,7 +111,7 @@ body { background:#0c0d10; }
 .demo-text p  { color:#6b7280; font-size:14.5px; line-height:1.75; margin-bottom:20px; }
 .demo-check   { display:flex; flex-direction:column; gap:10px; }
 .demo-check-item { display:flex; align-items:flex-start; gap:10px; font-size:13.5px; color:#9ca3af; }
-.demo-check-item span:first-child { color:#25D366; font-size:15px; flex-shrink:0; margin-top:1px; }
+.demo-check-item span:first-child { color:#6366F1; font-size:15px; flex-shrink:0; margin-top:1px; }
 
 /* ── Features grid ────────────────────────────────────────────────────── */
 .features { display:grid; grid-template-columns:repeat(3,1fr); gap:18px; max-width:960px; margin:0 auto; }
@@ -126,8 +126,8 @@ body { background:#0c0d10; }
 
 /* ── Google highlight ─────────────────────────────────────────────────── */
 .google-section {
-  background:linear-gradient(135deg, rgba(37,211,102,0.06) 0%, rgba(25,118,210,0.06) 100%);
-  border:1px solid rgba(37,211,102,0.15); border-radius:20px;
+  background:linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(25,118,210,0.06) 100%);
+  border:1px solid rgba(99,102,241,0.15); border-radius:20px;
   max-width:960px; margin:0 auto;
   padding:56px 48px;
   display:grid; grid-template-columns:1fr 1fr; gap:48px; align-items:center;
@@ -156,12 +156,12 @@ body { background:#0c0d10; }
   padding:32px 28px; display:flex; flex-direction:column; position:relative;
 }
 .plan-card.highlight {
-  border-color:rgba(37,211,102,0.4);
-  background:linear-gradient(135deg,rgba(37,211,102,0.06) 0%,#141618 60%);
+  border-color:rgba(99,102,241,0.4);
+  background:linear-gradient(135deg,rgba(99,102,241,0.06) 0%,#141618 60%);
 }
 .plan-popular {
   position:absolute; top:-12px; left:50%; transform:translateX(-50%);
-  background:#25D366; color:#000; font-size:11px; font-weight:700;
+  background:#6366F1; color:#000; font-size:11px; font-weight:700;
   padding:4px 14px; border-radius:20px; letter-spacing:.05em; text-transform:uppercase;
   white-space:nowrap;
 }
@@ -172,7 +172,7 @@ body { background:#0c0d10; }
 .plan-divider { border:none; border-top:1px solid #2a2d33; margin:20px 0; }
 .plan-features { display:flex; flex-direction:column; gap:10px; flex:1; margin-bottom:28px; }
 .plan-feature { display:flex; align-items:flex-start; gap:9px; font-size:13.5px; color:#9ca3af; }
-.plan-feature span:first-child { color:#25D366; flex-shrink:0; margin-top:1px; }
+.plan-feature span:first-child { color:#6366F1; flex-shrink:0; margin-top:1px; }
 .plan-trial { text-align:center; font-size:12px; color:#4b5563; margin-top:12px; }
 
 /* ── Social proof ─────────────────────────────────────────────────────── */
@@ -188,7 +188,7 @@ body { background:#0c0d10; }
 .testimonial-author { display:flex; align-items:center; gap:12px; }
 .testimonial-avatar {
   width:38px; height:38px; border-radius:50%;
-  background:linear-gradient(135deg,#25D366,#1a9e4a);
+  background:linear-gradient(135deg,#6366F1,#4f46e5);
   display:flex; align-items:center; justify-content:center;
   font-weight:700; font-size:14px; color:#000; flex-shrink:0;
 }
@@ -207,7 +207,7 @@ body { background:#0c0d10; }
   user-select:none;
 }
 .faq-q:hover { background:#1c1e22; }
-.faq-q::after { content:'＋'; color:#25D366; font-size:18px; flex-shrink:0; transition:transform .2s; }
+.faq-q::after { content:'＋'; color:#6366F1; font-size:18px; flex-shrink:0; transition:transform .2s; }
 .faq-item.open .faq-q::after { transform:rotate(45deg); }
 .faq-a {
   display:none; padding:0 20px 18px; font-size:13.5px;
@@ -217,8 +217,8 @@ body { background:#0c0d10; }
 
 /* ── Final CTA ────────────────────────────────────────────────────────── */
 .final-cta {
-  background:linear-gradient(135deg, rgba(37,211,102,0.1) 0%, rgba(37,211,102,0.03) 100%);
-  border:1px solid rgba(37,211,102,0.2); border-radius:20px;
+  background:linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(99,102,241,0.03) 100%);
+  border:1px solid rgba(99,102,241,0.2); border-radius:20px;
   max-width:700px; margin:0 auto; padding:64px 40px; text-align:center;
 }
 .final-cta h2 { font-size:32px; font-weight:700; color:#e8eaf0; margin-bottom:16px; line-height:1.25; }
@@ -265,7 +265,7 @@ body { background:#0c0d10; }
   <div class="lp-nav-actions">
     {% if demo_wa_url %}
     <a href="{{ demo_wa_url }}" target="_blank" rel="noopener" class="btn btn-sm"
-       style="background:#25D366;color:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600;">
+       style="background:#6366F1;color:#fff;display:inline-flex;align-items:center;gap:6px;font-weight:600;">
       <svg width="15" height="15" viewBox="0 0 24 24" fill="white" style="flex-shrink:0;">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
         <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.12 1.532 5.847L.057 23.882l6.197-1.625C7.88 23.408 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.668-.5-5.217-1.377l-.373-.22-3.872 1.016 1.034-3.775-.241-.387A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
@@ -283,9 +283,9 @@ body { background:#0c0d10; }
 <!-- ═══ HERO ══════════════════════════════════════════════════════════════ -->
 <section class="hero">
   <div class="hero-badge">🇩🇪 Made for Germany · DSGVO-konform</div>
-  <h1>Dein WhatsApp antwortet<br><span>automatisch — 24/7</span></h1>
+  <h1>Kundenanfragen werden beantwortet<br><span>automatisch — 24/7</span></h1>
   <p>
-    KI-Bot für WhatsApp: beantwortet Kundenanfragen, bucht Termine im Google Kalender
+    AI-Bot für Messaging: beantwortet Kundenanfragen, bucht Termine im Google Kalender
     und speichert Leads in Google Sheets — vollautomatisch, auf Deutsch.
   </p>
   <div class="hero-cta">
@@ -424,10 +424,10 @@ body { background:#0c0d10; }
 
 <!-- ═══ GOOGLE INTEGRATION ════════════════════════════════════════════════ -->
 <section class="section" id="google">
-  <div class="section-label">Exklusives Feature</div>
+  <div class="section-label">Premium Feature</div>
   <div class="section-title">Google-Integration — dein Wettbewerbsvorteil</div>
   <div class="section-sub">
-    Der einzige WhatsApp-Bot, der direkt mit Google Kalender und Google Sheets arbeitet —
+    Direct Integration mit Google Kalender und Google Sheets —
     ohne Zapier, ohne Umwege.
   </div>
 
@@ -541,7 +541,7 @@ body { background:#0c0d10; }
         <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
         <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
         <div class="plan-feature"><span>✓</span><span>Unbegrenzte Gespräche</span></div>
-        <div class="plan-feature"><span>✓</span><span><strong style="color:#25D366;">Prioritäts-Support</strong></span></div>
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#6366F1;">Prioritäts-Support</strong></span></div>
       </div>
       <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
          style="width:100%;justify-content:center;color:#000;font-weight:600;">
@@ -560,7 +560,7 @@ body { background:#0c0d10; }
         <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">10 WhatsApp-Nummern</strong></span></div>
         <div class="plan-feature"><span>✓</span><span>Alle Business-Features</span></div>
         <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
-        <div class="plan-feature"><span>✓</span><span><strong style="color:#25D366;">White-Label-Option</strong></span></div>
+        <div class="plan-feature"><span>✓</span><span><strong style="color:#6366F1;">White-Label-Option</strong></span></div>
         <div class="plan-feature"><span>✓</span><span>Dedicated Support</span></div>
         <div class="plan-feature"><span>✓</span><span>Für Agenturen & Wiederverkauf</span></div>
       </div>
@@ -693,10 +693,10 @@ body { background:#0c0d10; }
 <!-- ═══ FINAL CTA ══════════════════════════════════════════════════════════ -->
 <section class="section">
   <div class="final-cta">
-    <h2>Bereit, deinen WhatsApp<br>zu automatisieren?</h2>
+    <h2>Bereit, deine Kundenbetreuung<br>zu automatisieren?</h2>
     <p>
       3 Tage kostenlos testen · Keine Kreditkarte · Setup in 5 Minuten<br>
-      Starte jetzt und sieh wie der Bot für dich antwortet.
+      Starte jetzt und sieh wie der AI-Bot für dich antwortet.
     </p>
     <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
        style="font-size:16px;padding:14px 36px;color:#000;font-weight:700;">
@@ -718,7 +718,10 @@ body { background:#0c0d10; }
     <a href="#preise">Preise</a>
     <a href="{{ url_for('auth.login') }}">Anmelden</a>
   </div>
-  <div>© 2025–2026 WhatsApp Bot Helfer · Andrii Pylypchuk · Frankfurt am Main · DSGVO-konform 🔒</div>
+  <div>© 2025–2026 AI Chat Pro · Andrii Pylypchuk · Frankfurt am Main · DSGVO-konform 🔒</div>
+  <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(99,102,241,0.2);font-size:11px;color:#6b7280;text-align:center;">
+    <strong>Disclaimer:</strong> AI Chat Pro is an independent service and is not affiliated with, endorsed by, or associated with Meta Platforms, Inc. or WhatsApp LLC. WhatsApp® is a trademark of Meta Platforms, Inc.
+  </div>
 </footer>
 
 {% if demo_wa_url %}
@@ -727,19 +730,19 @@ body { background:#0c0d10; }
 .wa-float {
   position:fixed; bottom:28px; right:28px; z-index:999;
   display:flex; align-items:center; gap:0;
-  filter:drop-shadow(0 4px 16px rgba(37,211,102,0.45));
+  filter:drop-shadow(0 4px 16px rgba(99,102,241,0.45));
   text-decoration:none;
 }
 .wa-float-circle {
   width:58px; height:58px; border-radius:50%;
-  background:#25D366;
+  background:#6366F1;
   display:flex; align-items:center; justify-content:center;
   position:relative;
 }
 .wa-float-circle::before {
   content:'';
   position:absolute; inset:-4px; border-radius:50%;
-  background:rgba(37,211,102,0.25);
+  background:rgba(99,102,241,0.25);
   animation:wa-pulse 2s ease-in-out infinite;
 }
 @keyframes wa-pulse {
@@ -747,7 +750,7 @@ body { background:#0c0d10; }
   50%      { transform:scale(1.18); opacity:0; }
 }
 .wa-float-label {
-  background:#25D366; color:#fff;
+  background:#6366F1; color:#fff;
   font-size:13px; font-weight:600;
   padding:8px 14px 8px 10px;
   border-radius:0 24px 24px 0;
@@ -801,14 +804,14 @@ document.querySelectorAll('.faq-q').forEach(q => {
       "@type": "WebSite",
       "@id": "https://whatsappbothelfer.de/#website",
       "url": "https://whatsappbothelfer.de",
-      "name": "WhatsApp Bot Helfer",
-      "description": "KI-gestützter WhatsApp-Chatbot-Service für deutsche Unternehmen",
+      "name": "AI Chat Pro",
+      "description": "AI-powered customer service automation platform for German businesses",
       "inLanguage": "de-DE"
     },
     {
       "@type": "Organization",
       "@id": "https://whatsappbothelfer.de/#organization",
-      "name": "WhatsApp Bot Helfer",
+      "name": "AI Chat Pro",
       "url": "https://whatsappbothelfer.de",
       "contactPoint": {
         "@type": "ContactPoint",
@@ -825,11 +828,11 @@ document.querySelectorAll('.faq-q').forEach(q => {
     {
       "@type": "SoftwareApplication",
       "@id": "https://whatsappbothelfer.de/#product",
-      "name": "WhatsApp Bot Helfer",
+      "name": "AI Chat Pro",
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
       "url": "https://whatsappbothelfer.de",
-      "description": "Automatisiere deinen WhatsApp-Kundenservice mit KI. Claude AI beantwortet Kundenfragen 24/7 auf Deutsch — mit Google Kalender, Google Sheets, Wissensdatenbank und Sprachverständnis.",
+      "description": "AI-powered customer service automation. Claude AI answers customer questions 24/7 in German — with Google Calendar, Google Sheets, knowledge database, and voice understanding. Works with any messaging platform.",
       "offers": [
         {"@type":"Offer","name":"Solo","price":"59.00","priceCurrency":"EUR","description":"1 WhatsApp-Nummer, alle Features"},
         {"@type":"Offer","name":"Business","price":"149.00","priceCurrency":"EUR","description":"3 WhatsApp-Nummern, Prioritätssupport"},
@@ -860,3 +863,5 @@ document.querySelectorAll('.faq-q').forEach(q => {
 }
 </script>
 {% endblock %}
+
+

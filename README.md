@@ -1,4 +1,4 @@
-# WA.AI — WhatsApp KI-Support SaaS
+# WA.AI — AI Chat Pro - AI Chatbot SaaS
 
 WhatsApp AI-Support platform. Tenants connect their WhatsApp number,
 configure a bot prompt, upload documents (RAG), and Claude answers
@@ -122,3 +122,4 @@ docker-compose exec postgres psql -U wauser -d whatsapp_saas
 # Celery status
 docker-compose exec worker celery -A app.tasks.celery inspect active
 ```
+

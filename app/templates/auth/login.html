@@ -8,7 +8,7 @@
     <div style="text-align:center;margin-bottom:32px;">
       <div style="font-size:40px;margin-bottom:8px;">💬</div>
       <div style="font-size:22px;font-weight:700;">WA.AI</div>
-      <div style="color:var(--text-muted);font-size:13.5px;margin-top:4px;">WhatsApp KI-Support</div>
+      <div style="color:var(--text-muted);font-size:13.5px;margin-top:4px;">AI Chat Pro</div>
     </div>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -43,6 +43,11 @@
       Noch kein Konto?
       <a href="{{ url_for('auth.register') }}" style="margin-left:4px;">Registrieren →</a>
     </div>
+
+    <div style="margin-top:24px;padding:12px;background:rgba(99,102,241,0.05);border:1px solid rgba(99,102,241,0.1);border-radius:8px;font-size:11px;color:#6b7280;text-align:center;">
+      <strong>Disclaimer:</strong> AI Chat Pro is independent and not affiliated with Meta or WhatsApp LLC.
+    </div>
   </div>
 </div>
 {% endblock %}
+

@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}WhatsApp Bot Helfer{% endblock %} — KI-Chatbot für WhatsApp</title>
+  <title>{% block title %}AI Chat Pro{% endblock %} — KI-Chatbot für WhatsApp</title>
 
   <!-- SEO Meta -->
-  <meta name="description" content="{% block meta_description %}WhatsApp Bot Helfer: KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Ohne WhatsApp Business API — einfach QR-Code scannen. Jetzt 3 Tage kostenlos testen.{% endblock %}">
+  <meta name="description" content="{% block meta_description %}AI Chat Pro: KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Ohne WhatsApp Business API — einfach QR-Code scannen. Jetzt 3 Tage kostenlos testen.{% endblock %}">
   <meta name="keywords" content="WhatsApp Bot, WhatsApp KI, WhatsApp Chatbot, WhatsApp Automatisierung, Kundenservice automatisieren, KI Chatbot Deutschland">
-  <meta name="author" content="WhatsApp Bot Helfer">
+  <meta name="author" content="AI Chat Pro">
   <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
   <link rel="canonical" href="{% block canonical %}https://whatsappbothelfer.de{{ request.path }}{% endblock %}">
   <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
@@ -22,16 +22,16 @@
 
   <!-- Open Graph -->
   <meta property="og:type" content="{% block og_type %}website{% endblock %}">
-  <meta property="og:title" content="{% block og_title %}WhatsApp Bot Helfer — KI-Chatbot für WhatsApp{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}AI Chat Pro — KI-Chatbot für WhatsApp{% endblock %}">
   <meta property="og:description" content="{% block og_description %}KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Sprachnachrichten, Wissensdatenbank, 24/7 Automatisierung. Jetzt kostenlos testen.{% endblock %}">
   <meta property="og:url" content="https://whatsappbothelfer.de{{ request.path }}">
-  <meta property="og:site_name" content="WhatsApp Bot Helfer">
+  <meta property="og:site_name" content="AI Chat Pro">
   <meta property="og:locale" content="de_DE">
   <meta property="og:image" content="{% block og_image %}https://whatsappbothelfer.de/static/og-image.png{% endblock %}">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="{% block twitter_title %}WhatsApp Bot Helfer — KI-Chatbot für WhatsApp{% endblock %}">
+  <meta name="twitter:title" content="{% block twitter_title %}AI Chat Pro — KI-Chatbot für WhatsApp{% endblock %}">
   <meta name="twitter:description" content="KI-gestützter WhatsApp-Chatbot für deutsche Unternehmen. Jetzt kostenlos testen.">
   <meta name="twitter:image" content="https://whatsappbothelfer.de/static/og-image.png">
 
@@ -52,9 +52,9 @@
       --text: #e8eaf0;
       --text-muted: #6b7280;
       --text-dim: #9ca3af;
-      --accent: #25D366;
-      --accent-dim: rgba(37,211,102,0.12);
-      --accent-glow: rgba(37,211,102,0.25);
+      --accent: #6366F1;
+      --accent-dim: rgba(99,102,241,0.12);
+      --accent-glow: rgba(99,102,241,0.25);
       --danger: #ef4444;
       --warning: #f59e0b;
       --info: #3b82f6;
@@ -205,7 +205,7 @@
       border-radius: 20px;
       font-size: 12px; font-weight: 500;
     }
-    .badge-green { background: rgba(37,211,102,0.12); color: #25D366; }
+    .badge-green { background: rgba(99,102,241,0.12); color: #6366F1; }
     .badge-yellow { background: rgba(245,158,11,0.12); color: var(--warning); }
     .badge-red { background: rgba(239,68,68,0.12); color: var(--danger); }
     .badge-gray { background: var(--surface-2); color: var(--text-muted); }
@@ -219,7 +219,7 @@
       font-size: 13.5px; margin-bottom: 16px;
       display: flex; align-items: flex-start; gap: 10px;
     }
-    .alert-success { background: rgba(37,211,102,0.08); border: 1px solid rgba(37,211,102,0.2); color: #4ade80; }
+    .alert-success { background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2); color: #4ade80; }
     .alert-error { background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2); color: #f87171; }
     .alert-info { background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2); color: #60a5fa; }
     .alert-warning { background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2); color: #fbbf24; }
@@ -435,3 +435,4 @@
 </script>
 </body>
 </html>
+
