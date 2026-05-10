@@ -134,10 +134,17 @@ def authorize(instance_id):
         'scope':         ' '.join(SCOPES),
         'access_type':   'offline',   # request refresh token
         'prompt':        'consent',   # always show consent → ensures refresh_token
+        'include_granted_scopes': 'false',  # do not merge previously granted broader scopes
         'state':         state,
     }
     auth_url = f"{GOOGLE_AUTH_URL}?{urlencode(params)}"
-    logger.info(f"[GoogleOAuth] instance={instance_id} user={current_user.id} → Google consent")
+    logger.info(
+        "[GoogleOAuth] instance=%s user=%s client_id=*%s scopes=%s",
+        instance_id,
+        current_user.id,
+        cfg['client_id'][-8:] if cfg['client_id'] else 'none',
+        ','.join(SCOPES),
+    )
     return redirect(auth_url)
 
 

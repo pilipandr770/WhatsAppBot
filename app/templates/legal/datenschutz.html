@@ -26,7 +26,7 @@
     <li><strong style="color:#e8eaf0;">Sprachaufnahmen:</strong> Sprachnachrichten werden automatisch transkribiert (OpenAI Whisper) und als Text gespeichert; Audiodateien werden nicht dauerhaft gespeichert</li>
     <li><strong style="color:#e8eaf0;">Hochgeladene Dokumente:</strong> vom Nutzer hochgeladene Dateien (PDF, DOCX, TXT) für die Wissensdatenbank (RAG)</li>
     <li><strong style="color:#e8eaf0;">Nutzungsdaten:</strong> Log-Daten, IP-Adressen (in Server-Logs, nicht dauerhaft in der Anwendungsdatenbank gespeichert)</li>
-    <li><strong style="color:#e8eaf0;">Google-Nutzerdaten</strong> (optional, nur wenn Google-Integration aktiviert): Kalender- und Tabellenkalkulationsdaten via Google OAuth 2.0 — nur auf ausdrücklichen Wunsch des Nutzers; Zugriff kann jederzeit widerrufen werden</li>
+    <li><strong style="color:#e8eaf0;">Google-Nutzerdaten</strong> (optional, nur wenn Google-Integration aktiviert): Kalender- und Tabellenkalkulationsdaten via Google OAuth 2.0 in read-only scopes — nur auf ausdrücklichen Wunsch des Nutzers; Zugriff kann jederzeit widerrufen werden</li>
   </ul>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">3. Zweck und Rechtsgrundlage der Verarbeitung</h2>
@@ -82,15 +82,16 @@
     When a user explicitly connects the Google integration in the dashboard, the app requests
     access to the following Google user data via OAuth 2.0:</p>
     <ul style="margin:0 0 14px 24px;color:var(--text-dim);">
-      <li><code>calendar.events</code> — read, create, and update calendar events in the user's primary Google Calendar</li>
-      <li><code>spreadsheets</code> — read and write data in Google Sheets spreadsheets configured by the user</li>
+      <li><code>calendar.events.readonly</code> — read-only access to calendar events in the user's Google Calendar</li>
+      <li><code>spreadsheets.readonly</code> — read-only access to data in Google Sheets spreadsheets configured by the user</li>
       <li><code>email</code> / <code>openid</code> — the user's Google email address, used only to identify the connected account in the dashboard</li>
     </ul>
 
     <p style="margin-bottom:10px;"><strong>2. How Google user data is used</strong><br>
     Google user data is used <em>solely</em> to provide the features the user has explicitly requested:
-    booking appointments in Google Calendar via the AI WhatsApp bot, and reading/writing data
-    in Google Sheets (e.g. logging leads or reading price lists). The data is not used for any
+    reading upcoming appointments from Google Calendar and reading data
+    in Google Sheets (e.g. price lists or reference information). The app does not create,
+    edit, or delete Google Calendar events or Google Sheets data. The data is not used for any
     other purpose, including advertising, analytics, or profiling.</p>
 
     <p style="margin-bottom:10px;"><strong>3. Storage of Google user data</strong><br>

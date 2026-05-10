@@ -77,8 +77,8 @@
             ('Kundenservice', 'Du bist ein freundlicher Kundenservice-Assistent für {Firmenname}. Beantworte Fragen höflich auf Deutsch. Wenn du etwas nicht weißt, leite den Kunden an support@firma.de weiter. Öffnungszeiten: Mo–Fr 9–18 Uhr.'),
             ('Restaurant', 'Du bist der digitale Assistent von {Restaurantname}. Beantworte Fragen zur Speisekarte, Reservierungen und Öffnungszeiten. Reservierungen sind telefonisch unter {Telefon} möglich.'),
             ('Immobilien', 'Du bist ein KI-Assistent für {Immobilienbüro}. Beantworte Fragen zu verfügbaren Objekten, Miet- und Kaufpreisen. Für Besichtigungen leite Interessenten an unsere Makler weiter.'),
-            ('📅 Terminbuchung (Google)', 'Du bist ein Terminassistent für {Firmenname}. Wenn ein Kunde einen Termin buchen möchte, frage nach: Name, gewünschtem Datum/Uhrzeit und Anliegen. Erstelle dann den Termin direkt im Google Kalender. Verfügbare Zeiten: Mo–Fr 9–17 Uhr.'),
-            ('📊 Lead-Erfassung (Sheets)', 'Du bist ein Verkaufsassistent für {Firmenname}. Wenn ein Interessent Kontaktdaten hinterlässt, speichere Name, Telefon, E-Mail, Anliegen und heutiges Datum in der Google Tabelle. Spreadsheet-ID: {SPREADSHEET_ID} · Range: Leads!A:E'),
+            ('📅 Terminwunsch (Google read-only)', 'Du bist ein Terminassistent für {Firmenname}. Wenn ein Kunde einen Termin buchen möchte, frage nach: Name, gewünschtem Datum/Uhrzeit und Anliegen. Prüfe verfügbare Zeiten im Google Kalender (nur lesen) und bestätige den Terminwunsch. Weise darauf hin, dass das Team die finale Eintragung manuell vornimmt.'),
+            ('📊 Infos aus Sheets (read-only)', 'Du bist ein Verkaufsassistent für {Firmenname}. Nutze Google Sheets nur zum Lesen von Informationen (z. B. Preise, Produkte, FAQs). Schreibe oder ändere keine Daten in Tabellen.'),
           ] %}
           {% for name, prompt in templates %}
           <button type="button" class="btn btn-ghost btn-sm" style="text-align:left;justify-content:flex-start;"
@@ -155,8 +155,8 @@
           </div>
           {% endif %}
           <div style="font-size:12px;color:var(--text-dim);line-height:1.6;margin-bottom:14px;">
-            ✅ Kalender-Termine anlegen &amp; lesen<br>
-            ✅ Google Tabellen lesen &amp; befüllen
+            ✅ Kalenderdaten lesen (read-only)<br>
+            ✅ Google Tabellen lesen (read-only)
           </div>
           <form method="post" action="{{ url_for('google_oauth.disconnect', instance_id=instance.id) }}"
                 onsubmit="return confirm('Google-Verbindung wirklich trennen?')">
@@ -171,8 +171,8 @@
           <!-- NOT CONNECTED state -->
           <div style="font-size:12px;color:var(--text-muted);line-height:1.7;margin-bottom:14px;">
             Verbinde Google, damit der Bot:<br>
-            📅 Kalender-Termine buchen &amp; abfragen kann<br>
-            📊 Google Tabellen lesen &amp; ausfüllen kann
+            📅 Verfügbarkeiten im Kalender prüfen kann (read-only)<br>
+            📊 Informationen aus Google Tabellen lesen kann (read-only)
           </div>
           <a href="{{ url_for('google_oauth.authorize', instance_id=instance.id) }}"
              class="btn btn-secondary"
@@ -217,8 +217,8 @@
         </div>
         <div style="font-size:12px;color:var(--text-muted);line-height:1.6;margin-bottom:12px;">
           Dein WhatsApp erhält eine Nachricht, wenn der Bot
-          einen <strong>Termin gebucht</strong> oder einen
-          <strong>Eintrag in der Tabelle</strong> gespeichert hat.
+          einen <strong>neuen Terminwunsch bestätigt</strong>.
+          Das Team trägt den Termin danach manuell ein.
         </div>
         <div class="form-group" style="margin-bottom:0;">
           <label class="form-label">Deine WhatsApp-Nummer</label>

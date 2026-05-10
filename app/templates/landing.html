@@ -285,8 +285,8 @@ body { background:#0c0d10; }
   <div class="hero-badge">🇩🇪 Made for Germany · DSGVO-konform</div>
   <h1>Kundenanfragen werden beantwortet<br><span>automatisch — 24/7</span></h1>
   <p>
-    AI-Bot für Messaging: beantwortet Kundenanfragen, bucht Termine im Google Kalender
-    und speichert Leads in Google Sheets — vollautomatisch, auf Deutsch.
+    AI-Bot für Messaging: beantwortet Kundenanfragen, prüft verfügbare Zeiten im Google Kalender
+    und liest Informationen aus Google Sheets — vollautomatisch, auf Deutsch.
   </p>
   <div class="hero-cta">
     <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
@@ -333,7 +333,7 @@ body { background:#0c0d10; }
           <div class="bubble-time">09:15</div>
         </div>
         <div class="bubble bubble-out">
-          ✅ Perfekt, Thomas! Ich habe soeben den Termin für Mittwoch, 14:00 Uhr in unserem Google Kalender eingetragen. Sie erhalten kurz eine Bestätigung. Noch Fragen?
+          ✅ Perfekt, Thomas! Ich habe den Terminwunsch für Mittwoch, 14:00 Uhr an unser Team weitergegeben. Sie erhalten gleich eine persönliche Bestätigung. Noch Fragen?
           <div class="bubble-time">09:15</div>
         </div>
         <div class="bubble bubble-in">
@@ -352,8 +352,8 @@ body { background:#0c0d10; }
       <h3>So sieht es in der Praxis aus</h3>
       <p>
         Der Bot antwortet in Echtzeit — genau so, wie es Ihre Kunden gewohnt sind.
-        Er kennt Ihre Preise, Öffnungszeiten und kann Termine direkt in Ihren
-        Google Kalender eintragen.
+        Er kennt Ihre Preise, Öffnungszeiten und kann freie Zeiten aus Ihrem
+        Google Kalender abrufen.
       </p>
       <div class="demo-check">
         <div class="demo-check-item">
@@ -370,7 +370,7 @@ body { background:#0c0d10; }
         </div>
         <div class="demo-check-item">
           <span>✓</span>
-          <span>Bucht Termine und speichert Leads automatisch in Google</span>
+          <span>Prüft Verfügbarkeit und meldet Terminwünsche automatisch an Ihr Team</span>
         </div>
         <div class="demo-check-item">
           <span>✓</span>
@@ -449,7 +449,7 @@ body { background:#0c0d10; }
 
       <p style="color:#9ca3af;font-size:14.5px;line-height:1.8;margin-bottom:20px;">
         Verbinde einmal dein Google-Konto — und der Bot kann eigenständig
-        Termine eintragen, Kalender abfragen und Daten in Tabellen speichern.
+        Termine und Verfügbarkeiten abfragen sowie Daten in Tabellen nachschlagen.
         Kein Drittanbieter. Kein Zapier. Keine Extra-Kosten.
       </p>
 
@@ -464,15 +464,15 @@ body { background:#0c0d10; }
     <!-- Right: use cases -->
     <div class="google-use-cases">
       <div class="google-use-case">
-        <div class="google-use-case-title">📅 Terminbuchung per WhatsApp</div>
+        <div class="google-use-case-title">📅 Terminwunsch per WhatsApp</div>
         <div class="google-use-case-text">
-          Kunde fragt nach freiem Termin → Bot prüft Kalender → trägt Termin ein → sendet Bestätigung. Vollautomatisch.
+          Kunde fragt nach freiem Termin → Bot prüft Kalender → bestätigt den Terminwunsch → informiert Ihr Team sofort.
         </div>
       </div>
       <div class="google-use-case">
-        <div class="google-use-case-title">📊 Leads automatisch erfassen</div>
+        <div class="google-use-case-title">📊 Informationen sofort nachschlagen</div>
         <div class="google-use-case-text">
-          Interessent hinterlässt Kontaktdaten → Bot speichert Name, Telefon, Anliegen und Datum sofort in Google Sheets.
+          Bot liest Preislisten, FAQs oder Produktdaten direkt aus Google Sheets und antwortet ohne Medienbruch.
         </div>
       </div>
       <div class="google-use-case">
@@ -482,9 +482,9 @@ body { background:#0c0d10; }
         </div>
       </div>
       <div class="google-use-case">
-        <div class="google-use-case-title">📝 Bestellungen & Anfragen speichern</div>
+        <div class="google-use-case-title">📝 Team-Benachrichtigung bei Terminwunsch</div>
         <div class="google-use-case-text">
-          Jede Bestellung oder Anfrage landet strukturiert in deiner Tabelle — bereit für CRM oder weiteres.
+          Bei bestätigtem Terminwunsch informiert der Bot automatisch Ihre hinterlegte WhatsApp-Nummer zur manuellen Eintragung.
         </div>
       </div>
     </div>
@@ -604,8 +604,8 @@ body { background:#0c0d10; }
     <div class="testimonial">
       <div class="testimonial-stars">★★★★★</div>
       <div class="testimonial-text">
-        „Die Google Kalender-Integration ist Gold wert. Kunden buchen Termine direkt
-        per WhatsApp — ohne dass ich dabei sein muss. Empfehle ich jedem Restaurant."
+        „Die Google Kalender-Integration ist Gold wert. Der Bot prüft freie Zeiten
+        und informiert mich sofort über neue Terminwünsche per WhatsApp."
       </div>
       <div class="testimonial-author">
         <div class="testimonial-avatar">S</div>
@@ -659,8 +659,8 @@ body { background:#0c0d10; }
       <div class="faq-q">Wie funktioniert die Google-Integration?</div>
       <div class="faq-a">
         Einmalig Google-Konto in den Einstellungen verbinden (OAuth 2.0 — sicher und widerrufbar).
-        Danach kann der Bot selbstständig Termine im Google Kalender erstellen & abfragen
-        sowie Daten in Google Sheets schreiben und lesen — ganz ohne Zapier oder andere Dienste.
+          Danach kann der Bot Kalenderdaten und Tabelleninhalte lesen (read-only).
+          Bei neuen Terminwünschen wird Ihr Team per WhatsApp benachrichtigt, damit Sie den Termin manuell eintragen.
       </div>
     </div>
     <div class="faq-item">
