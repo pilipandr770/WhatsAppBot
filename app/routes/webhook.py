@@ -1,9 +1,12 @@
 import os
+import re
+import json
+import hashlib
 import logging
-from datetime import datetime
+from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from app import db
-from app.models import WhatsAppInstance, Conversation, Message
+from app.models import WhatsAppInstance, Conversation, Message, SiteConfig
 from app.services.claude_service import get_ai_response, get_ai_response_with_tools
 from app.services.rag import search_relevant_chunks
 from app.services.evolution import evolution_client
@@ -12,6 +15,9 @@ from app.services.google_service import GOOGLE_TOOLS, execute_tool as google_exe
 
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
+
+_APPOINTMENT_MARKER_RE = re.compile(r"\[\[APPOINTMENT_NOTIFY\|(.+?)\]\]", re.DOTALL)
+_APPOINTMENT_DEDUP_MINUTES = int(os.environ.get('APPOINTMENT_NOTIFY_DEDUP_MINUTES', '30'))
 
 # ---------------------------------------------------------------------------
 # Webhook authentication
@@ -216,7 +222,15 @@ def _process_single_message(instance_name: str, msg_data: dict):
         f"(Zeitzone: {os.environ.get('CALENDAR_TIMEZONE', 'Europe/Berlin')}). "
         "Verwende diese Information, wenn Terminzeiten berechnet werden müssen."
     )
-    system_prompt = system_prompt + _datetime_hint
+    _appointment_hint = (
+        "\n\nTERMIN-HINWEIS (WICHTIG): "
+        "Wenn der Kunde einen NEUEN Termin mit konkreter Zeit verbindlich bestätigt, "
+        "füge am ENDE deiner Antwort genau eine technische Marker-Zeile hinzu: "
+        "[[APPOINTMENT_NOTIFY|title=<kurzer Titel>;datetime=<Datum/Zeit>;note=<optional>]]. "
+        "Nur bei echter Termin-Bestätigung verwenden. "
+        "Niemals Google-Kalender schreiben, bearbeiten oder löschen."
+    )
+    system_prompt = system_prompt + _datetime_hint + _appointment_hint
 
     # Use Google tools if this instance has an active Google token
     has_google = bool(instance.google_token and instance.google_token.access_token)
@@ -238,7 +252,7 @@ def _process_single_message(instance_name: str, msg_data: dict):
             return result
 
         # Ensure enough tokens for tool-use reasoning + final answer (min 1500)
-        ai_text = get_ai_response_with_tools(
+        ai_text_raw = get_ai_response_with_tools(
             system_prompt=system_prompt,
             messages=history,
             tools=GOOGLE_TOOLS,
@@ -247,12 +261,14 @@ def _process_single_message(instance_name: str, msg_data: dict):
             max_tokens=max(config.max_tokens, 1500)
         )
     else:
-        ai_text = get_ai_response(
+        ai_text_raw = get_ai_response(
             system_prompt=system_prompt,
             messages=history,
             rag_context=rag_context,
             max_tokens=config.max_tokens
         )
+
+    appointment_event, ai_text = _extract_appointment_event(ai_text_raw)
 
     # Save AI response
     assistant_message = Message(
@@ -299,6 +315,126 @@ def _process_single_message(instance_name: str, msg_data: dict):
                 )
             except Exception as notif_err:
                 logger.warning(f"Owner notification failed: {notif_err}")
+
+    # ── Owner notification for appointment intent (no Google write) ───────────
+    if appointment_event and config.notification_phone:
+        owner_jid = f"{config.notification_phone}@s.whatsapp.net"
+        contact_display = conversation.contact_name or contact_jid.split('@')[0]
+        customer_phone = contact_jid.split('@')[0]
+        fingerprint = _appointment_fingerprint(appointment_event, customer_phone)
+        if _should_send_appointment_notify(instance.id, customer_phone, fingerprint):
+            notif = _build_appointment_notify_message(appointment_event, contact_display, customer_phone)
+            try:
+                evolution_client.send_text(
+                    instance_name=instance_name,
+                    token=instance.api_token,
+                    to_jid=owner_jid,
+                    text=notif
+                )
+                _mark_appointment_notify_sent(instance.id, customer_phone, fingerprint)
+                logger.info(f"Owner appointment notification sent to {owner_jid} on {instance_name}")
+            except Exception as notif_err:
+                logger.warning(f"Owner appointment notification failed: {notif_err}")
+        else:
+            logger.info(
+                "Skipped duplicate appointment notification for instance=%s customer=%s",
+                instance.id,
+                customer_phone,
+            )
+
+
+def _extract_appointment_event(ai_text: str):
+    """
+    Extract [[APPOINTMENT_NOTIFY|...]] marker from model output.
+    Returns: (event_dict_or_none, cleaned_text_for_customer)
+    """
+    if not ai_text:
+        return None, ai_text
+
+    match = _APPOINTMENT_MARKER_RE.search(ai_text)
+    if not match:
+        return None, ai_text
+
+    payload = match.group(1)
+    event = {'title': 'Neuer Termin', 'datetime': '—', 'note': ''}
+
+    for part in payload.split(';'):
+        if '=' not in part:
+            continue
+        key, val = part.split('=', 1)
+        key = key.strip().lower()
+        val = val.strip()
+        if key in event and val:
+            event[key] = val
+
+    cleaned = _APPOINTMENT_MARKER_RE.sub('', ai_text).strip()
+    return event, cleaned
+
+
+def _build_appointment_notify_message(event: dict, contact_name: str, customer_phone: str) -> str:
+    """Build owner WhatsApp notification for a confirmed new appointment request."""
+    title = event.get('title', 'Neuer Termin')
+    dt = event.get('datetime', '—')
+    note = event.get('note', '')
+
+    lines = [
+        "📅 *Neuer Termin bestätigt (manuell eintragen)*",
+        "",
+        f"👤 Kunde: {contact_name}",
+        f"📞 Nummer: +{customer_phone}",
+        f"📌 Termin: {title}",
+        f"🕐 Zeit: {dt}",
+    ]
+    if note:
+        lines.append(f"📝 Notiz: {note}")
+
+    lines += ["", "— dein WhatsApp Bot 🤖"]
+    return '\n'.join(lines)
+
+
+def _appointment_dedup_key(instance_id: int, customer_phone: str) -> str:
+    return f"appt_notify:{instance_id}:{customer_phone}"
+
+
+def _appointment_fingerprint(event: dict, customer_phone: str) -> str:
+    raw = '|'.join([
+        customer_phone.strip(),
+        (event.get('title') or '').strip().lower(),
+        (event.get('datetime') or '').strip().lower(),
+        (event.get('note') or '').strip().lower(),
+    ])
+    return hashlib.sha256(raw.encode('utf-8')).hexdigest()
+
+
+def _should_send_appointment_notify(instance_id: int, customer_phone: str, fingerprint: str) -> bool:
+    """Return True if this appointment notification should be sent (not a recent duplicate)."""
+    key = _appointment_dedup_key(instance_id, customer_phone)
+    raw = SiteConfig.get(key, '')
+    if not raw:
+        return True
+
+    try:
+        data = json.loads(raw)
+        last_fp = data.get('fingerprint', '')
+        last_ts_raw = data.get('sent_at', '')
+        if not last_fp or not last_ts_raw:
+            return True
+
+        last_ts = datetime.fromisoformat(last_ts_raw)
+        too_recent = datetime.utcnow() - last_ts < timedelta(minutes=_APPOINTMENT_DEDUP_MINUTES)
+        return not (too_recent and last_fp == fingerprint)
+    except Exception:
+        return True
+
+
+def _mark_appointment_notify_sent(instance_id: int, customer_phone: str, fingerprint: str):
+    key = _appointment_dedup_key(instance_id, customer_phone)
+    payload = {
+        'fingerprint': fingerprint,
+        'sent_at': datetime.utcnow().isoformat(),
+    }
+    SiteConfig.set(key, json.dumps(payload))
+    db.session.commit()
 
 
 def _build_owner_notification(event: dict, contact_name: str, customer_phone: str) -> str:

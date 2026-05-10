@@ -34,11 +34,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SCOPES = [
-    # calendar.events: create/read/update events — does NOT allow managing
-    # calendar settings or other people's calendars (less permissive than 'calendar')
-    'https://www.googleapis.com/auth/calendar.events',
-    # spreadsheets: read + write sheet data (minimum for our use case)
-    'https://www.googleapis.com/auth/spreadsheets',
+    # calendar.events.readonly: read-only access to calendar events.
+    'https://www.googleapis.com/auth/calendar.events.readonly',
+    # spreadsheets.readonly: read-only access to spreadsheet data.
+    'https://www.googleapis.com/auth/spreadsheets.readonly',
     'openid',
     'email',   # standard OIDC scope — no extra verification needed
 ]
