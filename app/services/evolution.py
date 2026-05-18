@@ -10,7 +10,7 @@ class EvolutionAPIClient:
     def __init__(self):
         self.base_url = os.environ.get('EVOLUTION_API_URL', 'http://evolution-api:8080').rstrip('/')
         self.global_key = os.environ.get('EVOLUTION_API_KEY', '')
-        self.app_base_url = os.environ.get('APP_BASE_URL', 'https://yourdomain.com')
+        self.app_base_url = os.environ.get('APP_BASE_URL', 'https://yourdomain.com').rstrip('/')
 
     def _headers(self, token=None):
         return {
