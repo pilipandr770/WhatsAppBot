@@ -51,9 +51,18 @@
     {% endif %}
 
     <div style="font-size:15px;font-weight:600;margin-bottom:6px;">{{ plan.name }}</div>
-    <div style="margin-bottom:20px;">
-      <span style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;">{{ plan.price }}</span>
+    <div style="margin-bottom:20px;" class="price-block" data-price="{{ plan.price }}">
+      {# Original price (always shown) #}
+      <span class="price-original"
+            style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;">{{ plan.price }}</span>
+      {# Discounted price — hidden until promo applied via JS #}
+      <span class="price-discounted"
+            style="font-size:32px;font-weight:700;font-family:'DM Mono',monospace;color:#4ade80;display:none;"></span>
       <span style="font-size:13px;color:var(--text-muted);">{{ plan.period }}</span>
+      {# Discount badge — hidden until promo applied #}
+      <span class="discount-badge"
+            style="display:none;margin-left:6px;background:#4ade80;color:#000;font-size:11px;
+                   font-weight:700;padding:2px 8px;border-radius:20px;vertical-align:middle;"></span>
     </div>
 
     <div style="border-top:1px solid var(--border);padding-top:16px;margin-bottom:20px;">
@@ -102,11 +111,50 @@
 <script>
 let validPromo = '';
 
+// Price map for discount calculation (raw numbers in cents)
+const PLAN_PRICES = {
+  {% for key, plan in plans.items() %}
+  '{{ key }}': {{ plan.price | replace('€','') | replace('/Monat','') | trim }},
+  {% endfor %}
+};
+
 function promoReset() {
   validPromo = '';
   document.getElementById('promo-msg').textContent = '';
+  // Restore original prices
+  document.querySelectorAll('.price-block').forEach(block => {
+    block.querySelector('.price-original').style.textDecoration = '';
+    block.querySelector('.price-original').style.color = '';
+    block.querySelector('.price-discounted').style.display = 'none';
+    block.querySelector('.discount-badge').style.display = 'none';
+  });
   document.querySelectorAll('.plan-btn').forEach(btn => {
     btn.href = btn.dataset.base;
+  });
+}
+
+function applyDiscount(discountPercent) {
+  document.querySelectorAll('.price-block').forEach(block => {
+    const origText = block.querySelector('.price-original').textContent.trim(); // e.g. "€59"
+    const origNum  = parseFloat(origText.replace('€', '').replace(',', '.'));
+    if (isNaN(origNum)) return;
+
+    const discounted = (origNum * (1 - discountPercent / 100)).toFixed(2)
+                        .replace('.', ',').replace(',00', '');
+
+    // Show strikethrough on original
+    block.querySelector('.price-original').style.textDecoration = 'line-through';
+    block.querySelector('.price-original').style.color = 'var(--text-muted)';
+
+    // Show new price
+    const disc = block.querySelector('.price-discounted');
+    disc.textContent = '€' + discounted;
+    disc.style.display = 'inline';
+
+    // Show badge
+    const badge = block.querySelector('.discount-badge');
+    badge.textContent = '-' + Math.round(discountPercent) + '%';
+    badge.style.display = 'inline';
   });
 }
 
@@ -129,12 +177,15 @@ function validatePromo() {
       validPromo = code;
       msg.style.color = '#4ade80';
       msg.textContent = data.message;
+      // Apply discount visually to all plan cards
+      applyDiscount(data.discount_percent);
       // Append ?promo=CODE to all checkout buttons
       document.querySelectorAll('.plan-btn').forEach(btn => {
         btn.href = btn.dataset.base + '?promo=' + encodeURIComponent(code);
       });
     } else {
       validPromo = '';
+      promoReset();
       msg.style.color = '#ef4444';
       msg.textContent = data.error;
     }

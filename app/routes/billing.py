@@ -87,7 +87,7 @@ def plans():
 @billing_bp.route('/validate-promo', methods=['POST'])
 @login_required
 def validate_promo():
-    """AJAX: validate a promo code and return affiliate name."""
+    """AJAX: validate a promo code and return discount info."""
     code_str = (request.json or {}).get('code', '').strip().upper()
     if not code_str:
         return jsonify({'valid': False, 'error': 'Kein Code eingegeben.'})
@@ -96,9 +96,11 @@ def validate_promo():
     if not code or not code.is_valid():
         return jsonify({'valid': False, 'error': 'Ungültiger oder abgelaufener Promocode.'})
 
+    discount_percent = code.commission_percent / 2   # user gets half of the commission
     return jsonify({
         'valid': True,
-        'message': f'✅ Promocode aktiv — Partner: {code.affiliate_name}',
+        'discount_percent': discount_percent,
+        'message': f'✅ {int(discount_percent)}% Rabatt aktiviert!',
     })
 
 
@@ -115,12 +117,24 @@ def checkout(plan_key):
 
     # Optional affiliate promo code passed as ?promo=CODE
     promo_code_str = request.args.get('promo', '').strip().upper()
-    promo_valid = False
+    aff_code       = None
+    stripe_coupon_id = None
+
     if promo_code_str:
-        aff = AffiliateCode.query.filter_by(code=promo_code_str).first()
-        promo_valid = bool(aff and aff.is_valid())
+        aff_code = AffiliateCode.query.filter_by(code=promo_code_str).first()
+        if not (aff_code and aff_code.is_valid()):
+            aff_code = None
+            promo_code_str = ''
 
     stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
+
+    # If valid promo — create (or reuse) a Stripe coupon for the user discount
+    if aff_code:
+        discount_percent = aff_code.commission_percent / 2   # half for user, half for affiliate
+        stripe_coupon_id = _get_or_create_stripe_coupon(
+            code=aff_code.code,
+            percent_off=discount_percent,
+        )
 
     # Create or reuse Stripe customer
     user = current_user
@@ -137,25 +151,36 @@ def checkout(plan_key):
             flash(f'Stripe-Fehler: {e.user_message}', 'error')
             return redirect(url_for('billing.plans'))
 
+    # Build checkout session params
+    session_params = dict(
+        customer=user.stripe_customer_id,
+        payment_method_types=['card'],
+        line_items=[{'price': plan['price_id'], 'quantity': 1}],
+        mode='subscription',
+        billing_address_collection='auto',
+        success_url=url_for('billing.success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
+        cancel_url=url_for('billing.plans', _external=True),
+        metadata={
+            'user_id': str(user.id),
+            'plan': plan_key,
+            'promo_code': promo_code_str,
+            # Store commission_percent so webhook can calculate affiliate payout correctly
+            'commission_percent': str(aff_code.commission_percent) if aff_code else '',
+        },
+        subscription_data={
+            'metadata': {'user_id': str(user.id), 'plan': plan_key}
+        }
+    )
+
+    if stripe_coupon_id:
+        # Apply our affiliate discount — NOTE: can't combine with allow_promotion_codes
+        session_params['discounts'] = [{'coupon': stripe_coupon_id}]
+    else:
+        # No affiliate code — allow Stripe native promo codes
+        session_params['allow_promotion_codes'] = True
+
     try:
-        session = stripe.checkout.Session.create(
-            customer=user.stripe_customer_id,
-            payment_method_types=['card'],
-            line_items=[{'price': plan['price_id'], 'quantity': 1}],
-            mode='subscription',
-            allow_promotion_codes=True,
-            billing_address_collection='auto',
-            success_url=url_for('billing.success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=url_for('billing.plans', _external=True),
-            metadata={
-                'user_id': str(user.id),
-                'plan': plan_key,
-                'promo_code': promo_code_str if promo_valid else '',
-            },
-            subscription_data={
-                'metadata': {'user_id': str(user.id), 'plan': plan_key}
-            }
-        )
+        session = stripe.checkout.Session.create(**session_params)
         return redirect(session.url, 303)
     except stripe.error.StripeError as e:
         logger.error(f"Stripe checkout error for user {user.id}: {e}")
@@ -334,14 +359,18 @@ def _handle_checkout_completed(session):
     logger.info(f"Subscription activated: user={user_id} plan={plan_key}")
 
     # Record affiliate commission if promo code was used
-    promo_code_str = session.get('metadata', {}).get('promo_code', '').strip().upper()
+    meta = session.get('metadata', {})
+    promo_code_str   = meta.get('promo_code', '').strip().upper()
+    commission_pct   = float(meta.get('commission_percent', '0') or '0')
     if promo_code_str:
+        amount_paid = session.get('amount_total') or 0   # after discount (cents)
         _record_affiliate_usage(
             code_str=promo_code_str,
             user_id=user_id,
             stripe_session_id=session.get('id', ''),
             stripe_sub_id=sub_id,
-            amount_total=session.get('amount_total') or 0,   # cents
+            amount_paid_cents=amount_paid,
+            commission_percent=commission_pct,
             currency=session.get('currency', 'eur'),
         )
 
@@ -459,6 +488,29 @@ def _upsert_subscription(user, stripe_sub_id, price_id, status, plan_key, period
     db.session.commit()
 
 
+def _get_or_create_stripe_coupon(code: str, percent_off: float) -> str:
+    """
+    Create a Stripe coupon for the affiliate discount, or reuse it if it already exists.
+    Uses 'aff_<CODE>' as the coupon ID so it's idempotent — safe to call on every checkout.
+    """
+    coupon_id = f"aff_{code}"
+    try:
+        stripe.Coupon.create(
+            id=coupon_id,
+            percent_off=percent_off,
+            duration='once',       # only first invoice of the subscription
+            name=f"Partnerrabatt {code} ({int(percent_off)}%)",
+        )
+        logger.info(f"Stripe coupon created: {coupon_id} ({int(percent_off)}% off)")
+    except stripe.error.InvalidRequestError as e:
+        if 'already exists' in str(e).lower() or 'resource_already_exists' in str(getattr(e, 'code', '')).lower():
+            logger.debug(f"Stripe coupon {coupon_id} already exists — reusing")
+        else:
+            logger.error(f"Stripe coupon creation error for {coupon_id}: {e}")
+            raise
+    return coupon_id
+
+
 def _current_plan():
     if current_user.subscription and current_user.subscription.is_active:
         return current_user.subscription.plan
@@ -470,24 +522,46 @@ def _record_affiliate_usage(
     user_id: int,
     stripe_session_id: str,
     stripe_sub_id: str,
-    amount_total: int,
+    amount_paid_cents: int,
+    commission_percent: float,
     currency: str,
 ):
-    """Create AffiliateUsage record after a successful checkout."""
+    """
+    Create AffiliateUsage record after a successful checkout.
+
+    Commission is calculated on the ORIGINAL price (before user discount):
+      user_discount = commission_percent / 2
+      original_price = amount_paid / (1 - user_discount/100)
+      affiliate_commission = original_price * (commission_percent / 2) / 100
+
+    This way user saves and affiliate earns the exact same € amount.
+    """
     try:
         aff = AffiliateCode.query.filter_by(code=code_str).first()
         if not aff:
             logger.warning(f"Affiliate code not found at payout time: {code_str!r}")
             return
 
-        commission = int(amount_total * aff.commission_percent / 100)
+        # Use commission_percent from metadata (passed at checkout time);
+        # fall back to what's stored on the code row if not in metadata
+        pct = commission_percent or aff.commission_percent
+        user_discount_pct = pct / 2
+
+        # Reconstruct original price before the discount was applied
+        if user_discount_pct < 100:
+            original_cents = int(amount_paid_cents / (1 - user_discount_pct / 100))
+        else:
+            original_cents = amount_paid_cents
+
+        # Affiliate gets half of the total commission_percent on the original price
+        commission = int(original_cents * user_discount_pct / 100)
 
         usage = AffiliateUsage(
             code_id=aff.id,
             user_id=user_id,
             stripe_session_id=stripe_session_id,
             stripe_subscription_id=stripe_sub_id,
-            gross_amount_cents=amount_total,
+            gross_amount_cents=original_cents,   # store original (pre-discount) price
             commission_cents=commission,
             currency=currency,
         )
@@ -495,7 +569,8 @@ def _record_affiliate_usage(
         db.session.commit()
         logger.info(
             f"AffiliateUsage recorded: code={code_str} user={user_id} "
-            f"gross={amount_total} commission={commission} {currency.upper()}"
+            f"original={original_cents}¢ paid={amount_paid_cents}¢ "
+            f"commission={commission}¢ ({int(user_discount_pct)}%) {currency.upper()}"
         )
     except Exception as e:
         logger.error(f"_record_affiliate_usage failed: {e}", exc_info=True)
