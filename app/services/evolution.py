@@ -124,7 +124,7 @@ class EvolutionAPIClient:
         """
         try:
             webhook_url = self._webhook_url(instance_name)
-            resp = requests.put(
+            resp = requests.post(
                 f'{self.base_url}/webhook/set/{instance_name}',
                 json={
                     'webhook': {
@@ -144,7 +144,8 @@ class EvolutionAPIClient:
             )
             ok = resp.status_code in (200, 201, 204)
             logger.info(
-                f"update_webhook {instance_name}: {resp.status_code} url={webhook_url}"
+                f"update_webhook {instance_name}: HTTP {resp.status_code} "
+                f"url={webhook_url} body={resp.text[:200]}"
             )
             return ok
         except Exception as e:
