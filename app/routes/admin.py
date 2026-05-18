@@ -144,7 +144,7 @@ def reregister_webhooks():
     ok_count = 0
     fail_count = 0
     for inst in instances:
-        success = evolution_client.update_webhook(inst.name, inst.evolution_token)
+        success = evolution_client.update_webhook(inst.instance_name, inst.api_token)
         if success:
             ok_count += 1
         else:
