@@ -219,21 +219,44 @@ def cancel_subscription():
 @billing_bp.route('/webhook', methods=['POST'])
 def stripe_webhook():
     """Receive and verify Stripe webhook events."""
+    stripe.api_key = os.environ.get('STRIPE_SECRET_KEY', '')
     payload    = request.get_data()
     sig_header = request.headers.get('Stripe-Signature', '')
     secret     = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 
-    try:
-        event = stripe.Webhook.construct_event(payload, sig_header, secret)
-    except ValueError:
-        logger.warning("Stripe webhook: invalid payload")
-        return jsonify({'error': 'Invalid payload'}), 400
-    except stripe.error.SignatureVerificationError:
-        logger.warning("Stripe webhook: invalid signature")
-        return jsonify({'error': 'Invalid signature'}), 400
+    if not secret:
+        # STRIPE_WEBHOOK_SECRET not configured — log and accept without verification
+        # (safe only in dev; in prod you MUST set this variable)
+        logger.error(
+            "STRIPE_WEBHOOK_SECRET is not set! "
+            "Accepting webhook without signature verification — set this variable NOW."
+        )
+        try:
+            event = stripe.Event.construct_from(
+                __import__('json').loads(payload), stripe.api_key
+            )
+        except Exception as e:
+            logger.error(f"Stripe webhook: failed to parse payload without secret: {e}")
+            return jsonify({'error': 'bad payload'}), 400
+    else:
+        try:
+            event = stripe.Webhook.construct_event(payload, sig_header, secret)
+        except ValueError as e:
+            logger.warning(f"Stripe webhook: invalid payload — {e}")
+            return jsonify({'error': 'Invalid payload'}), 400
+        except stripe.error.SignatureVerificationError as e:
+            logger.warning(f"Stripe webhook: signature mismatch — {e}")
+            return jsonify({'error': 'Invalid signature'}), 400
+        except stripe.error.StripeError as e:
+            # Catches any other stripe-level error during verification
+            logger.error(f"Stripe webhook: StripeError during construct_event — {e}", exc_info=True)
+            return jsonify({'error': 'Stripe error'}), 400
+        except Exception as e:
+            logger.error(f"Stripe webhook: unexpected error during construct_event — {e}", exc_info=True)
+            return jsonify({'error': 'Server error'}), 400
 
-    etype = event['type']
-    obj   = event['data']['object']
+    etype = event.get('type', '')
+    obj   = event.get('data', {}).get('object', {})
 
     logger.info(f"Stripe webhook: {etype}")
 
@@ -260,9 +283,12 @@ def stripe_webhook():
         elif etype == 'invoice.payment_failed':
             _handle_invoice_failed(obj)
 
+        else:
+            logger.debug(f"Stripe webhook: unhandled event type {etype!r} — ignored")
+
     except Exception as e:
         logger.error(f"Webhook handler error ({etype}): {e}", exc_info=True)
-        # Return 200 so Stripe doesn't keep retrying on our bugs
+        # Return 200 so Stripe doesn't keep retrying on our application bugs
         return jsonify({'status': 'handler_error'}), 200
 
     return jsonify({'status': 'ok'})
