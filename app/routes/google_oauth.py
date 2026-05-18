@@ -66,12 +66,12 @@ def _client_cfg():
 def _make_state(instance_id: int, user_id: int) -> str:
     """
     Build a signed state string: "inst_<instance_id>_<user_id>_<sig>"
-    where sig = HMAC-SHA256(f"{instance_id}:{user_id}", SECRET_KEY)[:12].
+    where sig = full HMAC-SHA256 hex digest (64 chars / 256 bits).
     Allows verification at callback without storing anything in the session.
     """
     secret = os.environ.get('SECRET_KEY', 'dev-secret').encode()
     payload = f"{instance_id}:{user_id}"
-    sig = hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()[:12]
+    sig = hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()  # full 256 bits
     return f"inst_{instance_id}_{user_id}_{sig}"
 
 
@@ -81,8 +81,9 @@ def _parse_state(state: str, expected_user_id: int):
     Returns instance_id (int) on success, or None if invalid.
     """
     try:
-        parts = state.split('_')
-        # format: inst _ <instance_id> _ <user_id> _ <sig>
+        # format: inst_<instance_id>_<user_id>_<sig64>
+        # The sig is a 64-char hex string (no underscores), so maxsplit=3 gives 4 parts.
+        parts = state.split('_', 3)
         if len(parts) != 4 or parts[0] != 'inst':
             return None
         instance_id = int(parts[1])
@@ -92,10 +93,10 @@ def _parse_state(state: str, expected_user_id: int):
         if user_id != expected_user_id:
             return None
 
-        # Re-compute expected signature
+        # Re-compute expected signature (full 256-bit digest)
         secret = os.environ.get('SECRET_KEY', 'dev-secret').encode()
         payload = f"{instance_id}:{user_id}"
-        expected_sig = hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()[:12]
+        expected_sig = hmac.new(secret, payload.encode(), hashlib.sha256).hexdigest()
 
         if not hmac.compare_digest(sig, expected_sig):
             return None

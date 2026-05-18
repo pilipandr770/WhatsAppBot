@@ -24,9 +24,9 @@ def extract_text(filepath: str, file_type: str) -> str:
 
 
 def _extract_pdf(content: bytes) -> str:
-    import PyPDF2
+    import pypdf
     text_parts = []
-    reader = PyPDF2.PdfReader(io.BytesIO(content))
+    reader = pypdf.PdfReader(io.BytesIO(content))
     for page in reader.pages:
         text = page.extract_text()
         if text:
@@ -72,10 +72,13 @@ def search_relevant_chunks(instance_id: int, query: str, limit: int = 3) -> Opti
     from app.models import DocumentChunk
     from app import db
 
-    # Only use chunks from ready documents
+    # Cap the number of chunks loaded into memory — prevents OOM on large corpora.
+    # 500 chunks × ~400 words × ~6 bytes ≈ 1.2 MB max; enough for good recall.
+    MAX_CHUNKS = int(os.environ.get('RAG_MAX_CHUNKS', '500'))
     chunks = (
         DocumentChunk.query
         .filter_by(instance_id=instance_id)
+        .limit(MAX_CHUNKS)
         .all()
     )
 

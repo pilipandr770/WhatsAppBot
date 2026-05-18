@@ -130,6 +130,37 @@ def demo_bot():
     return render_template('admin/demo_bot.html', cfg=cfg)
 
 
+@admin_bp.route('/reregister-webhooks', methods=['POST'])
+@login_required
+@admin_required
+def reregister_webhooks():
+    """
+    Re-register webhook URLs for ALL instances.
+    Run this once after setting/changing EVOLUTION_WEBHOOK_TOKEN so the new
+    URL (with embedded token query parameter) is pushed to Evolution API.
+    """
+    from app.services.evolution import evolution_client
+    instances = WhatsAppInstance.query.all()
+    ok_count = 0
+    fail_count = 0
+    for inst in instances:
+        success = evolution_client.update_webhook(inst.name, inst.evolution_token)
+        if success:
+            ok_count += 1
+        else:
+            fail_count += 1
+
+    if fail_count == 0:
+        flash(f'✅ {ok_count} Webhooks erfolgreich aktualisiert.', 'success')
+    else:
+        flash(
+            f'⚠️ {ok_count} Webhooks OK, {fail_count} fehlgeschlagen. '
+            'Details siehe Logs.',
+            'warning'
+        )
+    return redirect(url_for('admin.index'))
+
+
 @admin_bp.route('/users/<int:user_id>/toggle-admin', methods=['POST'])
 @login_required
 @admin_required

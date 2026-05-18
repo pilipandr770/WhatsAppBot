@@ -18,10 +18,22 @@ class EvolutionAPIClient:
             'apikey': token or self.global_key
         }
 
+    def _webhook_url(self, instance_name: str) -> str:
+        """
+        Build the webhook URL for this instance.
+        If EVOLUTION_WEBHOOK_TOKEN is set, append it as ?apikey=<token>
+        so Evolution can call back without any extra header configuration.
+        """
+        base = f"{self.app_base_url}/wh/{instance_name}"
+        wh_token = os.environ.get('EVOLUTION_WEBHOOK_TOKEN', '')
+        if wh_token:
+            base = f"{base}?apikey={wh_token}"
+        return base
+
     def create_instance(self, instance_name: str) -> tuple[dict, str]:
         """Create Evolution API instance. Returns (response, token)."""
         token = secrets.token_urlsafe(32)
-        webhook_url = f"{self.app_base_url}/wh/{instance_name}"
+        webhook_url = self._webhook_url(instance_name)
 
         payload = {
             'instanceName': instance_name,
@@ -103,6 +115,41 @@ class EvolutionAPIClient:
         )
         resp.raise_for_status()
         return resp.json()
+
+    def update_webhook(self, instance_name: str, token: str) -> bool:
+        """
+        Re-register the webhook URL for an existing instance.
+        Call this after changing EVOLUTION_WEBHOOK_TOKEN to propagate
+        the new URL (with embedded token) to all existing instances.
+        """
+        try:
+            webhook_url = self._webhook_url(instance_name)
+            resp = requests.put(
+                f'{self.base_url}/webhook/set/{instance_name}',
+                json={
+                    'webhook': {
+                        'enabled': True,
+                        'url': webhook_url,
+                        'byEvents': False,
+                        'base64': True,
+                        'events': [
+                            'MESSAGES_UPSERT',
+                            'CONNECTION_UPDATE',
+                            'QRCODE_UPDATED'
+                        ]
+                    }
+                },
+                headers=self._headers(token),
+                timeout=15
+            )
+            ok = resp.status_code in (200, 201, 204)
+            logger.info(
+                f"update_webhook {instance_name}: {resp.status_code} url={webhook_url}"
+            )
+            return ok
+        except Exception as e:
+            logger.error(f"update_webhook {instance_name}: {e}")
+            return False
 
     def delete_instance(self, instance_name: str, token: str) -> bool:
         """Disconnect and delete instance."""

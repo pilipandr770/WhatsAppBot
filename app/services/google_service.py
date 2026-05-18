@@ -12,6 +12,7 @@ Provides:
 """
 
 import os
+import re
 import json
 import logging
 from datetime import datetime, timezone, timedelta
@@ -226,6 +227,47 @@ def get_free_slots(
 # Tool dispatcher (called from Claude tool-use loop)
 # ---------------------------------------------------------------------------
 
+# Whitelisted parameters for each tool — prevents unexpected kwargs being splatted
+# into internal functions from untrusted LLM-generated tool_input.
+_TOOL_ALLOWED_PARAMS: dict[str, set] = {
+    'google_calendar_check_slot':   {'start_datetime', 'end_datetime'},
+    'google_calendar_get_free_slots': {
+        'date', 'business_start_hour', 'business_end_hour', 'slot_duration_minutes'
+    },
+}
+
+# Basic type validators for each parameter
+_ISO_DT_RE = re.compile(
+    r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}[+-]\d{2}:\d{2}$'
+)
+_DATE_RE   = re.compile(r'^\d{4}-\d{2}-\d{2}$')
+
+
+def _sanitize_tool_input(tool_name: str, raw: dict) -> dict:
+    """
+    Strip unknown keys and validate types/formats for each whitelisted parameter.
+    Raises ValueError with a human-readable message on invalid input.
+    """
+    allowed = _TOOL_ALLOWED_PARAMS.get(tool_name, set())
+    cleaned = {k: v for k, v in raw.items() if k in allowed}
+
+    # Per-parameter validation
+    for key, val in cleaned.items():
+        if key in ('start_datetime', 'end_datetime'):
+            if not isinstance(val, str) or not _ISO_DT_RE.match(val):
+                raise ValueError(
+                    f"'{key}' muss ISO-8601 mit Zeitzone sein, z. B. 2026-05-20T10:00:00+02:00"
+                )
+        elif key == 'date':
+            if not isinstance(val, str) or not _DATE_RE.match(val):
+                raise ValueError(f"'date' muss im Format YYYY-MM-DD sein, z. B. 2026-05-20")
+        elif key in ('business_start_hour', 'business_end_hour', 'slot_duration_minutes'):
+            if not isinstance(val, int) or not (0 <= val <= 23 if 'hour' in key else 5 <= val <= 480):
+                raise ValueError(f"'{key}' muss eine gültige ganze Zahl sein")
+
+    return cleaned
+
+
 def execute_tool(tool_name: str, tool_input: dict, instance_id: int) -> str:
     """Execute a Google Calendar freebusy tool call."""
     creds = get_credentials(instance_id)
@@ -236,10 +278,16 @@ def execute_tool(tool_name: str, tool_input: dict, instance_id: int) -> str:
         )
 
     try:
+        safe_input = _sanitize_tool_input(tool_name, tool_input)
+    except ValueError as ve:
+        logger.warning(f"execute_tool {tool_name} bad input instance={instance_id}: {ve}")
+        return f"Ungültige Tool-Parameter: {ve}"
+
+    try:
         if tool_name == 'google_calendar_check_slot':
-            return check_calendar_slot(creds, **tool_input)
+            return check_calendar_slot(creds, **safe_input)
         elif tool_name == 'google_calendar_get_free_slots':
-            return get_free_slots(creds, **tool_input)
+            return get_free_slots(creds, **safe_input)
         else:
             return f"Unbekanntes Tool: {tool_name}"
     except Exception as e:

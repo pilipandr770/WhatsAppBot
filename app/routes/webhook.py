@@ -25,23 +25,37 @@ _APPOINTMENT_DEDUP_MINUTES = int(os.environ.get('APPOINTMENT_NOTIFY_DEDUP_MINUTE
 
 def _verify_webhook_token() -> bool:
     """
-    Verify that the incoming request carries the Evolution API global key.
-    Evolution sends it as the 'apikey' header.
-    If EVOLUTION_WEBHOOK_TOKEN is not set we skip the check.
+    Verify that the incoming request carries the EVOLUTION_WEBHOOK_TOKEN.
+
+    Evolution API does NOT add auth headers to outgoing webhook calls by default.
+    We embed the token in the webhook URL as ?apikey=<token> when registering
+    webhooks, so Evolution carries it back as a query parameter.
+
+    Accepted locations (checked in order):
+      1. Query parameter  ?apikey=…
+      2. Header           apikey: …
+      3. Header           Authorization: Bearer …
+
+    If EVOLUTION_WEBHOOK_TOKEN is not configured the check is skipped with a
+    warning (allow-all) so a fresh deploy doesn't silently kill the bot.
+    Configure the variable as soon as possible.
     """
     expected = os.environ.get('EVOLUTION_WEBHOOK_TOKEN', '')
     if not expected:
-        return True  # Token not configured — allow all (disable check)
+        logger.warning(
+            "EVOLUTION_WEBHOOK_TOKEN is not set — webhook auth check is DISABLED. "
+            "Set this variable in your environment to secure the webhook endpoint."
+        )
+        return True  # Soft-open: warn but allow until operator configures the token
 
-    # Evolution API v2 sends the global key as 'apikey' header
     provided = (
-        request.headers.get('apikey') or
+        request.args.get('apikey') or          # embedded in URL by _webhook_url()
+        request.headers.get('apikey') or        # some Evolution versions send header
         request.headers.get('Authorization', '').replace('Bearer ', '') or
         ''
     )
 
     if provided != expected:
-        # Log ALL headers so we can see what Evolution actually sends
         safe_headers = {
             k: v for k, v in request.headers
             if k.lower() not in ('cookie', 'authorization')
