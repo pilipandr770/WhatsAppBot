@@ -1,10 +1,14 @@
 """
-Google Calendar & Sheets service for WhatsApp bot tool use.
+Google Calendar free/busy service for WhatsApp bot tool use.
+
+Scope used: https://www.googleapis.com/auth/calendar.freebusy
+  - Non-sensitive (no Google verification required)
+  - Checks availability ONLY — cannot read event details or create events
 
 Provides:
-  - get_credentials(instance_id)      – returns valid Credentials or None
+  - get_credentials(instance_id)       – returns valid Credentials or None
   - execute_tool(name, input, inst_id) – dispatcher for Claude tool calls
-  - GOOGLE_TOOLS                       – Anthropic tool definitions list
+  - GOOGLE_TOOLS                        – Anthropic tool definitions list
 """
 
 import os
@@ -14,56 +18,62 @@ from datetime import datetime, timezone, timedelta
 
 logger = logging.getLogger(__name__)
 
-REQUIRED_READONLY_SCOPES = {
-    'https://www.googleapis.com/auth/calendar.events.readonly',
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
-}
-
 # ---------------------------------------------------------------------------
 # Tool definitions for Claude (Anthropic format)
 # ---------------------------------------------------------------------------
 
 GOOGLE_TOOLS = [
     {
-        "name": "google_calendar_list_events",
+        "name": "google_calendar_check_slot",
         "description": (
-            "Listet bevorstehende Termine aus dem Google Kalender auf. "
-            "Nutze dieses Tool um freie Termine zu prüfen oder geplante Ereignisse zu nennen."
+            "Prüft ob ein bestimmtes Zeitfenster im Google Kalender frei oder belegt ist. "
+            "Nutze dieses Tool wenn ein Kunde fragt ob ein konkreter Termin möglich ist, "
+            "z. B. 'Ist Dienstag um 10 Uhr frei?' "
+            "Gib Start- und Endzeit im ISO-8601-Format an (z. B. 2026-05-20T10:00:00+02:00)."
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "max_results": {
-                    "type": "integer",
-                    "description": "Maximale Anzahl zurückzugebender Termine (Standard: 5)"
+                "start_datetime": {
+                    "type": "string",
+                    "description": "Startzeit im ISO-8601-Format mit Zeitzone, z. B. 2026-05-20T10:00:00+02:00"
                 },
-                "days_ahead": {
-                    "type": "integer",
-                    "description": "Wie viele Tage in die Zukunft schauen (Standard: 7)"
+                "end_datetime": {
+                    "type": "string",
+                    "description": "Endzeit im ISO-8601-Format mit Zeitzone, z. B. 2026-05-20T11:00:00+02:00"
                 }
-            }
+            },
+            "required": ["start_datetime", "end_datetime"]
         }
     },
     {
-        "name": "google_sheets_read",
+        "name": "google_calendar_get_free_slots",
         "description": (
-            "Liest Daten aus einer Google-Tabelle (Spreadsheet). "
-            "Nutze dieses Tool um Informationen wie Preislisten, Produkte, Kundendaten o. ä. nachzuschlagen. "
-            "Die spreadsheet_id steht in der URL der Tabelle: docs.google.com/spreadsheets/d/<ID>/edit"
+            "Gibt alle freien Zeitfenster für einen bestimmten Tag zurück. "
+            "Nutze dieses Tool wenn ein Kunde nach verfügbaren Terminen fragt, "
+            "z. B. 'Wann habt ihr nächste Woche Zeit?' oder 'Welche Termine sind am Montag frei?'"
         ),
         "input_schema": {
             "type": "object",
             "properties": {
-                "spreadsheet_id": {
+                "date": {
                     "type": "string",
-                    "description": "Die ID des Google Spreadsheets"
+                    "description": "Datum im Format YYYY-MM-DD, z. B. 2026-05-20"
                 },
-                "range": {
-                    "type": "string",
-                    "description": "Der Zellbereich, z. B. 'Tabelle1!A1:D20' oder 'A1:Z100'"
+                "business_start_hour": {
+                    "type": "integer",
+                    "description": "Beginn der Geschaeftszeiten in Stunden (Standard: 9)"
+                },
+                "business_end_hour": {
+                    "type": "integer",
+                    "description": "Ende der Geschaeftszeiten in Stunden (Standard: 17)"
+                },
+                "slot_duration_minutes": {
+                    "type": "integer",
+                    "description": "Laenge eines Terminfensters in Minuten (Standard: 60)"
                 }
             },
-            "required": ["spreadsheet_id", "range"]
+            "required": ["date"]
         }
     }
 ]
@@ -90,13 +100,6 @@ def get_credentials(instance_id: int):
             return None
 
         scopes = json.loads(token_row.scopes) if token_row.scopes else []
-        granted = set(scopes)
-        if not REQUIRED_READONLY_SCOPES.issubset(granted):
-            logger.warning(
-                "Instance %s has stale Google scopes. Reconnect required.",
-                instance_id,
-            )
-            return None
 
         creds = Credentials(
             token=token_row.access_token,
@@ -106,15 +109,9 @@ def get_credentials(instance_id: int):
             client_secret=os.environ.get('GOOGLE_CLIENT_SECRET', ''),
             scopes=scopes,
         )
-        # Set expiry so the library can check if a refresh is needed.
-        # google-auth uses naive UTC internally (datetime.utcnow()), so we
-        # must NOT make expiry timezone-aware — otherwise the comparison raises
-        # TypeError and get_credentials() silently returns None.
         if token_row.token_expiry:
-            # token_expiry is stored as naive UTC — pass it as-is
             creds.expiry = token_row.token_expiry
 
-        # Refresh if expired or about to expire (within 60 s)
         now_utc = datetime.utcnow()
         if creds.expired or (
             creds.expiry and
@@ -129,7 +126,7 @@ def get_credentials(instance_id: int):
                 db.session.commit()
                 logger.info(f"Google token refreshed for instance {instance_id}")
             else:
-                logger.warning(f"Google token expired and no refresh_token for instance {instance_id}")
+                logger.warning(f"Google token expired, no refresh_token for instance {instance_id}")
                 return None
 
         return creds
@@ -140,108 +137,89 @@ def get_credentials(instance_id: int):
 
 
 # ---------------------------------------------------------------------------
-# Calendar functions
+# Calendar free/busy functions
 # ---------------------------------------------------------------------------
 
-def create_calendar_event(
-    creds,
-    summary: str,
-    start_datetime: str,
-    end_datetime: str,
-    description: str = '',
-    attendee_email: str = ''
-) -> str:
+def check_calendar_slot(creds, start_datetime: str, end_datetime: str) -> str:
+    """Check if a specific time slot is free using the freebusy API."""
     from googleapiclient.discovery import build
 
     service = build('calendar', 'v3', credentials=creds, cache_discovery=False)
-    # Always specify timeZone — required when dateTime has no UTC offset,
-    # and harmless (ignored) when an explicit offset like +02:00 is present.
-    tz = os.environ.get('CALENDAR_TIMEZONE', 'Europe/Berlin')
-    event_body = {
-        'summary': summary,
-        'start': {'dateTime': start_datetime, 'timeZone': tz},
-        'end':   {'dateTime': end_datetime,   'timeZone': tz},
+    body = {
+        "timeMin": start_datetime,
+        "timeMax": end_datetime,
+        "items": [{"id": "primary"}]
     }
-    if description:
-        event_body['description'] = description
-    if attendee_email:
-        event_body['attendees'] = [{'email': attendee_email}]
+    result = service.freebusy().query(body=body).execute()
+    busy = result.get('calendars', {}).get('primary', {}).get('busy', [])
 
-    created = service.events().insert(calendarId='primary', body=event_body).execute()
-    link = created.get('htmlLink', '')
+    if not busy:
+        return (
+            f"Zeitfenster {start_datetime} bis {end_datetime} ist frei. "
+            "Der Kunde kann diesen Termin waehlen."
+        )
+    busy_str = ', '.join(f"{b['start']} bis {b['end']}" for b in busy)
     return (
-        f"✅ Termin erstellt: \"{summary}\"\n"
-        f"Start: {start_datetime}\nEnde: {end_datetime}\n"
-        f"Link: {link}"
+        f"Das Zeitfenster ist leider belegt: {busy_str}. "
+        "Bitte schlage dem Kunden einen anderen Termin vor."
     )
 
 
-def list_calendar_events(creds, max_results: int = 5, days_ahead: int = 7) -> str:
+def get_free_slots(
+    creds,
+    date: str,
+    business_start_hour: int = 9,
+    business_end_hour: int = 17,
+    slot_duration_minutes: int = 60
+) -> str:
+    """Return free time slots for a given day using the freebusy API."""
     from googleapiclient.discovery import build
+
+    tz = '+02:00'
+    time_min = f"{date}T{business_start_hour:02d}:00:00{tz}"
+    time_max = f"{date}T{business_end_hour:02d}:00:00{tz}"
 
     service = build('calendar', 'v3', credentials=creds, cache_discovery=False)
-    now = datetime.now(timezone.utc)
-    time_max = now + timedelta(days=days_ahead)
+    body = {
+        "timeMin": time_min,
+        "timeMax": time_max,
+        "timeZone": "Europe/Berlin",
+        "items": [{"id": "primary"}]
+    }
+    result = service.freebusy().query(body=body).execute()
+    busy = result.get('calendars', {}).get('primary', {}).get('busy', [])
 
-    result = service.events().list(
-        calendarId='primary',
-        timeMin=now.isoformat(),
-        timeMax=time_max.isoformat(),
-        maxResults=max(1, min(int(max_results), 20)),
-        singleEvents=True,
-        orderBy='startTime'
-    ).execute()
+    free_slots = []
+    current_min = business_start_hour * 60
+    end_min = business_end_hour * 60
 
-    items = result.get('items', [])
-    if not items:
-        return f"Keine Termine in den nächsten {days_ahead} Tagen gefunden."
+    while current_min + slot_duration_minutes <= end_min:
+        s_h, s_m = divmod(current_min, 60)
+        e_min = current_min + slot_duration_minutes
+        e_h, e_m = divmod(e_min, 60)
 
-    lines = [f"📅 Termine (nächste {days_ahead} Tage):"]
-    for ev in items:
-        start = ev['start'].get('dateTime', ev['start'].get('date', '?'))
-        lines.append(f"• {ev.get('summary', '(kein Titel)')} — {start}")
-    return '\n'.join(lines)
+        slot_start_iso = f"{date}T{s_h:02d}:{s_m:02d}:00{tz}"
+        slot_end_iso   = f"{date}T{e_h:02d}:{e_m:02d}:00{tz}"
 
+        is_busy = any(
+            not (slot_end_iso <= b['start'] or slot_start_iso >= b['end'])
+            for b in busy
+        )
+        if not is_busy:
+            free_slots.append(f"{s_h:02d}:{s_m:02d}-{e_h:02d}:{e_m:02d} Uhr")
 
-# ---------------------------------------------------------------------------
-# Sheets functions
-# ---------------------------------------------------------------------------
+        current_min += slot_duration_minutes
 
-def read_sheet(creds, spreadsheet_id: str, range: str) -> str:
-    from googleapiclient.discovery import build
+    if not free_slots:
+        return (
+            f"Am {date} sind keine freien Termine verfuegbar "
+            f"(Geschaeftszeiten {business_start_hour}-{business_end_hour} Uhr)."
+        )
 
-    service = build('sheets', 'v4', credentials=creds, cache_discovery=False)
-    result = service.spreadsheets().values().get(
-        spreadsheetId=spreadsheet_id,
-        range=range
-    ).execute()
-
-    rows = result.get('values', [])
-    if not rows:
-        return "Keine Daten in diesem Bereich gefunden."
-
-    lines = []
-    for row in rows[:50]:  # limit output
-        lines.append(' | '.join(str(cell) for cell in row))
-    return '\n'.join(lines)
-
-
-def append_to_sheet(creds, spreadsheet_id: str, range: str, values: list) -> str:
-    from googleapiclient.discovery import build
-
-    service = build('sheets', 'v4', credentials=creds, cache_discovery=False)
-    body = {'values': [values]}
-    result = service.spreadsheets().values().append(
-        spreadsheetId=spreadsheet_id,
-        range=range,
-        valueInputOption='USER_ENTERED',
-        insertDataOption='INSERT_ROWS',
-        body=body
-    ).execute()
-
-    updates = result.get('updates', {})
-    updated_range = updates.get('updatedRange', range)
-    return f"✅ Zeile hinzugefügt in: {updated_range}"
+    return (
+        f"Freie Termine am {date}: {', '.join(free_slots)}. "
+        "Bitte frage den Kunden welches Zeitfenster passt."
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -249,29 +227,19 @@ def append_to_sheet(creds, spreadsheet_id: str, range: str, values: list) -> str
 # ---------------------------------------------------------------------------
 
 def execute_tool(tool_name: str, tool_input: dict, instance_id: int) -> str:
-    """Execute a Google tool call and return a human-readable result string."""
+    """Execute a Google Calendar freebusy tool call."""
     creds = get_credentials(instance_id)
     if not creds:
         return (
-            "Google ist für diese Instanz nicht verbunden. "
-            "Bitte verbinde Google im Dashboard unter Konfiguration → Google-Integration."
+            "Google Kalender ist nicht verbunden. "
+            "Bitte verbinde Google im Dashboard unter Konfiguration."
         )
 
     try:
-        if tool_name == 'google_calendar_create_event':
-            return (
-                "Diese Google-Integration ist jetzt auf Nur-Lesen gesetzt. "
-                "Termine erstellen ist deaktiviert."
-            )
-        elif tool_name == 'google_calendar_list_events':
-            return list_calendar_events(creds, **tool_input)
-        elif tool_name == 'google_sheets_read':
-            return read_sheet(creds, **tool_input)
-        elif tool_name == 'google_sheets_append':
-            return (
-                "Diese Google-Integration ist jetzt auf Nur-Lesen gesetzt. "
-                "Schreiben in Google Sheets ist deaktiviert."
-            )
+        if tool_name == 'google_calendar_check_slot':
+            return check_calendar_slot(creds, **tool_input)
+        elif tool_name == 'google_calendar_get_free_slots':
+            return get_free_slots(creds, **tool_input)
         else:
             return f"Unbekanntes Tool: {tool_name}"
     except Exception as e:

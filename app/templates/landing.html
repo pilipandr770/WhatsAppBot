@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}AI Chat Pro — KI-Chatbot für dein Unternehmen{% endblock %}
-{% block meta_description %}AI Chat Pro: Automatisiere deinen Customer Service mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender, Google Sheets, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
+{% block meta_description %}AI Chat Pro: Automatisiere deinen Customer Service mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender Verfügbarkeit, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
 {% block og_title %}AI Chat Pro — Automatischer AI Support auf WhatsApp{% endblock %}
 {% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Keine WhatsApp Business API nötig. Ab €59/Monat. 3 Tage gratis.{% endblock %}
 
@@ -285,8 +285,8 @@ body { background:#0c0d10; }
   <div class="hero-badge">🇩🇪 Made for Germany · DSGVO-konform</div>
   <h1>Kundenanfragen werden beantwortet<br><span>automatisch — 24/7</span></h1>
   <p>
-    AI-Bot für Messaging: beantwortet Kundenanfragen, prüft verfügbare Zeiten im Google Kalender
-    und liest Informationen aus Google Sheets — vollautomatisch, auf Deutsch.
+    AI-Bot für Messaging: beantwortet Kundenanfragen, prüft freie Termine im Google Kalender
+    und zeigt Verfügbarkeiten — vollautomatisch, auf Deutsch.
   </p>
   <div class="hero-cta">
     <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
@@ -425,10 +425,10 @@ body { background:#0c0d10; }
 <!-- ═══ GOOGLE INTEGRATION ════════════════════════════════════════════════ -->
 <section class="section" id="google">
   <div class="section-label">Premium Feature</div>
-  <div class="section-title">Google-Integration — dein Wettbewerbsvorteil</div>
+  <div class="section-title">Google Kalender — Verfügbarkeit in Echtzeit</div>
   <div class="section-sub">
-    Direct Integration mit Google Kalender und Google Sheets —
-    ohne Zapier, ohne Umwege.
+    Der Bot prüft direkt deinen Google Kalender — ohne Zapier, ohne Umwege.
+    Kein Lesezugriff auf Termininhalte, nur Frei/Belegt-Abfrage.
   </div>
 
   <div class="google-section">
@@ -442,20 +442,20 @@ body { background:#0c0d10; }
           <path fill="#1976D2" d="M43.6 20.5H42V20H24V28H35.3c-.8 2.2-2.2 4.2-4.1 5.4l6.2 5.3C37 39.1 44 34 44 24c0-1.2-.1-2.3-.4-3.5z"/>
         </svg>
         <div>
-          <div style="font-size:20px;font-weight:700;color:#e8eaf0;">Google-Integration</div>
-          <div style="font-size:13px;color:#6b7280;">Kalender + Sheets direkt im WhatsApp-Bot</div>
+          <div style="font-size:20px;font-weight:700;color:#e8eaf0;">Google Kalender</div>
+          <div style="font-size:13px;color:#6b7280;">Frei/Belegt-Abfrage direkt im WhatsApp-Bot</div>
         </div>
       </div>
 
       <p style="color:#9ca3af;font-size:14.5px;line-height:1.8;margin-bottom:20px;">
         Verbinde einmal dein Google-Konto — und der Bot kann eigenständig
-        Termine und Verfügbarkeiten abfragen sowie Daten in Tabellen nachschlagen.
+        prüfen wann du frei bist und dem Kunden verfügbare Zeiten nennen.
         Kein Drittanbieter. Kein Zapier. Keine Extra-Kosten.
       </p>
 
       <div class="google-badges">
         <div class="google-badge">📅 Google Kalender</div>
-        <div class="google-badge">📊 Google Sheets</div>
+        <div class="google-badge">🔒 Nur Frei/Belegt</div>
         <div class="google-badge">🔗 OAuth 2.0</div>
         <div class="google-badge">⚡ Echtzeit</div>
       </div>
@@ -466,25 +466,25 @@ body { background:#0c0d10; }
       <div class="google-use-case">
         <div class="google-use-case-title">📅 Terminwunsch per WhatsApp</div>
         <div class="google-use-case-text">
-          Kunde fragt nach freiem Termin → Bot prüft Kalender → bestätigt den Terminwunsch → informiert Ihr Team sofort.
+          Kunde fragt nach freiem Termin → Bot prüft Kalender (Frei/Belegt) → bestätigt Verfügbarkeit → dein Team trägt ein.
         </div>
       </div>
       <div class="google-use-case">
-        <div class="google-use-case-title">📊 Informationen sofort nachschlagen</div>
+        <div class="google-use-case-title">🔍 Freie Slots für einen Tag anzeigen</div>
         <div class="google-use-case-text">
-          Bot liest Preislisten, FAQs oder Produktdaten direkt aus Google Sheets und antwortet ohne Medienbruch.
+          „Wann habt ihr diese Woche noch Zeit?" → Bot nennt alle freien Stunden des Tages aus deinem echten Kalender.
         </div>
       </div>
       <div class="google-use-case">
-        <div class="google-use-case-title">🔍 Verfügbarkeit abfragen</div>
+        <div class="google-use-case-title">🕐 Konkreten Slot prüfen</div>
         <div class="google-use-case-text">
-          "Wann habt ihr die nächsten freien Plätze?" → Bot liest deinen Kalender und antwortet mit echten Terminen.
+          „Ist Dienstag 10 Uhr frei?" → Bot antwortet sofort mit Ja oder Nein — ohne Termininhalte zu lesen.
         </div>
       </div>
       <div class="google-use-case">
-        <div class="google-use-case-title">📝 Team-Benachrichtigung bei Terminwunsch</div>
+        <div class="google-use-case-title">📲 Team-Benachrichtigung</div>
         <div class="google-use-case-text">
-          Bei bestätigtem Terminwunsch informiert der Bot automatisch Ihre hinterlegte WhatsApp-Nummer zur manuellen Eintragung.
+          Wenn ein Kunde einen Wunschtermin bestätigt, sendet der Bot deiner WhatsApp-Nummer eine Zusammenfassung.
         </div>
       </div>
     </div>
@@ -516,7 +516,7 @@ body { background:#0c0d10; }
         <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude AI)</span></div>
         <div class="plan-feature"><span>✓</span><span>Wissensdatenbank (PDF, DOCX, TXT)</span></div>
         <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
-        <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
+        <div class="plan-feature"><span>✓</span><span>Google Kalender Verfügbarkeit</span></div>
         <div class="plan-feature"><span>✓</span><span>Unbegrenzte Gespräche</span></div>
         <div class="plan-feature"><span>✓</span><span>E-Mail-Support</span></div>
       </div>
@@ -539,7 +539,7 @@ body { background:#0c0d10; }
         <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude AI)</span></div>
         <div class="plan-feature"><span>✓</span><span>Wissensdatenbank (PDF, DOCX, TXT)</span></div>
         <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
-        <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
+        <div class="plan-feature"><span>✓</span><span>Google Kalender Verfügbarkeit</span></div>
         <div class="plan-feature"><span>✓</span><span>Unbegrenzte Gespräche</span></div>
         <div class="plan-feature"><span>✓</span><span><strong style="color:#6366F1;">Prioritäts-Support</strong></span></div>
       </div>
@@ -559,7 +559,7 @@ body { background:#0c0d10; }
       <div class="plan-features">
         <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">10 WhatsApp-Nummern</strong></span></div>
         <div class="plan-feature"><span>✓</span><span>Alle Business-Features</span></div>
-        <div class="plan-feature"><span>✓</span><span>Google Kalender & Sheets</span></div>
+        <div class="plan-feature"><span>✓</span><span>Google Kalender Verfügbarkeit</span></div>
         <div class="plan-feature"><span>✓</span><span><strong style="color:#6366F1;">White-Label-Option</strong></span></div>
         <div class="plan-feature"><span>✓</span><span>Dedicated Support</span></div>
         <div class="plan-feature"><span>✓</span><span>Für Agenturen & Wiederverkauf</span></div>
@@ -659,7 +659,8 @@ body { background:#0c0d10; }
       <div class="faq-q">Wie funktioniert die Google-Integration?</div>
       <div class="faq-a">
         Einmalig Google-Konto in den Einstellungen verbinden (OAuth 2.0 — sicher und widerrufbar).
-          Danach kann der Bot Kalenderdaten und Tabelleninhalte lesen (read-only).
+          Danach kann der Bot Frei/Belegt-Zeiten aus deinem Kalender abfragen —
+          ohne Termininhalte zu lesen (calendar.freebusy — nicht-sensitiver Scope).
           Bei neuen Terminwünschen wird Ihr Team per WhatsApp benachrichtigt, damit Sie den Termin manuell eintragen.
       </div>
     </div>
@@ -832,7 +833,7 @@ document.querySelectorAll('.faq-q').forEach(q => {
       "applicationCategory": "BusinessApplication",
       "operatingSystem": "Web",
       "url": "https://whatsappbothelfer.de",
-      "description": "AI-powered customer service automation. Claude AI answers customer questions 24/7 in German — with Google Calendar, Google Sheets, knowledge database, and voice understanding. Works with any messaging platform.",
+      "description": "AI-powered customer service automation. Claude AI answers customer questions 24/7 in German — with Google Calendar availability check, knowledge database, and voice understanding. Works with any messaging platform.",
       "offers": [
         {"@type":"Offer","name":"Solo","price":"59.00","priceCurrency":"EUR","description":"1 WhatsApp-Nummer, alle Features"},
         {"@type":"Offer","name":"Business","price":"149.00","priceCurrency":"EUR","description":"3 WhatsApp-Nummern, Prioritätssupport"},
@@ -841,8 +842,7 @@ document.querySelectorAll('.faq-q').forEach(q => {
       "featureList": [
         "WhatsApp-Chatbot ohne WhatsApp Business API",
         "KI-Antworten mit Claude (Anthropic)",
-        "Google Kalender Integration",
-        "Google Sheets Integration",
+        "Google Kalender Verfügbarkeit (Frei/Belegt)",
         "Sprachnachrichten (Whisper STT)",
         "Wissensdatenbank aus PDF und Word",
         "DSGVO-konform, Server in Deutschland"

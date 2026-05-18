@@ -235,21 +235,14 @@ def _process_single_message(instance_name: str, msg_data: dict):
     # Use Google tools if this instance has an active Google token
     has_google = bool(instance.google_token and instance.google_token.access_token)
 
-    # Collect write-tool events for owner notifications
+    # No write-tool events (freebusy scope is read-only)
     write_events: list = []
-
-    # Tools that count as "write" operations → trigger owner notification
-    _WRITE_TOOLS = {'google_calendar_create_event', 'google_sheets_append'}
 
     if has_google:
         _inst_id = instance.id  # capture for closure
 
         def _tool_executor(tool_name: str, tool_input: dict) -> str:
-            result = google_execute_tool(tool_name, tool_input, _inst_id)
-            # Track successful write operations (result starts with ✅)
-            if tool_name in _WRITE_TOOLS and result.startswith('✅'):
-                write_events.append({'tool': tool_name, 'input': tool_input, 'result': result})
-            return result
+            return google_execute_tool(tool_name, tool_input, _inst_id)
 
         # Ensure enough tokens for tool-use reasoning + final answer (min 1500)
         ai_text_raw = get_ai_response_with_tools(

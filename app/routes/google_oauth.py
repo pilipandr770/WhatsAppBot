@@ -34,12 +34,11 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 SCOPES = [
-    # calendar.events.readonly: read-only access to calendar events.
-    'https://www.googleapis.com/auth/calendar.events.readonly',
-    # spreadsheets.readonly: read-only access to spreadsheet data.
-    'https://www.googleapis.com/auth/spreadsheets.readonly',
+    # calendar.freebusy: check free/busy status only — NON-sensitive scope,
+    # no Google verification required. Does NOT read event details or create events.
+    'https://www.googleapis.com/auth/calendar.freebusy',
     'openid',
-    'email',   # standard OIDC scope — no extra verification needed
+    'email',
 ]
 
 # REDIRECT_URI is resolved lazily so APP_BASE_URL is always read at runtime
