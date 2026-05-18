@@ -209,6 +209,70 @@ class SiteConfig(db.Model):
             db.session.add(cls(key=key, value=value))
 
 
+class AffiliateCode(db.Model):
+    """
+    Партнёрский промокод.
+    Партнёр (блогер / агентство) получает commission_percent % от первого платежа
+    каждого пользователя, который использовал его код.
+    Пользователь платит полную цену — скидки нет.
+    """
+    __tablename__ = 'affiliate_codes'
+    id                  = db.Column(db.Integer, primary_key=True)
+    code                = db.Column(db.String(50), unique=True, nullable=False)  # e.g. IVAN2026
+    affiliate_name      = db.Column(db.String(200), nullable=False)
+    affiliate_email     = db.Column(db.String(200), nullable=False)
+    commission_percent  = db.Column(db.Float, default=50.0)   # % от первого платежа
+    is_active           = db.Column(db.Boolean, default=True)
+    max_uses            = db.Column(db.Integer, nullable=True)  # None = безлимит
+    valid_until         = db.Column(db.DateTime, nullable=True)
+    notes               = db.Column(db.Text, nullable=True)     # комментарий для договора
+    created_at          = db.Column(db.DateTime, default=datetime.utcnow)
+
+    usages = db.relationship('AffiliateUsage', backref='affiliate_code', lazy=True)
+
+    @property
+    def total_uses(self):
+        return len(self.usages)
+
+    @property
+    def total_commission_cents(self):
+        return sum(u.commission_cents for u in self.usages)
+
+    @property
+    def unpaid_commission_cents(self):
+        return sum(u.commission_cents for u in self.usages if not u.is_paid_out)
+
+    def is_valid(self) -> bool:
+        """Check if code can still be used right now."""
+        if not self.is_active:
+            return False
+        if self.valid_until and datetime.utcnow() > self.valid_until:
+            return False
+        if self.max_uses is not None and self.total_uses >= self.max_uses:
+            return False
+        return True
+
+
+class AffiliateUsage(db.Model):
+    """
+    Запись каждого использования промокода (= одна продажа).
+    Создаётся в Stripe-вебхуке checkout.session.completed.
+    """
+    __tablename__ = 'affiliate_usages'
+    id                      = db.Column(db.Integer, primary_key=True)
+    code_id                 = db.Column(db.Integer, db.ForeignKey('affiliate_codes.id'), nullable=False)
+    user_id                 = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    stripe_session_id       = db.Column(db.String(200))   # cs_live_…
+    stripe_subscription_id  = db.Column(db.String(200))
+    gross_amount_cents      = db.Column(db.Integer, default=0)  # что заплатил пользователь
+    commission_cents        = db.Column(db.Integer, default=0)  # сколько причитается партнёру
+    currency                = db.Column(db.String(10), default='eur')
+    is_paid_out             = db.Column(db.Boolean, default=False)
+    paid_out_at             = db.Column(db.DateTime, nullable=True)
+    paid_out_note           = db.Column(db.String(500), nullable=True)  # номер перевода / комментарий
+    created_at              = db.Column(db.DateTime, default=datetime.utcnow)
+
+
 class GoogleToken(db.Model):
     """Stores Google OAuth 2.0 tokens per WhatsApp instance."""
     __tablename__ = 'google_tokens'

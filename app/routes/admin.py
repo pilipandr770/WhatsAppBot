@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Subscription, WhatsAppInstance, Conversation, Message, SiteConfig, TRIAL_DAYS
+from app.models import User, Subscription, WhatsAppInstance, Conversation, Message, SiteConfig, AffiliateCode, AffiliateUsage, TRIAL_DAYS
 
 admin_bp = Blueprint('admin', __name__)
 
@@ -159,6 +159,98 @@ def reregister_webhooks():
             'warning'
         )
     return redirect(url_for('admin.index'))
+
+
+@admin_bp.route('/affiliates')
+@login_required
+@admin_required
+def affiliates():
+    """Список всех партнёрских промокодов + сводка по выплатам."""
+    codes = AffiliateCode.query.order_by(AffiliateCode.created_at.desc()).all()
+    # Total unpaid across all codes
+    total_unpaid = sum(c.unpaid_commission_cents for c in codes)
+    return render_template('admin/affiliates.html',
+        codes=codes,
+        total_unpaid=total_unpaid,
+    )
+
+
+@admin_bp.route('/affiliates/create', methods=['POST'])
+@login_required
+@admin_required
+def affiliate_create():
+    code_str    = request.form.get('code', '').strip().upper()
+    name        = request.form.get('affiliate_name', '').strip()
+    email       = request.form.get('affiliate_email', '').strip()
+    commission  = float(request.form.get('commission_percent', 50) or 50)
+    max_uses_raw = request.form.get('max_uses', '').strip()
+    valid_until_raw = request.form.get('valid_until', '').strip()
+    notes       = request.form.get('notes', '').strip()
+
+    if not code_str or not name or not email:
+        flash('Code, Name und E-Mail sind Pflichtfelder.', 'error')
+        return redirect(url_for('admin.affiliates'))
+
+    if AffiliateCode.query.filter_by(code=code_str).first():
+        flash(f'Code «{code_str}» existiert bereits.', 'error')
+        return redirect(url_for('admin.affiliates'))
+
+    max_uses = int(max_uses_raw) if max_uses_raw.isdigit() else None
+    valid_until = None
+    if valid_until_raw:
+        try:
+            valid_until = datetime.strptime(valid_until_raw, '%Y-%m-%d')
+        except ValueError:
+            pass
+
+    db.session.add(AffiliateCode(
+        code=code_str,
+        affiliate_name=name,
+        affiliate_email=email,
+        commission_percent=commission,
+        max_uses=max_uses,
+        valid_until=valid_until,
+        notes=notes,
+    ))
+    db.session.commit()
+    flash(f'✅ Promocode «{code_str}» für {name} erstellt.', 'success')
+    return redirect(url_for('admin.affiliates'))
+
+
+@admin_bp.route('/affiliates/<int:code_id>/toggle', methods=['POST'])
+@login_required
+@admin_required
+def affiliate_toggle(code_id):
+    code = db.get_or_404(AffiliateCode, code_id)
+    code.is_active = not code.is_active
+    db.session.commit()
+    status = 'aktiviert' if code.is_active else 'deaktiviert'
+    flash(f'Code «{code.code}» {status}.', 'success')
+    return redirect(url_for('admin.affiliates'))
+
+
+@admin_bp.route('/affiliates/usage/<int:usage_id>/payout', methods=['POST'])
+@login_required
+@admin_required
+def affiliate_payout(usage_id):
+    usage = db.get_or_404(AffiliateUsage, usage_id)
+    note  = request.form.get('note', '').strip()
+    usage.is_paid_out  = True
+    usage.paid_out_at  = datetime.utcnow()
+    usage.paid_out_note = note or None
+    db.session.commit()
+    flash('✅ Zahlung als überwiesen markiert.', 'success')
+    return redirect(url_for('admin.affiliate_detail', code_id=usage.code_id))
+
+
+@admin_bp.route('/affiliates/<int:code_id>')
+@login_required
+@admin_required
+def affiliate_detail(code_id):
+    code = db.get_or_404(AffiliateCode, code_id)
+    usages = AffiliateUsage.query.filter_by(code_id=code_id)\
+        .order_by(AffiliateUsage.created_at.desc()).all()
+    return render_template('admin/affiliate_detail.html', code=code, usages=usages)
 
 
 @admin_bp.route('/users/<int:user_id>/toggle-admin', methods=['POST'])

@@ -22,7 +22,19 @@
 </div>
 {% endif %}
 
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;max-width:900px;">
+{# ── Promo code input ──────────────────────────────────────────────────── #}
+<div style="max-width:900px;margin-bottom:24px;">
+  <div class="card" style="padding:16px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <span style="font-size:13px;color:var(--text-muted);white-space:nowrap;">🎟 Hast du einen Promocode?</span>
+    <input type="text" id="promo-input" placeholder="z. B. IVAN2026"
+           style="flex:1;min-width:160px;max-width:220px;padding:7px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);color:var(--text);font-size:13px;text-transform:uppercase;"
+           oninput="this.value=this.value.toUpperCase();promoReset()">
+    <button onclick="validatePromo()" class="btn btn-secondary btn-sm">Prüfen</button>
+    <span id="promo-msg" style="font-size:13px;"></span>
+  </div>
+</div>
+
+<div id="plan-grid" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;max-width:900px;">
 
   {% for key, plan in plans.items() %}
   <div class="card" style="
@@ -58,7 +70,8 @@
       </button>
     {% elif plan.price_id %}
       <a href="{{ url_for('billing.checkout', plan_key=key) }}"
-         class="btn {{ 'btn-primary' if plan.highlight else 'btn-secondary' }}"
+         class="btn {{ 'btn-primary' if plan.highlight else 'btn-secondary' }} plan-btn"
+         data-base="{{ url_for('billing.checkout', plan_key=key) }}"
          style="width:100%;justify-content:center;">
         Auswählen →
       </a>
@@ -85,4 +98,53 @@
   </div>
 
 </div>{# /page-body #}
+
+<script>
+let validPromo = '';
+
+function promoReset() {
+  validPromo = '';
+  document.getElementById('promo-msg').textContent = '';
+  document.querySelectorAll('.plan-btn').forEach(btn => {
+    btn.href = btn.dataset.base;
+  });
+}
+
+function validatePromo() {
+  const code = document.getElementById('promo-input').value.trim().toUpperCase();
+  const msg  = document.getElementById('promo-msg');
+  if (!code) { msg.textContent = ''; return; }
+
+  msg.style.color = 'var(--text-muted)';
+  msg.textContent = '⏳ Prüfe...';
+
+  fetch('{{ url_for("billing.validate_promo") }}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token() }}'},
+    body: JSON.stringify({code})
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.valid) {
+      validPromo = code;
+      msg.style.color = '#4ade80';
+      msg.textContent = data.message;
+      // Append ?promo=CODE to all checkout buttons
+      document.querySelectorAll('.plan-btn').forEach(btn => {
+        btn.href = btn.dataset.base + '?promo=' + encodeURIComponent(code);
+      });
+    } else {
+      validPromo = '';
+      msg.style.color = '#ef4444';
+      msg.textContent = data.error;
+    }
+  })
+  .catch(() => { msg.style.color = '#ef4444'; msg.textContent = 'Fehler beim Prüfen.'; });
+}
+
+// Allow pressing Enter in the input
+document.getElementById('promo-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); validatePromo(); }
+});
+</script>
 {% endblock %}

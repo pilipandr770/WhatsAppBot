@@ -5,7 +5,7 @@ from datetime import datetime
 from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify
 from flask_login import login_required, current_user
 from app import db
-from app.models import User, Subscription
+from app.models import User, Subscription, AffiliateCode, AffiliateUsage
 
 billing_bp = Blueprint('billing', __name__)
 logger = logging.getLogger(__name__)
@@ -84,6 +84,24 @@ def plans():
     return render_template('billing/plans.html', plans=PLANS, current_plan=_current_plan())
 
 
+@billing_bp.route('/validate-promo', methods=['POST'])
+@login_required
+def validate_promo():
+    """AJAX: validate a promo code and return affiliate name."""
+    code_str = (request.json or {}).get('code', '').strip().upper()
+    if not code_str:
+        return jsonify({'valid': False, 'error': 'Kein Code eingegeben.'})
+
+    code = AffiliateCode.query.filter_by(code=code_str).first()
+    if not code or not code.is_valid():
+        return jsonify({'valid': False, 'error': 'Ungültiger oder abgelaufener Promocode.'})
+
+    return jsonify({
+        'valid': True,
+        'message': f'✅ Promocode aktiv — Partner: {code.affiliate_name}',
+    })
+
+
 @billing_bp.route('/checkout/<plan_key>')
 @login_required
 def checkout(plan_key):
@@ -94,6 +112,13 @@ def checkout(plan_key):
     if not plan['price_id']:
         flash('Stripe-Preise sind nicht konfiguriert. Bitte STRIPE_PRICE_* in Umgebungsvariablen setzen.', 'error')
         return redirect(url_for('billing.plans'))
+
+    # Optional affiliate promo code passed as ?promo=CODE
+    promo_code_str = request.args.get('promo', '').strip().upper()
+    promo_valid = False
+    if promo_code_str:
+        aff = AffiliateCode.query.filter_by(code=promo_code_str).first()
+        promo_valid = bool(aff and aff.is_valid())
 
     stripe.api_key = os.environ.get('STRIPE_SECRET_KEY')
 
@@ -122,7 +147,11 @@ def checkout(plan_key):
             billing_address_collection='auto',
             success_url=url_for('billing.success', _external=True) + '?session_id={CHECKOUT_SESSION_ID}',
             cancel_url=url_for('billing.plans', _external=True),
-            metadata={'user_id': str(user.id), 'plan': plan_key},
+            metadata={
+                'user_id': str(user.id),
+                'plan': plan_key,
+                'promo_code': promo_code_str if promo_valid else '',
+            },
             subscription_data={
                 'metadata': {'user_id': str(user.id), 'plan': plan_key}
             }
@@ -278,6 +307,18 @@ def _handle_checkout_completed(session):
     )
     logger.info(f"Subscription activated: user={user_id} plan={plan_key}")
 
+    # Record affiliate commission if promo code was used
+    promo_code_str = session.get('metadata', {}).get('promo_code', '').strip().upper()
+    if promo_code_str:
+        _record_affiliate_usage(
+            code_str=promo_code_str,
+            user_id=user_id,
+            stripe_session_id=session.get('id', ''),
+            stripe_sub_id=sub_id,
+            amount_total=session.get('amount_total') or 0,   # cents
+            currency=session.get('currency', 'eur'),
+        )
+
 
 def _handle_subscription_upsert(stripe_sub):
     """Subscription created or updated — sync status."""
@@ -396,3 +437,39 @@ def _current_plan():
     if current_user.subscription and current_user.subscription.is_active:
         return current_user.subscription.plan
     return None
+
+
+def _record_affiliate_usage(
+    code_str: str,
+    user_id: int,
+    stripe_session_id: str,
+    stripe_sub_id: str,
+    amount_total: int,
+    currency: str,
+):
+    """Create AffiliateUsage record after a successful checkout."""
+    try:
+        aff = AffiliateCode.query.filter_by(code=code_str).first()
+        if not aff:
+            logger.warning(f"Affiliate code not found at payout time: {code_str!r}")
+            return
+
+        commission = int(amount_total * aff.commission_percent / 100)
+
+        usage = AffiliateUsage(
+            code_id=aff.id,
+            user_id=user_id,
+            stripe_session_id=stripe_session_id,
+            stripe_subscription_id=stripe_sub_id,
+            gross_amount_cents=amount_total,
+            commission_cents=commission,
+            currency=currency,
+        )
+        db.session.add(usage)
+        db.session.commit()
+        logger.info(
+            f"AffiliateUsage recorded: code={code_str} user={user_id} "
+            f"gross={amount_total} commission={commission} {currency.upper()}"
+        )
+    except Exception as e:
+        logger.error(f"_record_affiliate_usage failed: {e}", exc_info=True)
