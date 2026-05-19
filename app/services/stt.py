@@ -1,6 +1,9 @@
 """
-Speech-to-Text service using OpenAI Whisper API.
-Transcribes WhatsApp voice messages (ogg/opus) to text.
+Speech-to-Text service.
+
+Provider priority (first key found wins):
+  1. GROQ_API_KEY  → Groq Whisper (whisper-large-v3-turbo) — fast & cheap
+  2. OPENAI_API_KEY → OpenAI Whisper (whisper-1)            — fallback
 """
 import base64
 import io
@@ -21,18 +24,29 @@ _MIME_TO_EXT = {
     'audio/x-m4a': 'm4a',
 }
 
+# Provider configs
+_PROVIDERS = [
+    {
+        'name':    'Groq',
+        'env':     'GROQ_API_KEY',
+        'url':     'https://api.groq.com/openai/v1/audio/transcriptions',
+        'model':   'whisper-large-v3-turbo',
+    },
+    {
+        'name':    'OpenAI',
+        'env':     'OPENAI_API_KEY',
+        'url':     'https://api.openai.com/v1/audio/transcriptions',
+        'model':   'whisper-1',
+    },
+]
+
 
 def transcribe_audio_base64(audio_base64: str, mimetype: str = 'audio/ogg') -> str:
     """
-    Transcribe base64-encoded audio using OpenAI Whisper API.
-
-    Returns transcribed text, or empty string if STT is unavailable/failed.
+    Transcribe base64-encoded audio.
+    Tries Groq first (if GROQ_API_KEY set), falls back to OpenAI Whisper.
+    Returns transcribed text or empty string.
     """
-    api_key = os.environ.get('OPENAI_API_KEY', '').strip()
-    if not api_key:
-        logger.warning('STT: OPENAI_API_KEY not set — cannot transcribe voice message')
-        return ''
-
     if not audio_base64:
         return ''
 
@@ -42,32 +56,44 @@ def transcribe_audio_base64(audio_base64: str, mimetype: str = 'audio/ogg') -> s
         logger.error(f'STT: base64 decode error: {e}')
         return ''
 
-    # Determine file extension — Whisper needs a filename with valid extension
-    clean_mime = mimetype.split(';')[0].strip().lower()  # strip codecs param
+    clean_mime = mimetype.split(';')[0].strip().lower()
     ext = _MIME_TO_EXT.get(clean_mime, 'ogg')
 
-    logger.info(f'STT: transcribing {len(audio_bytes)} bytes ({clean_mime}) via Whisper')
+    for provider in _PROVIDERS:
+        api_key = os.environ.get(provider['env'], '').strip()
+        if not api_key:
+            continue
 
-    try:
-        resp = requests.post(
-            'https://api.openai.com/v1/audio/transcriptions',
-            headers={'Authorization': f'Bearer {api_key}'},
-            files={
-                'file': (f'voice.{ext}', io.BytesIO(audio_bytes), mimetype),
-                'model': (None, 'whisper-1'),
-            },
-            timeout=30,
+        logger.info(
+            f"STT: transcribing {len(audio_bytes)} bytes ({clean_mime}) "
+            f"via {provider['name']} ({provider['model']})"
         )
-        resp.raise_for_status()
-        text = resp.json().get('text', '').strip()
-        logger.info(f'STT: transcribed {len(text)} chars: {text[:80]!r}')
-        return text
+        try:
+            resp = requests.post(
+                provider['url'],
+                headers={'Authorization': f"Bearer {api_key}"},
+                files={
+                    'file':  (f'voice.{ext}', io.BytesIO(audio_bytes), mimetype),
+                    'model': (None, provider['model']),
+                },
+                timeout=30,
+            )
+            resp.raise_for_status()
+            text = resp.json().get('text', '').strip()
+            logger.info(
+                f"STT ({provider['name']}): transcribed {len(text)} chars: {text[:80]!r}"
+            )
+            return text
 
-    except requests.HTTPError as e:
-        logger.error(f'STT: Whisper API error {e.response.status_code}: {e.response.text[:200]}')
-    except Exception as e:
-        logger.error(f'STT: unexpected error: {e}')
+        except requests.HTTPError as e:
+            logger.error(
+                f"STT ({provider['name']}): HTTP {e.response.status_code}: "
+                f"{e.response.text[:200]}"
+            )
+        except Exception as e:
+            logger.error(f"STT ({provider['name']}): unexpected error: {e}")
 
+    logger.warning('STT: no API key configured (set GROQ_API_KEY or OPENAI_API_KEY)')
     return ''
 
 
