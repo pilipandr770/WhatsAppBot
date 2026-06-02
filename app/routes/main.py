@@ -7,6 +7,11 @@ main_bp = Blueprint('main', __name__)
 SITE_URL = 'https://whatsappbothelfer.de'
 
 
+@main_bp.route('/healthz')
+def healthz():
+    return Response('ok\n', mimetype='text/plain')
+
+
 @main_bp.route('/favicon.ico')
 def favicon():
     static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')

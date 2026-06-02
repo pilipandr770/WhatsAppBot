@@ -6,6 +6,10 @@ from typing import List, Dict, Optional, Callable
 logger = logging.getLogger(__name__)
 
 _client = None
+_SERVICE_UNAVAILABLE_MESSAGE = (
+    "Entschuldigung, unser KI-Service ist momentan voruebergehend nicht verfuegbar. "
+    "Bitte versuche es in ein paar Minuten erneut."
+)
 
 
 def get_client() -> anthropic.Anthropic:
@@ -29,12 +33,15 @@ def get_ai_response(
     cleaned_messages = _clean_messages(messages)
 
     client = get_client()
-    response = client.messages.create(
-        model="claude-opus-4-5",
-        max_tokens=max_tokens,
-        system=full_system,
-        messages=cleaned_messages
-    )
+    try:
+        response = client.messages.create(
+            model="claude-opus-4-5",
+            max_tokens=max_tokens,
+            system=full_system,
+            messages=cleaned_messages
+        )
+    except anthropic.APIError as err:
+        return _handle_anthropic_error(err)
 
     return response.content[0].text
 
@@ -63,13 +70,16 @@ def get_ai_response_with_tools(
 
     # Safety: max 5 tool-call rounds to prevent infinite loops
     for round_num in range(5):
-        response = client.messages.create(
-            model="claude-opus-4-5",
-            max_tokens=max_tokens,
-            system=full_system,
-            messages=cleaned_messages,
-            tools=tools
-        )
+        try:
+            response = client.messages.create(
+                model="claude-opus-4-5",
+                max_tokens=max_tokens,
+                system=full_system,
+                messages=cleaned_messages,
+                tools=tools
+            )
+        except anthropic.APIError as err:
+            return _handle_anthropic_error(err)
 
         logger.debug(
             f"[Claude tools] round={round_num} stop_reason={response.stop_reason} "
@@ -154,3 +164,12 @@ def _clean_messages(messages: List[Dict]) -> List[Dict]:
         cleaned.insert(0, {'role': 'user', 'content': '...'})
 
     return cleaned
+
+
+def _handle_anthropic_error(err: anthropic.APIError) -> str:
+    err_text = str(err)
+    if 'credit balance is too low' in err_text.lower():
+        logger.error('Anthropic credits exhausted: %s', err_text)
+    else:
+        logger.error('Anthropic API request failed: %s', err_text)
+    return _SERVICE_UNAVAILABLE_MESSAGE

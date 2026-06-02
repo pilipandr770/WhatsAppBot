@@ -35,6 +35,7 @@ services:
   - type: redis
     name: whatsapp-saas-redis
     plan: free
+    ipAllowList: []
     maxmemoryPolicy: allkeys-lru
 
   # ── Evolution API (WhatsApp gateway) ─────────────────────────────────────────
@@ -93,6 +94,7 @@ services:
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: starter
+    healthCheckPath: /healthz
     disk:
       name: web-uploads
       mountPath: /app/uploads
