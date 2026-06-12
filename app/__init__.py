@@ -138,5 +138,8 @@ def create_app():
     # NOT the whole billing_bp (cancel/portal are browser forms that need CSRF).
     from app.routes.billing import stripe_webhook
     csrf.exempt(stripe_webhook)
+    # Meta Data Deletion Callback posts a signed_request (HMAC-verified, no session)
+    from app.routes.auth import facebook_data_deletion
+    csrf.exempt(facebook_data_deletion)
 
     return app

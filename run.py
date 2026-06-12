@@ -39,6 +39,9 @@ with app.app_context():
             "ALTER TABLE affiliate_usages ALTER COLUMN user_id DROP NOT NULL",
             # Semantic RAG: embedding vector per chunk (JSON, NULL = keyword fallback)
             "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS embedding TEXT",
+            # Login with Facebook (Meta OAuth)
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS facebook_id VARCHAR(100)",
+            "CREATE INDEX IF NOT EXISTS ix_users_facebook_id ON users (facebook_id)",
         ]
         with db.engine.connect() as _conn:
             for _sql in _additive_migrations:

@@ -19,6 +19,7 @@ class User(db.Model, UserMixin):
     name = db.Column(db.String(100))
     company = db.Column(db.String(150))
     stripe_customer_id = db.Column(db.String(100))
+    facebook_id = db.Column(db.String(100), index=True)   # Meta OAuth (Login with Facebook)
     is_admin = db.Column(db.Boolean, default=False)
     trial_ends_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
