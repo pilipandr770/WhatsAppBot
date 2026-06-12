@@ -19,6 +19,8 @@ with app.app_context():
     # Add columns that were introduced after initial deployment.
     _additive_migrations = [
         "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS notification_phone VARCHAR(50)",
+        # GDPR account deletion: affiliate sales are kept anonymized
+        "ALTER TABLE affiliate_usages ALTER COLUMN user_id DROP NOT NULL",
     ]
     with db.engine.connect() as _conn:
         for _sql in _additive_migrations:

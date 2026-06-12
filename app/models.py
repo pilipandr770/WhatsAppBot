@@ -24,7 +24,7 @@ class User(db.Model, UserMixin):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     instances = db.relationship('WhatsAppInstance', backref='user', lazy=True, cascade='all, delete-orphan')
-    subscription = db.relationship('Subscription', backref='user', uselist=False)
+    subscription = db.relationship('Subscription', backref='user', uselist=False, cascade='all, delete-orphan')
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -261,7 +261,9 @@ class AffiliateUsage(db.Model):
     __tablename__ = 'affiliate_usages'
     id                      = db.Column(db.Integer, primary_key=True)
     code_id                 = db.Column(db.Integer, db.ForeignKey('affiliate_codes.id'), nullable=False)
-    user_id                 = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    # nullable: при удалении аккаунта (GDPR) user_id обнуляется,
+    # но запись о продаже остаётся для расчётов с партнёром
+    user_id                 = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=True)
     stripe_session_id       = db.Column(db.String(200))   # cs_live_…
     stripe_subscription_id  = db.Column(db.String(200))
     gross_amount_cents      = db.Column(db.Integer, default=0)  # что заплатил пользователь

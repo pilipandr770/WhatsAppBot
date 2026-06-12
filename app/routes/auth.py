@@ -138,6 +138,17 @@ def delete_account():
             pass
 
     logout_user()
+
+    # Detach rows that would violate FK constraints on user delete:
+    # affiliate sales stay for partner accounting (anonymized),
+    # subscription rows go with the account.
+    from app.models import AffiliateUsage
+    AffiliateUsage.query.filter_by(user_id=user.id).update(
+        {'user_id': None}, synchronize_session=False
+    )
+    Subscription.query.filter_by(user_id=user.id).delete(synchronize_session=False)
+    db.session.expire_all()
+
     db.session.delete(user)
     db.session.commit()
     flash('Dein Konto wurde gelöscht.', 'info')
