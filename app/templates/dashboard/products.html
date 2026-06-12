@@ -1,0 +1,198 @@
+{% extends 'base.html' %}
+{% block title %}Produkte — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.connect_instance', instance_id=instance.id) }}" class="nav-item">📱 Verbinden</a>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item active">🛍 Produkte</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Produkte &amp; Dienstleistungen</div>
+    <div class="page-sub">{{ instance.display_name }} — Katalog für den Bot</div>
+  </div>
+  <button class="btn btn-primary" onclick="document.getElementById('newProductModal').classList.add('open')">
+    + Produkt anlegen
+  </button>
+</div>
+
+<div class="page-body">
+
+  <div class="card" style="margin-bottom:20px;border-color:rgba(99,102,241,0.2);background:var(--accent-dim);">
+    <div style="display:flex;gap:16px;align-items:flex-start;">
+      <div style="font-size:24px;">🛍</div>
+      <div>
+        <div style="font-weight:600;margin-bottom:4px;">Wie funktioniert der Produktkatalog?</div>
+        <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+          Lege Produkte oder Dienstleistungen mit Name, Preis und Beschreibung an und lade Fotos/Videos hoch.
+          Der Bot kennt den kompletten Katalog: Er nennt Preise, beschreibt Produkte und
+          sendet dem Kunden auf Wunsch automatisch die Fotos oder Videos — direkt in WhatsApp.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if products %}
+  <div style="display:flex;flex-direction:column;gap:14px;">
+    {% for p in products %}
+    <div class="card" style="{% if not p.is_active %}opacity:0.55;{% endif %}">
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+
+        <!-- Thumbnail -->
+        <div style="flex-shrink:0;width:84px;height:84px;border-radius:10px;overflow:hidden;background:rgba(255,255,255,0.04);display:flex;align-items:center;justify-content:center;font-size:30px;">
+          {% set first_img = p.media|selectattr('media_type','eq','image')|first %}
+          {% if first_img %}
+            <img src="{{ url_for('dashboard.product_media_file', instance_id=instance.id, product_id=p.id, media_id=first_img.id) }}"
+                 alt="" style="width:100%;height:100%;object-fit:cover;">
+          {% else %}🛍{% endif %}
+        </div>
+
+        <!-- Info -->
+        <div style="flex:1;min-width:220px;">
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+            <span style="font-weight:600;font-size:15px;">{{ p.name }}</span>
+            {% if p.price %}<span class="badge badge-green">{{ p.price }}</span>{% endif %}
+            {% if not p.is_active %}<span class="badge badge-gray">inaktiv</span>{% endif %}
+          </div>
+          {% if p.description %}
+          <div style="font-size:13px;color:var(--text-dim);margin-top:6px;line-height:1.6;">
+            {{ p.description[:220] }}{% if p.description|length > 220 %}…{% endif %}
+          </div>
+          {% endif %}
+          <div style="font-size:12px;color:var(--text-muted);margin-top:8px;">
+            📷 {{ p.photo_count }} Fotos · 🎬 {{ p.video_count }} Videos
+          </div>
+
+          <!-- Media strip -->
+          {% if p.media %}
+          <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+            {% for m in p.media %}
+            <div style="position:relative;width:56px;height:56px;border-radius:8px;overflow:hidden;background:rgba(255,255,255,0.05);">
+              {% if m.media_type == 'image' %}
+                <img src="{{ url_for('dashboard.product_media_file', instance_id=instance.id, product_id=p.id, media_id=m.id) }}"
+                     alt="" style="width:100%;height:100%;object-fit:cover;">
+              {% else %}
+                <div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:20px;">🎬</div>
+              {% endif %}
+              <form method="post"
+                    action="{{ url_for('dashboard.delete_product_media', instance_id=instance.id, product_id=p.id, media_id=m.id) }}"
+                    onsubmit="return confirm('Medium löschen?')"
+                    style="position:absolute;top:1px;right:1px;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" title="Löschen"
+                        style="background:rgba(0,0,0,0.65);color:#fca5a5;border:none;border-radius:6px;width:18px;height:18px;font-size:10px;cursor:pointer;line-height:1;">✕</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Actions -->
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+          <form method="post" enctype="multipart/form-data"
+                action="{{ url_for('dashboard.upload_product_media', instance_id=instance.id, product_id=p.id) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="file" name="file" accept=".jpg,.jpeg,.png,.webp,.mp4"
+                   id="media-{{ p.id }}" style="display:none;" onchange="this.form.submit()">
+            <button type="button" class="btn btn-secondary btn-sm" style="width:100%;"
+                    onclick="document.getElementById('media-{{ p.id }}').click()">📷 Foto/Video</button>
+          </form>
+          <button type="button" class="btn btn-ghost btn-sm"
+                  onclick="document.getElementById('editModal-{{ p.id }}').classList.add('open')">✎ Bearbeiten</button>
+          <form method="post"
+                action="{{ url_for('dashboard.delete_product', instance_id=instance.id, product_id=p.id) }}"
+                onsubmit="return confirm('Produkt und alle Medien löschen?')">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button type="submit" class="btn btn-danger btn-sm" style="width:100%;">✕ Löschen</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Edit modal -->
+    <div class="modal-backdrop" id="editModal-{{ p.id }}">
+      <div class="modal">
+        <div class="modal-title">✎ {{ p.name }}</div>
+        <form method="post" action="{{ url_for('dashboard.update_product', instance_id=instance.id, product_id=p.id) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <div class="form-group">
+            <label class="form-label">Name</label>
+            <input type="text" name="name" class="form-input" value="{{ p.name }}" required maxlength="200">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Preis</label>
+            <input type="text" name="price" class="form-input" value="{{ p.price or '' }}"
+                   placeholder="z. B. 24.500 € oder ab 99 €/Monat" maxlength="100">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Beschreibung</label>
+            <textarea name="description" class="form-input" rows="4" maxlength="2000"
+                      placeholder="Details, Ausstattung, Besonderheiten…">{{ p.description or '' }}</textarea>
+          </div>
+          <div class="form-group">
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+              <input type="checkbox" name="is_active" {% if p.is_active %}checked{% endif %}>
+              Aktiv (für den Bot sichtbar)
+            </label>
+          </div>
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost"
+                    onclick="document.getElementById('editModal-{{ p.id }}').classList.remove('open')">Abbrechen</button>
+            <button type="submit" class="btn btn-primary">Speichern</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <div class="empty-state">
+    <div class="empty-icon">🛍</div>
+    <div class="empty-title">Noch keine Produkte</div>
+    <div class="empty-text">Lege dein erstes Produkt an — der Bot nennt dann Preise und sendet Fotos automatisch.</div>
+    <button class="btn btn-primary" style="margin-top:16px;"
+            onclick="document.getElementById('newProductModal').classList.add('open')">
+      + Erstes Produkt anlegen
+    </button>
+  </div>
+  {% endif %}
+
+</div>
+
+<!-- New product modal -->
+<div class="modal-backdrop" id="newProductModal">
+  <div class="modal">
+    <div class="modal-title">🛍 Neues Produkt</div>
+    <form method="post" action="{{ url_for('dashboard.create_product', instance_id=instance.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label">Name *</label>
+        <input type="text" name="name" class="form-input" required maxlength="200"
+               placeholder="z. B. BMW 320d 2019 oder Herrenhaarschnitt">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Preis</label>
+        <input type="text" name="price" class="form-input" maxlength="100"
+               placeholder="z. B. 24.500 € oder ab 35 €">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Beschreibung</label>
+        <textarea name="description" class="form-input" rows="4" maxlength="2000"
+                  placeholder="Details, Ausstattung, Besonderheiten — der Bot nutzt diesen Text für Antworten"></textarea>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost"
+                onclick="document.getElementById('newProductModal').classList.remove('open')">Abbrechen</button>
+        <button type="submit" class="btn btn-primary">Anlegen</button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

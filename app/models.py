@@ -102,6 +102,7 @@ class WhatsAppInstance(db.Model):
     conversations = db.relationship('Conversation', backref='instance', lazy=True, cascade='all, delete-orphan')
     google_token = db.relationship('GoogleToken', backref='instance', uselist=False, cascade='all, delete-orphan')
     bot_events = db.relationship('BotEvent', backref='instance', lazy=True, cascade='all, delete-orphan')
+    products = db.relationship('Product', backref='instance', lazy=True, cascade='all, delete-orphan')
 
     @property
     def is_connected(self):
@@ -162,6 +163,48 @@ class DocumentChunk(db.Model):
     chunk_index = db.Column(db.Integer, default=0)
     # JSON-encoded embedding vector (text-embedding-3-small); NULL = keyword fallback
     embedding = db.Column(db.Text, nullable=True)
+
+
+class Product(db.Model):
+    """
+    Produkt/Dienstleistung im Katalog einer Instanz.
+    Der Bot sieht Name, Preis und Beschreibung im System-Prompt und kann
+    Fotos/Videos des Produkts per send_product_media an Kunden senden.
+    """
+    __tablename__ = 'products'
+    id = db.Column(db.Integer, primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('whatsapp_instances.id'), nullable=False, index=True)
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text, default='')
+    # Freitext: "24.500 €", "ab 99 €/Monat", "auf Anfrage"
+    price = db.Column(db.String(100), default='')
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    media = db.relationship('ProductMedia', backref='product', lazy=True,
+                            cascade='all, delete-orphan', order_by='ProductMedia.id')
+
+    @property
+    def photo_count(self):
+        return sum(1 for m in self.media if m.media_type == 'image')
+
+    @property
+    def video_count(self):
+        return sum(1 for m in self.media if m.media_type == 'video')
+
+
+class ProductMedia(db.Model):
+    """Foto oder Video eines Produkts (Datei auf Disk im UPLOAD_FOLDER)."""
+    __tablename__ = 'product_media'
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False, index=True)
+    filename = db.Column(db.String(500), nullable=False)    # absolute path on disk
+    original_name = db.Column(db.String(255))
+    media_type = db.Column(db.String(20), default='image')  # image | video
+    mimetype = db.Column(db.String(100))
+    file_size = db.Column(db.Integer)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 
 class BotEvent(db.Model):

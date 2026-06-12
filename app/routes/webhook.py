@@ -15,6 +15,9 @@ from app.services.google_service import GOOGLE_TOOLS, execute_tool as google_exe
 from app.services.media_tools import (
     MEDIA_TOOLS, get_sendable_documents, build_files_hint, send_file_to_customer
 )
+from app.services.product_tools import (
+    PRODUCT_TOOLS, get_active_products, build_catalog_hint, send_product_media
+)
 
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
@@ -261,9 +264,10 @@ def _process_single_message(instance_name: str, msg_data: dict):
     )
     system_prompt = system_prompt + _datetime_hint + _appointment_hint + _handoff_hint
 
-    # ── Assemble tools: Google Calendar (if connected) + file sending ─────────
+    # ── Assemble tools: Google Calendar + file sending + product catalog ──────
     has_google = bool(instance.google_token and instance.google_token.access_token)
     sendable_docs = get_sendable_documents(instance.id)
+    catalog = get_active_products(instance.id)
 
     tools = []
     if has_google:
@@ -271,6 +275,10 @@ def _process_single_message(instance_name: str, msg_data: dict):
     if sendable_docs:
         tools += MEDIA_TOOLS
         system_prompt += build_files_hint(sendable_docs)
+    if catalog:
+        system_prompt += build_catalog_hint(catalog)
+        if any(p.media for p in catalog):
+            tools += PRODUCT_TOOLS
 
     # No write-tool events (freebusy scope is read-only)
     write_events: list = []
@@ -282,6 +290,8 @@ def _process_single_message(instance_name: str, msg_data: dict):
         def _tool_executor(tool_name: str, tool_input: dict) -> str:
             if tool_name == 'send_file_to_customer':
                 return send_file_to_customer(_inst, _jid, tool_input)
+            if tool_name == 'send_product_media':
+                return send_product_media(_inst, _jid, tool_input)
             return google_execute_tool(tool_name, tool_input, _inst.id)
 
         # Ensure enough tokens for tool-use reasoning + final answer (min 1500)

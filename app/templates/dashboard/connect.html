@@ -5,6 +5,7 @@
 <div class="nav-section">{{ instance.display_name }}</div>
 <a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
 <a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item">🛍 Produkte</a>
 <a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
 {% endblock %}
 

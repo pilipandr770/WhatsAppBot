@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Subscription, WhatsAppInstance, BotConfig, Document, DocumentChunk, Conversation, Message, GoogleToken, SiteConfig, AffiliateCode, AffiliateUsage, BotEvent
+from app.models import User, Subscription, WhatsAppInstance, BotConfig, Document, DocumentChunk, Conversation, Message, GoogleToken, SiteConfig, AffiliateCode, AffiliateUsage, BotEvent, Product, ProductMedia
 from sqlalchemy import text
 import os
 

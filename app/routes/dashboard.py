@@ -4,11 +4,11 @@ import time
 import threading
 import logging
 from datetime import datetime
-from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app
+from flask import Blueprint, render_template, redirect, url_for, flash, request, jsonify, current_app, send_file
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message, Subscription
+from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message, Subscription, Product, ProductMedia
 from app.services.evolution import evolution_client
 from app.tasks import process_document
 
@@ -474,6 +474,174 @@ def delete_document(instance_id, doc_id):
     db.session.commit()
     flash('Dokument gelöscht.', 'success')
     return redirect(url_for('dashboard.documents', instance_id=instance_id))
+
+
+# ─── Products / Shop ─────────────────────────────────────────────────────────
+
+# Media types for product photos/videos
+_PRODUCT_MEDIA = {
+    'jpg':  ('image', 'image/jpeg',  b'\xff\xd8\xff'),
+    'jpeg': ('image', 'image/jpeg',  b'\xff\xd8\xff'),
+    'png':  ('image', 'image/png',   b'\x89PNG'),
+    'webp': ('image', 'image/webp',  b'RIFF'),
+    'mp4':  ('video', 'video/mp4',   None),   # ftyp box is at offset 4 — checked separately
+}
+
+
+def _check_product_media(file_storage, ext: str) -> bool:
+    """Verify magic bytes for product media uploads."""
+    if ext == 'mp4':
+        header = file_storage.read(12)
+        file_storage.seek(0)
+        return len(header) >= 12 and header[4:8] == b'ftyp'
+    magic = _PRODUCT_MEDIA[ext][2]
+    if magic is None:
+        return True
+    header = file_storage.read(len(magic))
+    file_storage.seek(0)
+    return header == magic
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products')
+@login_required
+def products(instance_id):
+    instance = _get_instance(instance_id)
+    items = Product.query.filter_by(instance_id=instance_id).order_by(Product.created_at.desc()).all()
+    return render_template('dashboard/products.html', instance=instance, products=items)
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products/create', methods=['POST'])
+@login_required
+def create_product(instance_id):
+    _get_instance(instance_id)
+    name = request.form.get('name', '').strip()
+    if not name:
+        flash('Bitte gib einen Produktnamen ein.', 'error')
+        return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+    product = Product(
+        instance_id=instance_id,
+        name=name[:200],
+        price=request.form.get('price', '').strip()[:100],
+        description=request.form.get('description', '').strip()[:2000],
+    )
+    db.session.add(product)
+    db.session.commit()
+    flash(f'Produkt "{product.name}" angelegt. Füge jetzt Fotos oder Videos hinzu.', 'success')
+    return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products/<int:product_id>/update', methods=['POST'])
+@login_required
+def update_product(instance_id, product_id):
+    _get_instance(instance_id)
+    product = Product.query.filter_by(id=product_id, instance_id=instance_id).first_or_404()
+
+    name = request.form.get('name', '').strip()
+    if name:
+        product.name = name[:200]
+    product.price = request.form.get('price', '').strip()[:100]
+    product.description = request.form.get('description', '').strip()[:2000]
+    product.is_active = request.form.get('is_active') == 'on'
+    db.session.commit()
+    flash('Produkt aktualisiert.', 'success')
+    return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products/<int:product_id>/delete', methods=['POST'])
+@login_required
+def delete_product(instance_id, product_id):
+    _get_instance(instance_id)
+    product = Product.query.filter_by(id=product_id, instance_id=instance_id).first_or_404()
+
+    for m in product.media:
+        try:
+            if m.filename and os.path.exists(m.filename):
+                os.remove(m.filename)
+        except Exception:
+            pass
+
+    db.session.delete(product)
+    db.session.commit()
+    flash('Produkt gelöscht.', 'success')
+    return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products/<int:product_id>/media/upload', methods=['POST'])
+@login_required
+def upload_product_media(instance_id, product_id):
+    _get_instance(instance_id)
+    product = Product.query.filter_by(id=product_id, instance_id=instance_id).first_or_404()
+
+    file = request.files.get('file')
+    if not file or not file.filename or '.' not in file.filename:
+        flash('Keine Datei ausgewählt.', 'error')
+        return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    if ext not in _PRODUCT_MEDIA:
+        flash('Nur JPG, PNG, WEBP (Fotos) und MP4 (Videos) erlaubt.', 'error')
+        return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+    if not _check_product_media(file, ext):
+        flash('Dateiinhalt stimmt nicht mit der Dateiendung überein.', 'error')
+        return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+    media_type, mimetype, _ = _PRODUCT_MEDIA[ext]
+    unique_name = f"product_{product_id}_{uuid.uuid4().hex}.{ext}"
+    upload_folder = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
+    os.makedirs(upload_folder, exist_ok=True)
+    filepath = os.path.join(upload_folder, unique_name)
+    file.save(filepath)
+
+    db.session.add(ProductMedia(
+        product_id=product.id,
+        filename=filepath,
+        original_name=secure_filename(file.filename),
+        media_type=media_type,
+        mimetype=mimetype,
+        file_size=os.path.getsize(filepath),
+    ))
+    db.session.commit()
+    flash(f'{"Video" if media_type == "video" else "Foto"} zu "{product.name}" hinzugefügt.', 'success')
+    return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products/<int:product_id>/media/<int:media_id>/delete', methods=['POST'])
+@login_required
+def delete_product_media(instance_id, product_id, media_id):
+    _get_instance(instance_id)
+    media = (
+        ProductMedia.query
+        .join(Product, ProductMedia.product_id == Product.id)
+        .filter(ProductMedia.id == media_id, Product.id == product_id, Product.instance_id == instance_id)
+        .first_or_404()
+    )
+    try:
+        if media.filename and os.path.exists(media.filename):
+            os.remove(media.filename)
+    except Exception:
+        pass
+    db.session.delete(media)
+    db.session.commit()
+    flash('Medium gelöscht.', 'success')
+    return redirect(url_for('dashboard.products', instance_id=instance_id))
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/products/<int:product_id>/media/<int:media_id>')
+@login_required
+def product_media_file(instance_id, product_id, media_id):
+    """Serve a product photo/video to the logged-in owner (dashboard thumbnails)."""
+    _get_instance(instance_id)
+    media = (
+        ProductMedia.query
+        .join(Product, ProductMedia.product_id == Product.id)
+        .filter(ProductMedia.id == media_id, Product.id == product_id, Product.instance_id == instance_id)
+        .first_or_404()
+    )
+    if not media.filename or not os.path.exists(media.filename):
+        return jsonify({'error': 'File not found'}), 404
+    return send_file(media.filename, mimetype=media.mimetype or 'application/octet-stream')
 
 
 # ─── Conversations ────────────────────────────────────────────────────────────
