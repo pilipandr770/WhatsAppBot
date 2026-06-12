@@ -287,6 +287,121 @@ def facebook_callback():
     return redirect(url_for('dashboard.index'))
 
 
+# ───────────────────────────────────────────────────────────────────────────────
+# Sign in with Google (OAuth 2.0, server-side flow)
+# Reuses the existing Google Cloud OAuth client (GOOGLE_CLIENT_ID/SECRET, same
+# project as the Calendar integration). Scopes are non-sensitive: openid email
+# profile — no Google verification wait.
+# Console setup: add redirect URI https://<domain>/auth/google/callback
+# ───────────────────────────────────────────────────────────────────────────────
+
+@auth_bp.route('/google')
+def google_login():
+    client_id = os.environ.get('GOOGLE_CLIENT_ID', '')
+    if not client_id:
+        flash('Google-Login ist derzeit nicht verfügbar.', 'error')
+        return redirect(url_for('auth.login'))
+
+    state = secrets.token_urlsafe(24)
+    session['g_oauth_state'] = state
+    params = urlencode({
+        'client_id': client_id,
+        'redirect_uri': url_for('auth.google_callback', _external=True, _scheme='https'),
+        'response_type': 'code',
+        'scope': 'openid email profile',
+        'state': state,
+    })
+    return redirect(f'https://accounts.google.com/o/oauth2/v2/auth?{params}')
+
+
+@auth_bp.route('/google/callback')
+@limiter.limit('20 per minute')
+def google_callback():
+    if request.args.get('error'):
+        flash('Google-Anmeldung abgebrochen.', 'info')
+        return redirect(url_for('auth.login'))
+
+    state = request.args.get('state', '')
+    if not state or state != session.pop('g_oauth_state', None):
+        flash('Ungültige Anfrage. Bitte versuche es erneut.', 'error')
+        return redirect(url_for('auth.login'))
+
+    code = request.args.get('code', '')
+    if not code:
+        return redirect(url_for('auth.login'))
+
+    try:
+        token_resp = requests.post(
+            'https://oauth2.googleapis.com/token',
+            data={
+                'code': code,
+                'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+                'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+                'redirect_uri': url_for('auth.google_callback', _external=True, _scheme='https'),
+                'grant_type': 'authorization_code',
+            },
+            timeout=15,
+        )
+        token_resp.raise_for_status()
+        access_token = token_resp.json().get('access_token', '')
+
+        info_resp = requests.get(
+            'https://www.googleapis.com/oauth2/v3/userinfo',
+            headers={'Authorization': f'Bearer {access_token}'},
+            timeout=15,
+        )
+        info_resp.raise_for_status()
+        profile = info_resp.json()
+    except Exception as e:
+        logger.error(f'Google OAuth login failed: {e}')
+        flash('Google-Anmeldung fehlgeschlagen. Bitte versuche es erneut.', 'error')
+        return redirect(url_for('auth.login'))
+
+    g_id = str(profile.get('sub', ''))
+    g_name = (profile.get('name') or '').strip()
+    g_email = (profile.get('email') or '').strip().lower()
+    email_verified = bool(profile.get('email_verified'))
+
+    if not g_id:
+        flash('Google-Anmeldung fehlgeschlagen.', 'error')
+        return redirect(url_for('auth.login'))
+
+    # 1) Existing Google-linked account
+    user = User.query.filter_by(google_id=g_id).first()
+
+    # 2) Link by verified e-mail if the user registered classically before
+    if user is None and g_email and email_verified:
+        user = User.query.filter_by(email=g_email).first()
+        if user:
+            user.google_id = g_id
+            db.session.commit()
+
+    # 3) New signup via Google
+    if user is None:
+        if not g_email:
+            flash('Google hat keine E-Mail-Adresse übermittelt. '
+                  'Bitte registriere dich mit deiner E-Mail.', 'error')
+            return redirect(url_for('auth.register'))
+
+        user = User(
+            name=g_name or g_email.split('@')[0],
+            email=g_email,
+            google_id=g_id,
+            trial_ends_at=datetime.utcnow() + timedelta(days=TRIAL_DAYS),
+        )
+        user.set_password(secrets.token_urlsafe(32))   # random — login via Google
+        db.session.add(user)
+        db.session.flush()
+        db.session.add(Subscription(user_id=user.id, status='inactive'))
+        db.session.commit()
+        flash(f'Willkommen, {user.name}! Du hast {TRIAL_DAYS} Tage kostenlos.', 'success')
+    else:
+        flash(f'Willkommen zurück, {user.name}!', 'success')
+
+    login_user(user, remember=True)
+    return redirect(url_for('dashboard.index'))
+
+
 def _parse_signed_request(signed_request: str, secret: str):
     """Verify and decode Meta's signed_request (HMAC-SHA256, base64url)."""
     try:

@@ -42,6 +42,9 @@ with app.app_context():
             # Login with Facebook (Meta OAuth)
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS facebook_id VARCHAR(100)",
             "CREATE INDEX IF NOT EXISTS ix_users_facebook_id ON users (facebook_id)",
+            # Sign in with Google
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(100)",
+            "CREATE INDEX IF NOT EXISTS ix_users_google_id ON users (google_id)",
         ]
         with db.engine.connect() as _conn:
             for _sql in _additive_migrations:
