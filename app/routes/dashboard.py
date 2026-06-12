@@ -15,14 +15,20 @@ from app.tasks import process_document
 dashboard_bp = Blueprint('dashboard', __name__)
 logger = logging.getLogger(__name__)
 
-ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt'}
+ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'jpg', 'jpeg', 'png'}
 
 # Magic bytes: first bytes that identify a file type regardless of extension
 _MAGIC_BYTES = {
     'pdf':  b'%PDF',
     'docx': b'PK\x03\x04',   # ZIP-based (Office Open XML)
     'txt':  None,              # plain text has no magic bytes — skip check
+    'jpg':  b'\xff\xd8\xff',
+    'jpeg': b'\xff\xd8\xff',
+    'png':  b'\x89PNG',
 }
+
+# Extensions that feed the RAG knowledge base (images are send-only media)
+TEXT_EXTENSIONS = {'pdf', 'docx', 'txt'}
 
 
 def allowed_file(filename):
@@ -45,7 +51,68 @@ def allowed_file_content(file_storage, ext: str) -> bool:
 @login_required
 def index():
     instances = WhatsAppInstance.query.filter_by(user_id=current_user.id).all()
-    return render_template('dashboard/index.html', instances=instances)
+    week_stats = _compute_week_stats([i.id for i in instances])
+    return render_template('dashboard/index.html', instances=instances, week_stats=week_stats)
+
+
+def _compute_week_stats(instance_ids):
+    """ROI numbers for the last 7 days vs the 7 days before."""
+    from datetime import timedelta
+    from sqlalchemy import func
+    from app.models import BotEvent
+
+    empty = {
+        'new_contacts': 0, 'new_contacts_prev': 0,
+        'messages': 0, 'messages_prev': 0,
+        'appointments': 0, 'appointments_prev': 0,
+        'handoffs': 0, 'handoffs_prev': 0,
+        'media_sent': 0,
+    }
+    if not instance_ids:
+        return empty
+
+    now = datetime.utcnow()
+    week_ago = now - timedelta(days=7)
+    two_weeks_ago = now - timedelta(days=14)
+
+    def _count_contacts(start, end):
+        return (
+            db.session.query(func.count(Conversation.id))
+            .filter(Conversation.instance_id.in_(instance_ids))
+            .filter(Conversation.created_at >= start, Conversation.created_at < end)
+            .scalar() or 0
+        )
+
+    def _count_messages(start, end):
+        return (
+            db.session.query(func.count(Message.id))
+            .join(Conversation, Message.conversation_id == Conversation.id)
+            .filter(Conversation.instance_id.in_(instance_ids))
+            .filter(Message.created_at >= start, Message.created_at < end)
+            .filter(Message.role == 'user')
+            .scalar() or 0
+        )
+
+    def _count_events(event_type, start, end):
+        return (
+            db.session.query(func.count(BotEvent.id))
+            .filter(BotEvent.instance_id.in_(instance_ids))
+            .filter(BotEvent.event_type == event_type)
+            .filter(BotEvent.created_at >= start, BotEvent.created_at < end)
+            .scalar() or 0
+        )
+
+    return {
+        'new_contacts':       _count_contacts(week_ago, now),
+        'new_contacts_prev':  _count_contacts(two_weeks_ago, week_ago),
+        'messages':           _count_messages(week_ago, now),
+        'messages_prev':      _count_messages(two_weeks_ago, week_ago),
+        'appointments':       _count_events('appointment', week_ago, now),
+        'appointments_prev':  _count_events('appointment', two_weeks_ago, week_ago),
+        'handoffs':           _count_events('handoff', week_ago, now),
+        'handoffs_prev':      _count_events('handoff', two_weeks_ago, week_ago),
+        'media_sent':         _count_events('media_sent', week_ago, now),
+    }
 
 
 # ─── Instances ───────────────────────────────────────────────────────────────
@@ -323,8 +390,8 @@ def upload_document(instance_id):
     db.session.add(doc)
     db.session.commit()
 
-    # Enable RAG on config
-    if instance.bot_config:
+    # Enable RAG on config (only text documents feed the knowledge base)
+    if ext in TEXT_EXTENSIONS and instance.bot_config:
         instance.bot_config.use_rag = True
         db.session.commit()
 

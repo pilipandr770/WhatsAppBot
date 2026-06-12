@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Subscription, WhatsAppInstance, BotConfig, Document, DocumentChunk, Conversation, Message, GoogleToken, SiteConfig, AffiliateCode, AffiliateUsage
+from app.models import User, Subscription, WhatsAppInstance, BotConfig, Document, DocumentChunk, Conversation, Message, GoogleToken, SiteConfig, AffiliateCode, AffiliateUsage, BotEvent
 from sqlalchemy import text
 import os
 
@@ -21,6 +21,8 @@ with app.app_context():
         "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS notification_phone VARCHAR(50)",
         # GDPR account deletion: affiliate sales are kept anonymized
         "ALTER TABLE affiliate_usages ALTER COLUMN user_id DROP NOT NULL",
+        # Semantic RAG: embedding vector per chunk (JSON, NULL = keyword fallback)
+        "ALTER TABLE document_chunks ADD COLUMN IF NOT EXISTS embedding TEXT",
     ]
     with db.engine.connect() as _conn:
         for _sql in _additive_migrations:

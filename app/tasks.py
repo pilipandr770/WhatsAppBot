@@ -50,6 +50,16 @@ def process_document(self, document_id: int):
         doc.status = 'processing'
         db.session.commit()
 
+        # Images carry no extractable text — they exist so the bot can send
+        # them to customers (product photos). Mark ready without chunking.
+        if doc.file_type in ('jpg', 'jpeg', 'png'):
+            DocumentChunk.query.filter_by(document_id=document_id).delete()
+            doc.chunk_count = 0
+            doc.status = 'ready'
+            db.session.commit()
+            logger.info(f"Document {document_id} is an image — ready for sending, no chunks")
+            return
+
         # Extract text
         text = extract_text(doc.filename, doc.file_type)
 
@@ -62,14 +72,19 @@ def process_document(self, document_id: int):
         # Delete existing chunks
         DocumentChunk.query.filter_by(document_id=document_id).delete()
 
-        # Create chunks
+        # Create chunks with embeddings (None → keyword-search fallback)
+        import json as _json
+        from app.services.rag import embed_texts
+
         chunks = chunk_text(text)
+        embeddings = embed_texts(chunks)
         for idx, chunk_content in enumerate(chunks):
             chunk = DocumentChunk(
                 document_id=doc.id,
                 instance_id=doc.instance_id,
                 content=chunk_content,
-                chunk_index=idx
+                chunk_index=idx,
+                embedding=_json.dumps(embeddings[idx]) if embeddings else None
             )
             db.session.add(chunk)
 

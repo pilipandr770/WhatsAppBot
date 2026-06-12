@@ -81,7 +81,7 @@
                   action="{{ url_for('dashboard.replace_document', instance_id=instance.id, doc_id=doc.id) }}"
                   enctype="multipart/form-data" style="display:inline;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <input type="file" name="file" accept=".pdf,.docx,.txt"
+              <input type="file" name="file" accept=".pdf,.docx,.txt,.jpg,.jpeg,.png"
                      id="replace-file-{{ doc.id }}" style="display:none;"
                      onchange="this.form.submit()">
               <button type="button" class="btn btn-ghost btn-sm" title="Durch neue Datei ersetzen"
@@ -127,9 +127,12 @@
       <div class="form-group">
         <label class="form-label">Datei auswählen</label>
         <input type="file" name="file" class="form-input"
-               accept=".pdf,.docx,.txt" required
+               accept=".pdf,.docx,.txt,.jpg,.jpeg,.png" required
                style="padding:8px;">
-        <div class="form-hint">Unterstützte Formate: PDF, DOCX, TXT · Max. 16 MB</div>
+        <div class="form-hint">
+          Unterstützte Formate: PDF, DOCX, TXT, JPG, PNG · Max. 16 MB<br>
+          Texte landen in der Wissensdatenbank · Bilder &amp; PDFs kann der Bot an Kunden senden (z. B. Preisliste, Produktfotos)
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn btn-ghost"

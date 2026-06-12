@@ -1,6 +1,8 @@
 import io
 import re
 import os
+import json
+import math
 import logging
 from typing import List, Optional
 
@@ -8,6 +10,49 @@ logger = logging.getLogger(__name__)
 
 CHUNK_SIZE = 400    # words per chunk
 CHUNK_OVERLAP = 40  # overlap words
+
+EMBEDDING_MODEL = os.environ.get('RAG_EMBEDDING_MODEL', 'text-embedding-3-small')
+EMBEDDING_BATCH = 100   # max inputs per OpenAI embeddings request
+
+
+def embed_texts(texts: List[str]) -> Optional[List[List[float]]]:
+    """
+    Embed texts via the OpenAI embeddings API (plain HTTP, no SDK dependency).
+    Returns a vector per text, or None if no API key / request failed
+    (caller falls back to keyword search).
+    """
+    api_key = os.environ.get('OPENAI_API_KEY', '')
+    if not api_key or not texts:
+        return None
+
+    import requests
+
+    vectors: List[List[float]] = []
+    try:
+        for i in range(0, len(texts), EMBEDDING_BATCH):
+            batch = texts[i:i + EMBEDDING_BATCH]
+            resp = requests.post(
+                'https://api.openai.com/v1/embeddings',
+                headers={'Authorization': f'Bearer {api_key}'},
+                json={'model': EMBEDDING_MODEL, 'input': batch},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            data = sorted(resp.json()['data'], key=lambda d: d['index'])
+            vectors.extend(d['embedding'] for d in data)
+        return vectors
+    except Exception as e:
+        logger.warning(f"embed_texts failed ({len(texts)} texts): {e}")
+        return None
+
+
+def _cosine(a: List[float], b: List[float]) -> float:
+    dot = sum(x * y for x, y in zip(a, b))
+    na = math.sqrt(sum(x * x for x in a))
+    nb = math.sqrt(sum(x * x for x in b))
+    if na == 0 or nb == 0:
+        return 0.0
+    return dot / (na * nb)
 
 
 def extract_text(filepath: str, file_type: str) -> str:
@@ -67,7 +112,7 @@ def chunk_text(text: str) -> List[str]:
 def search_relevant_chunks(instance_id: int, query: str, limit: int = 3) -> Optional[str]:
     """
     Find most relevant document chunks for a query.
-    Uses keyword scoring (PostgreSQL full-text is v2 upgrade path).
+    Semantic search via embeddings when available, keyword scoring as fallback.
     """
     from app.models import DocumentChunk
     from app import db
@@ -85,6 +130,24 @@ def search_relevant_chunks(instance_id: int, query: str, limit: int = 3) -> Opti
     if not chunks:
         return None
 
+    # ── Semantic search (embeddings) ──────────────────────────────────────────
+    embedded = [c for c in chunks if c.embedding]
+    if embedded:
+        query_vecs = embed_texts([query])
+        if query_vecs:
+            qv = query_vecs[0]
+            scored_sem = []
+            for chunk in embedded:
+                try:
+                    cv = json.loads(chunk.embedding)
+                except Exception:
+                    continue
+                scored_sem.append((_cosine(qv, cv), chunk.content))
+            if scored_sem:
+                scored_sem.sort(key=lambda x: x[0], reverse=True)
+                return '\n\n'.join(content for _, content in scored_sem[:limit])
+
+    # ── Keyword fallback ──────────────────────────────────────────────────────
     query_words = set(re.findall(r'\w+', query.lower()))
     # Remove very common German/English stop words
     stop_words = {'der', 'die', 'das', 'und', 'ist', 'ich', 'sie', 'the', 'is', 'and', 'a', 'in', 'zu', 'von'}

@@ -116,6 +116,34 @@ class EvolutionAPIClient:
         resp.raise_for_status()
         return resp.json()
 
+    def send_media(self, instance_name: str, token: str, to_jid: str,
+                   media_b64: str, mediatype: str, mimetype: str,
+                   filename: str, caption: str = '') -> dict:
+        """Send a media message (document, image, video) from base64 content.
+
+        mediatype: 'document' | 'image' | 'video'
+        """
+        number = to_jid.replace('@s.whatsapp.net', '').replace('@g.us', '')
+
+        payload = {
+            'number': number,
+            'mediatype': mediatype,
+            'mimetype': mimetype,
+            'media': media_b64,
+            'fileName': filename,
+        }
+        if caption:
+            payload['caption'] = caption
+
+        resp = requests.post(
+            f'{self.base_url}/message/sendMedia/{instance_name}',
+            json=payload,
+            headers=self._headers(token),
+            timeout=60
+        )
+        resp.raise_for_status()
+        return resp.json()
+
     def update_webhook(self, instance_name: str, token: str) -> bool:
         """
         Re-register the webhook URL for an existing instance.

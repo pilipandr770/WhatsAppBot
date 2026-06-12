@@ -46,6 +46,46 @@
     </div>
   </div>
 
+  <!-- ROI: last 7 days -->
+  {% macro week_delta(cur, prev) -%}
+    {%- set diff = cur - prev -%}
+    {%- if diff > 0 -%}
+      <span style="color:var(--accent);">▲ +{{ diff }}</span> vs. Vorwoche
+    {%- elif diff < 0 -%}
+      <span style="color:var(--text-muted);">▼ {{ diff }}</span> vs. Vorwoche
+    {%- else -%}
+      wie Vorwoche
+    {%- endif -%}
+  {%- endmacro %}
+
+  <div style="font-size:13px;font-weight:600;color:var(--text-dim);margin-bottom:10px;letter-spacing:0.3px;">
+    📊 Letzte 7 Tage — was dein Bot geleistet hat
+  </div>
+  <div class="grid-3" style="margin-bottom:24px;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+    <div class="stat-card">
+      <div class="stat-label">Neue Kontakte</div>
+      <div class="stat-value">{{ week_stats.new_contacts }}</div>
+      <div class="stat-change">{{ week_delta(week_stats.new_contacts, week_stats.new_contacts_prev) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Kundenanfragen</div>
+      <div class="stat-value">{{ week_stats.messages }}</div>
+      <div class="stat-change">{{ week_delta(week_stats.messages, week_stats.messages_prev) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Termine bestätigt</div>
+      <div class="stat-value" style="color:var(--accent)">{{ week_stats.appointments }}</div>
+      <div class="stat-change">{{ week_delta(week_stats.appointments, week_stats.appointments_prev) }}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">An Mensch übergeben</div>
+      <div class="stat-value">{{ week_stats.handoffs }}</div>
+      <div class="stat-change">
+        {% if week_stats.media_sent %}+ {{ week_stats.media_sent }} Dateien gesendet{% else %}{{ week_delta(week_stats.handoffs, week_stats.handoffs_prev) }}{% endif %}
+      </div>
+    </div>
+  </div>
+
   <!-- Instance list -->
   {% if instances %}
   <div style="display:flex; flex-direction:column; gap:12px;">

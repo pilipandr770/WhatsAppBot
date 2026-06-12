@@ -101,6 +101,7 @@ class WhatsAppInstance(db.Model):
     documents = db.relationship('Document', backref='instance', lazy=True, cascade='all, delete-orphan')
     conversations = db.relationship('Conversation', backref='instance', lazy=True, cascade='all, delete-orphan')
     google_token = db.relationship('GoogleToken', backref='instance', uselist=False, cascade='all, delete-orphan')
+    bot_events = db.relationship('BotEvent', backref='instance', lazy=True, cascade='all, delete-orphan')
 
     @property
     def is_connected(self):
@@ -159,6 +160,24 @@ class DocumentChunk(db.Model):
     instance_id = db.Column(db.Integer, db.ForeignKey('whatsapp_instances.id'), nullable=False)
     content = db.Column(db.Text, nullable=False)
     chunk_index = db.Column(db.Integer, default=0)
+    # JSON-encoded embedding vector (text-embedding-3-small); NULL = keyword fallback
+    embedding = db.Column(db.Text, nullable=True)
+
+
+class BotEvent(db.Model):
+    """
+    Geschäfts-Events des Bots für die ROI-Statistik im Dashboard:
+      appointment — Kunde hat einen Termin bestätigt
+      handoff     — Kunde möchte mit einem Menschen sprechen
+      media_sent  — Bot hat eine Datei (Preisliste/Foto) verschickt
+    """
+    __tablename__ = 'bot_events'
+    id = db.Column(db.Integer, primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('whatsapp_instances.id'), nullable=False, index=True)
+    event_type = db.Column(db.String(50), nullable=False, index=True)
+    contact_jid = db.Column(db.String(100))
+    meta = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, index=True)
 
 
 class Conversation(db.Model):
