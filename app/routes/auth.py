@@ -178,22 +178,28 @@ def delete_account():
 # Env: FACEBOOK_APP_ID, FACEBOOK_APP_SECRET
 # ───────────────────────────────────────────────────────────────────────────────
 
-@auth_bp.route('/facebook')
-def facebook_login():
-    app_id = os.environ.get('FACEBOOK_APP_ID', '')
-    if not app_id:
-        flash('Facebook-Login ist derzeit nicht verfügbar.', 'error')
-        return redirect(url_for('auth.login'))
-
+def _fb_dialog_redirect(extra_params: dict = None):
+    """Build the Facebook OAuth dialog redirect with a fresh state."""
     state = secrets.token_urlsafe(24)
     session['fb_oauth_state'] = state
-    params = urlencode({
-        'client_id': app_id,
+    params = {
+        'client_id': os.environ.get('FACEBOOK_APP_ID', ''),
         'redirect_uri': url_for('auth.facebook_callback', _external=True, _scheme='https'),
         'state': state,
         'scope': 'public_profile,email',
-    })
-    return redirect(f'https://www.facebook.com/{FB_API_VERSION}/dialog/oauth?{params}')
+    }
+    if extra_params:
+        params.update(extra_params)
+    return redirect(f'https://www.facebook.com/{FB_API_VERSION}/dialog/oauth?{urlencode(params)}')
+
+
+@auth_bp.route('/facebook')
+def facebook_login():
+    if not os.environ.get('FACEBOOK_APP_ID', ''):
+        flash('Facebook-Login ist derzeit nicht verfügbar.', 'error')
+        return redirect(url_for('auth.login'))
+    session.pop('fb_email_rerequested', None)
+    return _fb_dialog_redirect()
 
 
 @auth_bp.route('/facebook/callback')
@@ -261,10 +267,29 @@ def facebook_callback():
     # 3) New signup via Facebook
     if user is None:
         if not fb_email:
-            # No email permission granted (e.g. phone-registered FB account)
+            # Diagnose: log which permissions Facebook actually granted
+            try:
+                perms = requests.get(
+                    f'https://graph.facebook.com/{FB_API_VERSION}/me/permissions',
+                    params={'access_token': access_token},
+                    timeout=10,
+                ).json()
+                logger.warning(f'FB login without email, fb_id={fb_id}, permissions={perms}')
+            except Exception:
+                pass
+
+            # The email checkbox may have been unticked on the first consent.
+            # Facebook only re-asks a declined permission with auth_type=rerequest —
+            # try that once before giving up.
+            if not session.get('fb_email_rerequested'):
+                session['fb_email_rerequested'] = True
+                return _fb_dialog_redirect({'auth_type': 'rerequest'})
+
+            session.pop('fb_email_rerequested', None)
             flash(
-                'Facebook hat keine E-Mail-Adresse übermittelt. '
-                'Bitte registriere dich mit deiner E-Mail.', 'error'
+                'Facebook hat keine E-Mail-Adresse übermittelt — entweder hat dein '
+                'Facebook-Konto keine bestätigte E-Mail, oder die E-Mail-Freigabe wurde '
+                'abgelehnt. Bitte registriere dich mit deiner E-Mail.', 'error'
             )
             return redirect(url_for('auth.register'))
 
