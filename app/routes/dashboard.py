@@ -335,6 +335,61 @@ def upload_document(instance_id):
     return redirect(url_for('dashboard.documents', instance_id=instance_id))
 
 
+@dashboard_bp.route('/instance/<int:instance_id>/documents/status')
+@login_required
+def documents_status(instance_id):
+    """Lightweight JSON poll: id → status for all documents of this instance."""
+    _get_instance(instance_id)
+    docs = Document.query.filter_by(instance_id=instance_id).all()
+    return jsonify({str(d.id): d.status for d in docs})
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/documents/<int:doc_id>/replace', methods=['POST'])
+@login_required
+def replace_document(instance_id, doc_id):
+    """Replace the file of an existing document and re-process it."""
+    _get_instance(instance_id)
+    doc = Document.query.filter_by(id=doc_id, instance_id=instance_id).first_or_404()
+
+    file = request.files.get('file')
+    if not file or not file.filename or not allowed_file(file.filename):
+        flash('Nur PDF, DOCX und TXT Dateien erlaubt.', 'error')
+        return redirect(url_for('dashboard.documents', instance_id=instance_id))
+
+    ext = file.filename.rsplit('.', 1)[1].lower()
+    if not allowed_file_content(file, ext):
+        flash('Dateiinhalt stimmt nicht mit der Dateiendung überein.', 'error')
+        return redirect(url_for('dashboard.documents', instance_id=instance_id))
+
+    unique_name = f"{uuid.uuid4().hex}.{ext}"
+    upload_folder = os.environ.get('UPLOAD_FOLDER', '/app/uploads')
+    os.makedirs(upload_folder, exist_ok=True)
+    filepath = os.path.join(upload_folder, unique_name)
+    file.save(filepath)
+
+    old_path = doc.filename
+    try:
+        if old_path and os.path.exists(old_path):
+            os.remove(old_path)
+    except Exception:
+        pass
+
+    doc.filename = filepath
+    doc.original_name = secure_filename(file.filename)
+    doc.file_type = ext
+    doc.file_size = os.path.getsize(filepath)
+    doc.status = 'processing'
+    doc.error_message = None
+    doc.chunk_count = 0
+    db.session.commit()
+
+    # process_document clears old chunks before re-chunking
+    process_document.delay(doc.id)
+
+    flash(f'Datei "{file.filename}" wird ersetzt und neu verarbeitet...', 'success')
+    return redirect(url_for('dashboard.documents', instance_id=instance_id))
+
+
 @dashboard_bp.route('/instance/<int:instance_id>/documents/<int:doc_id>/delete', methods=['POST'])
 @login_required
 def delete_document(instance_id, doc_id):

@@ -37,7 +37,7 @@
   </div>
 
   {% if documents %}
-  <div class="card" style="padding:0;overflow:hidden;">
+  <div class="card" style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch;">
     <table class="table">
       <thead>
         <tr>
@@ -76,12 +76,24 @@
           <td style="color:var(--text-muted);font-size:12px;">
             {{ doc.created_at.strftime('%d.%m.%Y %H:%M') }}
           </td>
-          <td>
+          <td style="white-space:nowrap;text-align:right;">
+            <form method="post"
+                  action="{{ url_for('dashboard.replace_document', instance_id=instance.id, doc_id=doc.id) }}"
+                  enctype="multipart/form-data" style="display:inline;">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+              <input type="file" name="file" accept=".pdf,.docx,.txt"
+                     id="replace-file-{{ doc.id }}" style="display:none;"
+                     onchange="this.form.submit()">
+              <button type="button" class="btn btn-ghost btn-sm" title="Durch neue Datei ersetzen"
+                      onclick="document.getElementById('replace-file-{{ doc.id }}').click()">
+                ↻ Ersetzen
+              </button>
+            </form>
             <form method="post"
                   action="{{ url_for('dashboard.delete_document', instance_id=instance.id, doc_id=doc.id) }}"
                   onsubmit="return confirm('Dokument löschen?')" style="display:inline;">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-              <button type="submit" class="btn btn-danger btn-sm">✕</button>
+              <button type="submit" class="btn btn-danger btn-sm" title="Löschen">✕ Löschen</button>
             </form>
           </td>
         </tr>
@@ -132,10 +144,25 @@
 
 {% block scripts %}
 <script>
-// Auto-refresh if any doc is processing
+// While a doc is processing: poll status quietly, reload ONCE when it finishes.
+// (A blind reload loop made the page unusable — buttons unreachable mid-click.)
 const hasProcessing = {{ 'true' if documents|selectattr('status','eq','processing')|list else 'false' }};
 if (hasProcessing) {
-  setTimeout(() => location.reload(), 5000);
+  const statusUrl = "{{ url_for('dashboard.documents_status', instance_id=instance.id) }}";
+  let attempts = 0;
+  const poll = setInterval(async () => {
+    attempts++;
+    if (attempts > 60) { clearInterval(poll); return; }  // give up after ~4 min
+    try {
+      const resp = await fetch(statusUrl, {headers: {'Accept': 'application/json'}});
+      if (!resp.ok) return;
+      const statuses = await resp.json();
+      if (!Object.values(statuses).includes('processing')) {
+        clearInterval(poll);
+        location.reload();
+      }
+    } catch (e) { /* network hiccup — try again next tick */ }
+  }, 4000);
 }
 </script>
 {% endblock %}
