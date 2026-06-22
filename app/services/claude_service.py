@@ -35,7 +35,7 @@ def get_ai_response(
     client = get_client()
     try:
         response = client.messages.create(
-            model="claude-opus-4-5",
+            model=os.environ.get('CLAUDE_MODEL', 'claude-haiku-4-5-20251001'),
             max_tokens=max_tokens,
             system=full_system,
             messages=cleaned_messages
@@ -72,7 +72,7 @@ def get_ai_response_with_tools(
     for round_num in range(5):
         try:
             response = client.messages.create(
-                model="claude-opus-4-5",
+                model=os.environ.get('CLAUDE_MODEL', 'claude-haiku-4-5-20251001'),
                 max_tokens=max_tokens,
                 system=full_system,
                 messages=cleaned_messages,
