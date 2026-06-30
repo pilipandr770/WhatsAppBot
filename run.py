@@ -45,6 +45,9 @@ with app.app_context():
             # Sign in with Google
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id VARCHAR(100)",
             "CREATE INDEX IF NOT EXISTS ix_users_google_id ON users (google_id)",
+            # Multi-provider LLM: user can choose Anthropic / Mistral / OpenAI / local
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS ai_provider VARCHAR(20) DEFAULT 'anthropic'",
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS ai_model VARCHAR(100)",
         ]
         with db.engine.connect() as _conn:
             for _sql in _additive_migrations:

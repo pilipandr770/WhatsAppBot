@@ -331,6 +331,11 @@ def bot_config(instance_id):
             config.max_tokens = 500
         config.use_rag = request.form.get('use_rag') == 'on'
         config.is_active = request.form.get('is_active') == 'on'
+        # LLM provider / model override
+        ai_provider = request.form.get('ai_provider', 'anthropic').strip()
+        if ai_provider in ('anthropic', 'mistral', 'local', 'openai'):
+            config.ai_provider = ai_provider
+        config.ai_model = request.form.get('ai_model', '').strip() or None
         # Normalize notification phone: strip spaces, dashes, leading +
         notif_raw = request.form.get('notification_phone', '').strip()
         notif_clean = ''.join(c for c in notif_raw if c.isdigit())

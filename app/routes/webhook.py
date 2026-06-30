@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from flask import Blueprint, request, jsonify
 from app import db
 from app.models import WhatsAppInstance, Conversation, Message, SiteConfig, BotEvent
-from app.services.claude_service import get_ai_response, get_ai_response_with_tools
+from app.services.llm import get_provider as _get_llm_provider
 from app.services.rag import search_relevant_chunks
 from app.services.evolution import evolution_client
 from app.services.stt import transcribe_audio_base64, transcribe_from_evolution
@@ -295,20 +295,24 @@ def _process_single_message(instance_name: str, msg_data: dict):
             return google_execute_tool(tool_name, tool_input, _inst.id)
 
         # Ensure enough tokens for tool-use reasoning + final answer (min 1500)
-        ai_text_raw = get_ai_response_with_tools(
+        provider = _get_llm_provider(getattr(config, 'ai_provider', None))
+        ai_text_raw = provider.get_ai_response_with_tools(
             system_prompt=system_prompt,
             messages=history,
             tools=tools,
             tool_executor=_tool_executor,
             rag_context=rag_context,
-            max_tokens=max(config.max_tokens, 1500)
+            max_tokens=max(config.max_tokens, 1500),
+            model=getattr(config, 'ai_model', None) or None,
         )
     else:
-        ai_text_raw = get_ai_response(
+        provider = _get_llm_provider(getattr(config, 'ai_provider', None))
+        ai_text_raw = provider.get_ai_response(
             system_prompt=system_prompt,
             messages=history,
             rag_context=rag_context,
-            max_tokens=config.max_tokens
+            max_tokens=config.max_tokens,
+            model=getattr(config, 'ai_model', None) or None,
         )
 
     appointment_event, ai_text = _extract_appointment_event(ai_text_raw)

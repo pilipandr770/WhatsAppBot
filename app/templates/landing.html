@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
 {% block title %}AI Chat Pro — KI-Chatbot für dein Unternehmen{% endblock %}
-{% block meta_description %}AI Chat Pro: Automatisiere deinen Customer Service mit KI (Claude). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender Verfügbarkeit, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
+{% block meta_description %}AI Chat Pro: Automatisiere deinen Customer Service mit KI (Claude, Mistral, OpenAI). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender Verfügbarkeit, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
 {% block og_title %}AI Chat Pro — Automatischer AI Support auf WhatsApp{% endblock %}
-{% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Keine WhatsApp Business API nötig. Ab €59/Monat. 3 Tage gratis.{% endblock %}
+{% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Wähle zwischen Claude, Mistral & OpenAI. Keine WhatsApp Business API nötig. Ab €59/Monat. 3 Tage gratis.{% endblock %}
 
 {% block public_content %}
 <style>
@@ -430,8 +430,8 @@ body { background:#0c0d10; }
     </div>
     <div class="feat">
       <div class="feat-icon">🧠</div>
-      <div class="feat-title">Claude KI (Anthropic)</div>
-      <div class="feat-text">Modernste KI-Technologie beantwortet Fragen intelligent, kontextbezogen und auf Deutsch — klingt wie ein echter Mitarbeiter.</div>
+      <div class="feat-title">Wählbare KI-Modelle</div>
+      <div class="feat-text">Wähle deinen KI-Anbieter: Anthropic Claude, OpenAI GPT oder Mistral — inkl. selbstgehosteter Lösung für maximalen Datenschutz. Klingt wie ein echter Mitarbeiter.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">📄</div>
@@ -562,7 +562,7 @@ body { background:#0c0d10; }
       <hr class="plan-divider">
       <div class="plan-features">
         <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">1 WhatsApp-Nummer</strong></span></div>
-        <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude AI)</span></div>
+        <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude / Mistral / OpenAI)</span></div>
         <div class="plan-feature"><span>✓</span><span>Wissensdatenbank mit KI-Suche</span></div>
         <div class="plan-feature"><span>✓</span><span>Produktkatalog + Foto-Versand</span></div>
         <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
@@ -587,7 +587,7 @@ body { background:#0c0d10; }
       <hr class="plan-divider">
       <div class="plan-features">
         <div class="plan-feature"><span>✓</span><span><strong style="color:#e8eaf0;">3 WhatsApp-Nummern</strong></span></div>
-        <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude AI)</span></div>
+        <div class="plan-feature"><span>✓</span><span>KI-Antworten 24/7 (Claude / Mistral / OpenAI)</span></div>
         <div class="plan-feature"><span>✓</span><span>Wissensdatenbank mit KI-Suche</span></div>
         <div class="plan-feature"><span>✓</span><span>Produktkatalog + Foto-Versand</span></div>
         <div class="plan-feature"><span>✓</span><span>Sprachnachrichten (STT)</span></div>
@@ -720,9 +720,9 @@ body { background:#0c0d10; }
     <div class="faq-item">
       <div class="faq-q">Kann der Bot Sprachnachrichten verstehen?</div>
       <div class="faq-a">
-        Ja. Sprachnachrichten werden automatisch mit OpenAI Whisper transkribiert und
-        anschließend von Claude AI beantwortet — genau wie normale Textnachrichten.
-        Für den Kunden ist kein Unterschied erkennbar.
+        Ja. Sprachnachrichten werden automatisch transkribiert (Groq Whisper oder OpenAI Whisper)
+        und anschließend vom gewählten KI-Modell (Claude, Mistral oder OpenAI GPT) beantwortet —
+        genau wie normale Textnachrichten. Für den Kunden ist kein Unterschied erkennbar.
       </div>
     </div>
     <div class="faq-item">
@@ -894,9 +894,9 @@ document.querySelectorAll('.faq-q').forEach(q => {
       ],
       "featureList": [
         "WhatsApp-Chatbot ohne WhatsApp Business API",
-        "KI-Antworten mit Claude (Anthropic)",
+        "Wählbare KI-Modelle: Anthropic Claude, OpenAI GPT, Mistral (Cloud & selbstgehostet)",
         "Google Kalender Verfügbarkeit (Frei/Belegt)",
-        "Sprachnachrichten (Whisper STT)",
+        "Sprachnachrichten (Groq Whisper / OpenAI Whisper STT)",
         "Wissensdatenbank aus PDF und Word",
         "DSGVO-konform, Server in Deutschland"
       ],

@@ -5,7 +5,7 @@
 <div style="max-width:720px;margin:60px auto;padding:0 24px;font-size:14px;line-height:1.9;color:#e8eaf0;">
   <a href="{{ url_for('main.index') }}" style="color:#6b7280;font-size:13px;">← Zurück</a>
   <h1 style="font-size:28px;font-weight:600;margin:24px 0 8px;">Datenschutzerklärung</h1>
-  <p style="color:#6b7280;margin-bottom:32px;">Stand: April 2026 · gemäß DSGVO (EU) 2016/679</p>
+  <p style="color:#6b7280;margin-bottom:32px;">Stand: Juni 2026 · gemäß DSGVO (EU) 2016/679</p>
   <p style="color:#6b7280;margin-bottom:24px;">Diese Datenschutzerklärung gilt für die Dienste unter https://whatsappbothelfer.de und beschreibt, wie wir Google-Nutzerdaten sowie andere personenbezogene Daten erheben, verwenden, speichern und ggf. weitergeben.</p>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">1. Verantwortlicher</h2>
@@ -23,7 +23,7 @@
     <li><strong style="color:#e8eaf0;">Registrierungsdaten:</strong> Name, E-Mail-Adresse, Firmenname (bei Registrierung)</li>
     <li><strong style="color:#e8eaf0;">Zahlungsdaten:</strong> werden ausschließlich von Stripe verarbeitet; wir speichern nur die Stripe-Kunden-ID und den Abonnementstatus</li>
     <li><strong style="color:#e8eaf0;">WhatsApp-Nachrichten:</strong> Textnachrichten und Sprachnachrichten von Endkunden werden zur KI-Verarbeitung übermittelt und in unserer Datenbank gespeichert, um dem Bot Gesprächskontext bereitzustellen</li>
-    <li><strong style="color:#e8eaf0;">Sprachaufnahmen:</strong> Sprachnachrichten werden automatisch transkribiert (OpenAI Whisper) und als Text gespeichert; Audiodateien werden nicht dauerhaft gespeichert</li>
+    <li><strong style="color:#e8eaf0;">Sprachaufnahmen:</strong> Sprachnachrichten werden automatisch transkribiert (Groq Whisper oder OpenAI Whisper, je nach Konfiguration) und als Text gespeichert; Audiodateien werden nicht dauerhaft gespeichert</li>
     <li><strong style="color:#e8eaf0;">Hochgeladene Dokumente:</strong> vom Nutzer hochgeladene Dateien (PDF, DOCX, TXT) für die Wissensdatenbank (RAG)</li>
     <li><strong style="color:#e8eaf0;">Nutzungsdaten:</strong> Log-Daten, IP-Adressen (in Server-Logs, nicht dauerhaft in der Anwendungsdatenbank gespeichert)</li>
     <li><strong style="color:#e8eaf0;">Google-Nutzerdaten</strong> (optional, nur wenn Google-Integration aktiviert): Kalender- und Tabellenkalkulationsdaten via Google OAuth 2.0 in read-only scopes — nur auf ausdrücklichen Wunsch des Nutzers; Zugriff kann jederzeit widerrufen werden</li>
@@ -41,16 +41,33 @@
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">4. Auftragsverarbeiter und Drittanbieter</h2>
 
-  <p><strong>Anthropic, Inc. (Claude AI)</strong><br>
-  Textnachrichten werden zur KI-Antwortgenerierung an die Anthropic-API (USA) übertragen.
-  Anthropic verarbeitet die Daten gemäß seiner Datenschutzrichtlinie und bietet entsprechende
-  Datenschutzgarantien für EU-Übertragungen.<br>
+  <p><strong>Anthropic, Inc. (Claude AI — optional)</strong><br>
+  Wenn der Nutzer als KI-Anbieter „Anthropic Claude" konfiguriert hat, werden Textnachrichten
+  zur KI-Antwortgenerierung an die Anthropic-API (USA) übertragen. Anthropic verarbeitet die
+  Daten gemäß seiner Datenschutzrichtlinie und bietet entsprechende Datenschutzgarantien
+  für EU-Übertragungen.<br>
   Datenschutz: <a href="https://www.anthropic.com/privacy" target="_blank">anthropic.com/privacy</a></p>
 
-  <p><strong>OpenAI, LLC (Whisper — Spracherkennung)</strong><br>
-  Sprachnachrichten werden zur Transkription an die OpenAI-API (USA) übermittelt.
-  OpenAI verarbeitet Audiodaten gemäß seiner Datenschutzrichtlinie.<br>
+  <p><strong>OpenAI, LLC (GPT-Modelle &amp; Whisper — optional)</strong><br>
+  Wenn der Nutzer als KI-Anbieter „OpenAI" konfiguriert hat, werden Textnachrichten zur
+  KI-Antwortgenerierung an die OpenAI-API (USA) übertragen. Unabhängig davon können
+  Sprachnachrichten zur Transkription an OpenAI Whisper übermittelt werden (als Fallback,
+  sofern kein Groq-Schlüssel konfiguriert ist). OpenAI verarbeitet die Daten gemäß seiner
+  Datenschutzrichtlinie.<br>
   Datenschutz: <a href="https://openai.com/privacy" target="_blank">openai.com/privacy</a></p>
+
+  <p><strong>Mistral AI, SAS (Mistral-Modelle — optional)</strong><br>
+  Wenn der Nutzer als KI-Anbieter „Mistral" konfiguriert hat, werden Textnachrichten zur
+  KI-Antwortgenerierung an die Mistral-API (Frankreich, EU) übertragen. Bei Nutzung eines
+  selbstgehosteten Mistral-Modells (Modus „Lokales Modell") verlassen die Daten die eigene
+  Infrastruktur des Nutzers nicht.<br>
+  Datenschutz: <a href="https://mistral.ai/terms/#privacy-policy" target="_blank">mistral.ai/terms</a></p>
+
+  <p><strong>Groq, Inc. (Whisper-Spracherkennung — optional)</strong><br>
+  Sprachnachrichten werden bevorzugt zur Transkription an die Groq-API (USA) übermittelt,
+  sofern ein Groq-API-Schlüssel konfiguriert ist. Groq verarbeitet Audiodaten gemäß seiner
+  Datenschutzrichtlinie.<br>
+  Datenschutz: <a href="https://groq.com/privacy-policy/" target="_blank">groq.com/privacy-policy</a></p>
 
   <p><strong>Stripe, Inc. (Zahlungsabwicklung)</strong><br>
   Zahlungsdaten werden ausschließlich von Stripe verarbeitet. Wir haben keinen Zugriff auf
@@ -133,9 +150,12 @@
   </div>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Datenübertragung in Drittländer</h2>
-  <p>Einige der oben genannten Dienste (Anthropic, OpenAI, Stripe) verarbeiten Daten in den USA.
-  Diese Übertragungen erfolgen auf Grundlage der EU-Standardvertragsklauseln (SCC) gemäß
-  Art. 46 DSGVO oder eines angemessenen Schutzniveaus.</p>
+  <p>Einige der oben genannten Dienste verarbeiten Daten außerhalb der EU/EWR:</p>
+  <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
+    <li><strong style="color:#e8eaf0;">USA:</strong> Anthropic (Claude AI), OpenAI (GPT &amp; Whisper), Groq (Whisper), Stripe (Zahlungen) — Übertragungen erfolgen auf Grundlage der EU-Standardvertragsklauseln (SCC) gemäß Art. 46 DSGVO</li>
+    <li><strong style="color:#e8eaf0;">EU (Frankreich):</strong> Mistral AI — Verarbeitung innerhalb der EU, kein Drittlandtransfer</li>
+    <li><strong style="color:#e8eaf0;">Selbstgehostetes Modell:</strong> Bei Nutzung eines lokalen KI-Modells (Modus „Lokales Modell") findet keine Übertragung an externe Drittanbieter statt</li>
+  </ul>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">6. Speicherdauer</h2>
   <p>Personenbezogene Daten werden gelöscht, sobald sie für den Verarbeitungszweck nicht mehr

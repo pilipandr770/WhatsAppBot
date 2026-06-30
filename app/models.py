@@ -137,6 +137,11 @@ class BotConfig(db.Model):
     # Owner notification: WhatsApp number to notify when a booking/order is made
     # Format: international without +, e.g. 4917612345678
     notification_phone = db.Column(db.String(50), nullable=True)
+    # LLM provider selection per instance
+    # Values: 'anthropic' | 'mistral' | 'openai' | 'local'
+    ai_provider = db.Column(db.String(20), default='anthropic')
+    # Optional model override; if empty, the provider's default is used
+    ai_model = db.Column(db.String(100), nullable=True)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
