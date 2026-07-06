@@ -72,16 +72,37 @@ class EvolutionAPIClient:
         resp.raise_for_status()
         return resp.json()
 
-    def trigger_connect(self, instance_name: str, token: str) -> None:
-        """Fire-and-forget: start WhatsApp connection to trigger QR generation via webhook."""
+    def trigger_connect(self, instance_name: str, token: str) -> str:
+        """Start WhatsApp connection; return base64 QR if Evolution includes it in the response.
+
+        Some Evolution versions (v2.1.x) return the QR directly in the HTTP response;
+        others (v2.2+) send it asynchronously via the QRCODE_UPDATED webhook.
+        We handle both: return the QR string when present, empty string otherwise.
+        """
         try:
-            requests.get(
+            resp = requests.get(
                 f'{self.base_url}/instance/connect/{instance_name}',
                 headers=self._headers(token),
                 timeout=30
             )
+            resp.raise_for_status()
+            data = resp.json()
+            # Try all known field paths across Evolution versions:
+            # { "base64": "..." }
+            # { "qrcode": { "base64": "..." } }
+            # { "code": "...", "base64": "..." }  (some forks)
+            qr = (
+                data.get('base64') or
+                (data.get('qrcode') or {}).get('base64') or
+                data.get('qr') or
+                ''
+            )
+            if qr:
+                logger.info(f"[trigger_connect] QR received directly in response for {instance_name}")
+            return qr
         except Exception as e:
             logger.debug(f"trigger_connect {instance_name}: {e}")
+            return ''
 
     def get_connection_state(self, instance_name: str, token: str) -> str:
         """Returns: open | connecting | close"""

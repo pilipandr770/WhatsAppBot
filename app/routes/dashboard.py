@@ -185,22 +185,28 @@ def get_qr(instance_id):
             instance.qr_code = None
             db.session.commit()
 
-    # No fresh QR — poke Evolution API to (re)generate one via trigger_connect.
-    # The QRCODE_UPDATED webhook will deliver the QR asynchronously.
-    # Full delete+create (recreate) is only done via the manual "Neu verbinden" button
-    # to avoid race conditions with concurrent reconnect attempts.
+    # No fresh QR — call trigger_connect.
+    # Some Evolution versions return the QR directly in the response;
+    # others send it via QRCODE_UPDATED webhook asynchronously.
+    # We handle both: save directly when present, otherwise the webhook handler will save it.
     _inst_name = instance.instance_name
     _inst_token = instance.api_token
 
-    def _do_trigger():
-        try:
-            evolution_client.trigger_connect(_inst_name, _inst_token)
-            logger.debug(f"[QR] trigger_connect sent for {_inst_name}")
-        except Exception as ex:
-            logger.debug(f"[QR] trigger_connect {_inst_name}: {ex}")
+    try:
+        qr_direct = evolution_client.trigger_connect(_inst_name, _inst_token)
+    except Exception as ex:
+        logger.debug(f"[QR] trigger_connect {_inst_name}: {ex}")
+        qr_direct = ''
 
-    threading.Thread(target=_do_trigger, daemon=True).start()
+    if qr_direct:
+        # Evolution returned QR inline — save it immediately
+        instance.qr_code = qr_direct
+        instance.qr_updated_at = datetime.utcnow()
+        db.session.commit()
+        logger.info(f"[QR] stored inline QR for {_inst_name}")
+        return jsonify({'qr': qr_direct, 'status': instance.status})
 
+    # QR will arrive via webhook — frontend keeps polling
     return jsonify({'qr': '', 'status': instance.status})
 
 
