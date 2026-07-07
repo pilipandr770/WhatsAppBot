@@ -8,12 +8,20 @@ from flask import Blueprint, render_template, redirect, url_for, flash, request,
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from app import db
-from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message, Subscription, Product, ProductMedia
+from app.models import WhatsAppInstance, BotConfig, Document, Conversation, Message, Subscription, Product, ProductMedia, Appointment
 from app.services.evolution import evolution_client
 from app.tasks import process_document
 
 dashboard_bp = Blueprint('dashboard', __name__)
 logger = logging.getLogger(__name__)
+
+_VALID_TIMEZONES = {
+    'Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/London',
+    'Europe/Paris', 'Europe/Rome', 'Europe/Madrid', 'Europe/Warsaw',
+    'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
+    'Asia/Dubai', 'Asia/Istanbul', 'Asia/Almaty',
+    'UTC',
+}
 
 ALLOWED_EXTENSIONS = {'pdf', 'docx', 'txt', 'jpg', 'jpeg', 'png'}
 
@@ -369,11 +377,118 @@ def bot_config(instance_id):
         notif_raw = request.form.get('notification_phone', '').strip()
         notif_clean = ''.join(c for c in notif_raw if c.isdigit())
         config.notification_phone = notif_clean or None
+        # Built-in calendar settings
+        config.calendar_enabled = request.form.get('calendar_enabled') == 'on'
+        try:
+            config.business_hours_start = max(0, min(23, int(request.form.get('business_hours_start', 9))))
+        except (ValueError, TypeError):
+            config.business_hours_start = 9
+        try:
+            config.business_hours_end = max(1, min(24, int(request.form.get('business_hours_end', 18))))
+        except (ValueError, TypeError):
+            config.business_hours_end = 18
+        try:
+            config.appointment_duration = max(15, min(480, int(request.form.get('appointment_duration', 60))))
+        except (ValueError, TypeError):
+            config.appointment_duration = 60
+        tz_raw = request.form.get('calendar_timezone', 'Europe/Berlin').strip()
+        if tz_raw in _VALID_TIMEZONES:
+            config.calendar_timezone = tz_raw
         db.session.commit()
         flash('Konfiguration gespeichert.', 'success')
         return redirect(url_for('dashboard.bot_config', instance_id=instance_id))
 
     return render_template('dashboard/config.html', instance=instance, config=config)
+
+
+# ─── Appointments (built-in calendar) ───────────────────────────────────────
+
+@dashboard_bp.route('/instance/<int:instance_id>/appointments')
+@login_required
+def appointments(instance_id):
+    instance = _get_instance(instance_id)
+    import zoneinfo
+    from datetime import timezone as _tz
+
+    config = instance.bot_config
+    tz_name = getattr(config, 'calendar_timezone', 'Europe/Berlin') if config else 'Europe/Berlin'
+    try:
+        tz = zoneinfo.ZoneInfo(tz_name)
+    except Exception:
+        tz = zoneinfo.ZoneInfo('Europe/Berlin')
+
+    # Filter: status
+    status_filter = request.args.get('status', 'upcoming')
+    now_utc = datetime.utcnow()
+
+    q = Appointment.query.filter_by(instance_id=instance_id)
+    if status_filter == 'upcoming':
+        q = q.filter(Appointment.status == 'confirmed', Appointment.start_dt >= now_utc)
+    elif status_filter == 'past':
+        q = q.filter(Appointment.start_dt < now_utc)
+    elif status_filter == 'cancelled':
+        q = q.filter(Appointment.status == 'cancelled')
+    # else 'all'
+
+    appts_raw = q.order_by(
+        Appointment.start_dt.asc() if status_filter == 'upcoming' else Appointment.start_dt.desc()
+    ).limit(200).all()
+
+    # Convert to display objects
+    appts = []
+    for a in appts_raw:
+        start_local = a.start_dt.replace(tzinfo=zoneinfo.ZoneInfo('UTC')).astimezone(tz)
+        end_local   = a.end_dt.replace(tzinfo=zoneinfo.ZoneInfo('UTC')).astimezone(tz)
+        appts.append({
+            'id': a.id,
+            'customer_name': a.customer_name or '—',
+            'customer_phone': a.customer_phone,
+            'title': a.title,
+            'date': start_local.strftime('%d.%m.%Y'),
+            'weekday': ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][start_local.weekday()],
+            'time': start_local.strftime('%H:%M'),
+            'time_end': end_local.strftime('%H:%M'),
+            'note': a.note or '',
+            'status': a.status,
+        })
+
+    # Stats
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_count = Appointment.query.filter(
+        Appointment.instance_id == instance_id,
+        Appointment.status == 'confirmed',
+        Appointment.start_dt >= today_start,
+        Appointment.start_dt < today_start + timedelta(days=1),
+    ).count()
+    week_count = Appointment.query.filter(
+        Appointment.instance_id == instance_id,
+        Appointment.status == 'confirmed',
+        Appointment.start_dt >= today_start,
+        Appointment.start_dt < today_start + timedelta(days=7),
+    ).count()
+
+    return render_template(
+        'dashboard/appointments.html',
+        instance=instance,
+        config=config,
+        appointments=appts,
+        status_filter=status_filter,
+        today_count=today_count,
+        week_count=week_count,
+        valid_timezones=sorted(_VALID_TIMEZONES),
+    )
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/appointments/<int:appt_id>/cancel', methods=['POST'])
+@login_required
+def cancel_appointment(instance_id, appt_id):
+    _get_instance(instance_id)
+    appt = Appointment.query.filter_by(id=appt_id, instance_id=instance_id).first_or_404()
+    if appt.status != 'cancelled':
+        appt.status = 'cancelled'
+        db.session.commit()
+        flash(f'Termin "{appt.title}" wurde storniert.', 'success')
+    return redirect(url_for('dashboard.appointments', instance_id=instance_id))
 
 
 # ─── Documents / RAG ─────────────────────────────────────────────────────────

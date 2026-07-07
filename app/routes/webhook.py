@@ -18,6 +18,9 @@ from app.services.media_tools import (
 from app.services.product_tools import (
     PRODUCT_TOOLS, get_active_products, build_catalog_hint, send_product_media
 )
+from app.services.calendar_service import (
+    CALENDAR_TOOLS, execute_tool as calendar_execute_tool
+)
 
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
@@ -245,14 +248,25 @@ def _process_single_message(instance_name: str, msg_data: dict):
         f"(Zeitzone: {os.environ.get('CALENDAR_TIMEZONE', 'Europe/Berlin')}). "
         "Verwende diese Information, wenn Terminzeiten berechnet werden müssen."
     )
-    _appointment_hint = (
-        "\n\nTERMIN-HINWEIS (WICHTIG): "
-        "Wenn der Kunde einen NEUEN Termin mit konkreter Zeit verbindlich bestätigt, "
-        "füge am ENDE deiner Antwort genau eine technische Marker-Zeile hinzu: "
-        "[[APPOINTMENT_NOTIFY|title=<kurzer Titel>;datetime=<Datum/Zeit>;note=<optional>]]. "
-        "Nur bei echter Termin-Bestätigung verwenden. "
-        "Niemals Google-Kalender schreiben, bearbeiten oder löschen."
-    )
+    if getattr(config, 'calendar_enabled', False):
+        _appointment_hint = (
+            "\n\nKALENDER (WICHTIG): Du hast Zugriff auf einen integrierten Terminkalender. "
+            "Wenn ein Kunde einen Termin buchen möchte: "
+            "1) Frage nach Datum und gewünschter Uhrzeit. "
+            "2) Nutze calendar_check_slots um zu prüfen ob der Slot frei ist. "
+            "3) Wenn der Kunde ausdrücklich bestätigt hat, rufe calendar_create_appointment auf. "
+            "Für Stornierungen: calendar_list_upcoming (Termin-ID finden), dann calendar_cancel_appointment. "
+            "Buche niemals ohne klare Zustimmung des Kunden."
+        )
+    else:
+        _appointment_hint = (
+            "\n\nTERMIN-HINWEIS (WICHTIG): "
+            "Wenn der Kunde einen NEUEN Termin mit konkreter Zeit verbindlich bestätigt, "
+            "füge am ENDE deiner Antwort genau eine technische Marker-Zeile hinzu: "
+            "[[APPOINTMENT_NOTIFY|title=<kurzer Titel>;datetime=<Datum/Zeit>;note=<optional>]]. "
+            "Nur bei echter Termin-Bestätigung verwenden. "
+            "Niemals Google-Kalender schreiben, bearbeiten oder löschen."
+        )
     _handoff_hint = (
         "\n\nÜBERGABE-HINWEIS (WICHTIG): "
         "Wenn der Kunde ausdrücklich mit einem echten Menschen / Mitarbeiter sprechen möchte, "
@@ -264,13 +278,16 @@ def _process_single_message(instance_name: str, msg_data: dict):
     )
     system_prompt = system_prompt + _datetime_hint + _appointment_hint + _handoff_hint
 
-    # ── Assemble tools: Google Calendar + file sending + product catalog ──────
-    has_google = bool(instance.google_token and instance.google_token.access_token)
+    # ── Assemble tools: Google Calendar + built-in Calendar + files + products ─
+    has_google   = bool(instance.google_token and instance.google_token.access_token)
+    has_calendar = bool(getattr(config, 'calendar_enabled', False))
     sendable_docs = get_sendable_documents(instance.id)
     catalog = get_active_products(instance.id)
 
     tools = []
-    if has_google:
+    if has_calendar:
+        tools += CALENDAR_TOOLS
+    elif has_google:
         tools += GOOGLE_TOOLS
     if sendable_docs:
         tools += MEDIA_TOOLS
@@ -284,14 +301,18 @@ def _process_single_message(instance_name: str, msg_data: dict):
     write_events: list = []
 
     if tools:
-        _inst = instance          # capture for closure
-        _jid = contact_jid
+        _inst   = instance          # capture for closure
+        _jid    = contact_jid
+        _config = config
+        _cphone = contact_jid.split('@')[0]
 
         def _tool_executor(tool_name: str, tool_input: dict) -> str:
             if tool_name == 'send_file_to_customer':
                 return send_file_to_customer(_inst, _jid, tool_input)
             if tool_name == 'send_product_media':
                 return send_product_media(_inst, _jid, tool_input)
+            if tool_name.startswith('calendar_'):
+                return calendar_execute_tool(tool_name, tool_input, _inst, _config, _cphone)
             return google_execute_tool(tool_name, tool_input, _inst.id)
 
         # Ensure enough tokens for tool-use reasoning + final answer (min 1500)

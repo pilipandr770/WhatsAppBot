@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Subscription, WhatsAppInstance, BotConfig, Document, DocumentChunk, Conversation, Message, GoogleToken, SiteConfig, AffiliateCode, AffiliateUsage, BotEvent, Product, ProductMedia
+from app.models import User, Subscription, WhatsAppInstance, BotConfig, Document, DocumentChunk, Conversation, Message, GoogleToken, SiteConfig, AffiliateCode, AffiliateUsage, BotEvent, Product, ProductMedia, Appointment
 from sqlalchemy import text
 import os
 
@@ -48,6 +48,12 @@ with app.app_context():
             # Multi-provider LLM: user can choose Anthropic / Mistral / OpenAI / local
             "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS ai_provider VARCHAR(20) DEFAULT 'anthropic'",
             "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS ai_model VARCHAR(100)",
+            # Built-in calendar
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS calendar_enabled BOOLEAN DEFAULT FALSE",
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS business_hours_start INTEGER DEFAULT 9",
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS business_hours_end INTEGER DEFAULT 18",
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS appointment_duration INTEGER DEFAULT 60",
+            "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS calendar_timezone VARCHAR(50) DEFAULT 'Europe/Berlin'",
         ]
         with db.engine.connect() as _conn:
             for _sql in _additive_migrations:

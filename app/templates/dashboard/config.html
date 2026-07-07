@@ -5,6 +5,7 @@
 <div class="nav-section">{{ instance.display_name }}</div>
 <a href="{{ url_for('dashboard.connect_instance', instance_id=instance.id) }}" class="nav-item">📱 Verbinden</a>
 <a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item active">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.appointments', instance_id=instance.id) }}" class="nav-item">📅 Termine</a>
 <a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
 <a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item">🛍 Produkte</a>
 <a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
@@ -265,6 +266,74 @@
         </div>
       </div>
       <!-- /OWNER NOTIFICATIONS -->
+
+      <!-- BUILT-IN CALENDAR -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">📅 Integrierter Kalender</div>
+        <p style="color:var(--text-muted); font-size:13px; margin-bottom:16px;">
+          Der Bot bucht Termine direkt in der App — kein Google-Konto nötig.
+          Du erhältst eine WhatsApp-Benachrichtigung bei jeder Buchung und Stornierung.
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+            <input type="checkbox" name="calendar_enabled" form="config-form"
+                   id="calendar-enabled-cb"
+                   {% if config.calendar_enabled %}checked{% endif %}
+                   onchange="document.getElementById('calendar-settings').style.display=this.checked?'block':'none'">
+            <span>Kalender aktivieren</span>
+          </label>
+        </div>
+
+        <div id="calendar-settings" style="display:{% if config.calendar_enabled %}block{% else %}none{% endif %};">
+          <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;">
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Öffnung (Uhr)</label>
+              <input type="number" name="business_hours_start" form="config-form"
+                     class="form-input" min="0" max="23"
+                     value="{{ config.business_hours_start if config.business_hours_start is not none else 9 }}">
+            </div>
+            <div class="form-group" style="margin-bottom:0;">
+              <label class="form-label">Schließung (Uhr)</label>
+              <input type="number" name="business_hours_end" form="config-form"
+                     class="form-input" min="1" max="24"
+                     value="{{ config.business_hours_end if config.business_hours_end is not none else 18 }}">
+            </div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:12px;">
+            <label class="form-label">Termindauer (Minuten)</label>
+            <select name="appointment_duration" form="config-form" class="form-select">
+              {% for d in [15, 30, 45, 60, 90, 120] %}
+              <option value="{{ d }}"
+                {% if (config.appointment_duration or 60) == d %}selected{% endif %}>
+                {{ d }} Min
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:0;">
+            <label class="form-label">Zeitzone</label>
+            <select name="calendar_timezone" form="config-form" class="form-select">
+              {% set current_tz = config.calendar_timezone or 'Europe/Berlin' %}
+              {% for tz in ['Europe/Berlin', 'Europe/Vienna', 'Europe/Zurich', 'Europe/London',
+                            'Europe/Paris', 'Europe/Rome', 'Europe/Warsaw', 'Europe/Istanbul',
+                            'America/New_York', 'America/Los_Angeles', 'Asia/Dubai', 'UTC'] %}
+              <option value="{{ tz }}" {% if current_tz == tz %}selected{% endif %}>{{ tz }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div style="margin-top:14px; text-align:right;">
+            <a href="{{ url_for('dashboard.appointments', instance_id=instance.id) }}"
+               class="btn btn-secondary btn-sm">
+              📋 Termine anzeigen →
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- /BUILT-IN CALENDAR -->
 
       <!-- Save button — submits the external #config-form via HTML5 form= attribute -->
       <button type="submit" form="config-form" class="btn btn-primary"

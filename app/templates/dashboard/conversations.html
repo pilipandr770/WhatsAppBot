@@ -5,6 +5,7 @@
 <div class="nav-section">{{ instance.display_name }}</div>
 <a href="{{ url_for('dashboard.connect_instance', instance_id=instance.id) }}" class="nav-item">📱 Verbinden</a>
 <a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.appointments', instance_id=instance.id) }}" class="nav-item">📅 Termine</a>
 <a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
 <a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item">🛍 Produkte</a>
 <a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item active">💬 Gespräche</a>

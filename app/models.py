@@ -142,6 +142,12 @@ class BotConfig(db.Model):
     ai_provider = db.Column(db.String(20), default='anthropic')
     # Optional model override; if empty, the provider's default is used
     ai_model = db.Column(db.String(100), nullable=True)
+    # ── Built-in calendar ─────────────────────────────────────────────────────
+    calendar_enabled = db.Column(db.Boolean, default=False)
+    business_hours_start = db.Column(db.Integer, default=9)   # hour 0-23
+    business_hours_end = db.Column(db.Integer, default=18)    # hour 0-23
+    appointment_duration = db.Column(db.Integer, default=60)  # minutes
+    calendar_timezone = db.Column(db.String(50), default='Europe/Berlin')
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
@@ -342,6 +348,27 @@ class AffiliateUsage(db.Model):
     paid_out_at             = db.Column(db.DateTime, nullable=True)
     paid_out_note           = db.Column(db.String(500), nullable=True)  # номер перевода / комментарий
     created_at              = db.Column(db.DateTime, default=datetime.utcnow)
+
+
+class Appointment(db.Model):
+    """Terminbuchungen aus dem internen Kalender (KI-gesteuert)."""
+    __tablename__ = 'appointments'
+    id = db.Column(db.Integer, primary_key=True)
+    instance_id = db.Column(db.Integer, db.ForeignKey('whatsapp_instances.id'), nullable=False, index=True)
+    customer_phone = db.Column(db.String(50), nullable=False)
+    customer_name = db.Column(db.String(200))
+    title = db.Column(db.String(200), nullable=False)
+    start_dt = db.Column(db.DateTime, nullable=False)   # UTC
+    end_dt = db.Column(db.DateTime, nullable=False)     # UTC
+    note = db.Column(db.Text)
+    # confirmed | cancelled | completed
+    status = db.Column(db.String(20), default='confirmed', nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    __table_args__ = (
+        db.Index('ix_appt_instance_start', 'instance_id', 'start_dt'),
+    )
 
 
 class GoogleToken(db.Model):

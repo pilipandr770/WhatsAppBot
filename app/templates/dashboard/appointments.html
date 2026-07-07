@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+{% block title %}Termine — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.appointments', instance_id=instance.id) }}" class="nav-item active">📅 Termine</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item">🛍 Produkte</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">📅 Terminkalender</div>
+    <div class="page-sub">{{ instance.display_name }}</div>
+  </div>
+  <a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="btn btn-secondary">⚙ Einstellungen</a>
+</div>
+
+{% if not config or not config.calendar_enabled %}
+<div class="card" style="text-align:center; padding:40px;">
+  <div style="font-size:48px; margin-bottom:16px;">📅</div>
+  <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Kalender nicht aktiviert</div>
+  <p style="color:var(--text-muted); margin-bottom:24px;">
+    Aktiviere den integrierten Kalender in der Konfiguration, damit der Bot automatisch Termine buchen kann.
+  </p>
+  <a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="btn btn-primary">
+    ⚙ Zur Konfiguration →
+  </a>
+</div>
+{% else %}
+
+<!-- Stats row -->
+<div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-bottom:20px;">
+  <div class="card" style="padding:20px; text-align:center;">
+    <div style="font-size:28px; font-weight:700; color:var(--accent);">{{ today_count }}</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Heute</div>
+  </div>
+  <div class="card" style="padding:20px; text-align:center;">
+    <div style="font-size:28px; font-weight:700; color:var(--accent);">{{ week_count }}</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Diese Woche</div>
+  </div>
+  <div class="card" style="padding:20px; text-align:center;">
+    <div style="font-size:28px; font-weight:700; color:var(--accent);">{{ config.business_hours_start }}–{{ config.business_hours_end }} Uhr</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Geschäftszeiten</div>
+  </div>
+  <div class="card" style="padding:20px; text-align:center;">
+    <div style="font-size:28px; font-weight:700; color:var(--accent);">{{ config.appointment_duration }} Min</div>
+    <div style="font-size:12px; color:var(--text-muted); margin-top:4px;">Termindauer</div>
+  </div>
+</div>
+
+<!-- Filter tabs -->
+<div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+  <a href="{{ url_for('dashboard.appointments', instance_id=instance.id, status='upcoming') }}"
+     class="btn btn-sm {% if status_filter == 'upcoming' %}btn-primary{% else %}btn-secondary{% endif %}">
+    Bevorstehend
+  </a>
+  <a href="{{ url_for('dashboard.appointments', instance_id=instance.id, status='past') }}"
+     class="btn btn-sm {% if status_filter == 'past' %}btn-primary{% else %}btn-secondary{% endif %}">
+    Vergangen
+  </a>
+  <a href="{{ url_for('dashboard.appointments', instance_id=instance.id, status='cancelled') }}"
+     class="btn btn-sm {% if status_filter == 'cancelled' %}btn-primary{% else %}btn-secondary{% endif %}">
+    Storniert
+  </a>
+  <a href="{{ url_for('dashboard.appointments', instance_id=instance.id, status='all') }}"
+     class="btn btn-sm {% if status_filter == 'all' %}btn-primary{% else %}btn-secondary{% endif %}">
+    Alle
+  </a>
+</div>
+
+<div class="card" style="padding:0; overflow:hidden;">
+  {% if appointments %}
+  <div style="overflow-x:auto;">
+    <table style="width:100%; border-collapse:collapse; font-size:13.5px;">
+      <thead>
+        <tr style="border-bottom:1px solid var(--border);">
+          <th style="padding:12px 16px; text-align:left; color:var(--text-muted); font-weight:500; white-space:nowrap;">Datum</th>
+          <th style="padding:12px 16px; text-align:left; color:var(--text-muted); font-weight:500;">Termin</th>
+          <th style="padding:12px 16px; text-align:left; color:var(--text-muted); font-weight:500;">Kunde</th>
+          <th style="padding:12px 16px; text-align:left; color:var(--text-muted); font-weight:500;">Notiz</th>
+          <th style="padding:12px 16px; text-align:left; color:var(--text-muted); font-weight:500;">Status</th>
+          <th style="padding:12px 16px; text-align:left; color:var(--text-muted); font-weight:500; width:80px;"></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for a in appointments %}
+        <tr style="border-bottom:1px solid var(--border); {% if loop.last %}border-bottom:none{% endif %}">
+          <td style="padding:12px 16px; white-space:nowrap;">
+            <div style="font-weight:600;">{{ a.weekday }}, {{ a.date }}</div>
+            <div style="color:var(--text-muted); font-size:12px;">{{ a.time }}–{{ a.time_end }} Uhr</div>
+          </td>
+          <td style="padding:12px 16px;">{{ a.title }}</td>
+          <td style="padding:12px 16px;">
+            <div>{{ a.customer_name }}</div>
+            <div style="color:var(--text-muted); font-size:12px;">{{ a.customer_phone }}</div>
+          </td>
+          <td style="padding:12px 16px; color:var(--text-muted); max-width:200px;">
+            {{ a.note[:60] + '…' if a.note|length > 60 else a.note }}
+          </td>
+          <td style="padding:12px 16px;">
+            {% if a.status == 'confirmed' %}
+              <span class="badge badge-green" style="font-size:11px; padding:3px 8px;">Bestätigt</span>
+            {% elif a.status == 'cancelled' %}
+              <span class="badge badge-red" style="font-size:11px; padding:3px 8px;">Storniert</span>
+            {% else %}
+              <span class="badge badge-yellow" style="font-size:11px; padding:3px 8px;">{{ a.status }}</span>
+            {% endif %}
+          </td>
+          <td style="padding:12px 16px;">
+            {% if a.status == 'confirmed' %}
+            <form method="POST"
+                  action="{{ url_for('dashboard.cancel_appointment', instance_id=instance.id, appt_id=a.id) }}"
+                  onsubmit="return confirm('Termin wirklich stornieren?')"
+                  style="display:inline;">
+              <button type="submit" class="btn btn-sm" style="padding:4px 10px; font-size:12px; color:#e05252;">
+                ✕ Stornieren
+              </button>
+            </form>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  <div style="text-align:center; padding:48px; color:var(--text-muted);">
+    {% if status_filter == 'upcoming' %}
+      Keine bevorstehenden Termine.
+    {% elif status_filter == 'cancelled' %}
+      Keine stornierten Termine.
+    {% else %}
+      Keine Termine gefunden.
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+{% endif %}
+{% endblock %}
