@@ -240,13 +240,17 @@ def reconnect_instance(instance_id):
 # ─── Evolution helpers ────────────────────────────────────────────────────────
 
 def _recreate_evolution_instance(instance: WhatsAppInstance):
-    """Delete + re-create the Evolution API instance so it fires a fresh QRCODE_UPDATED webhook.
+    """Delete + re-create the Evolution API instance and save QR immediately.
+
+    Evolution v2.3.x returns the QR inside the create response (qrcode.base64).
+    We save it right away so the frontend doesn't have to wait for a webhook.
+    The QRCODE_UPDATED webhook (if it arrives) will just overwrite with a fresh QR.
 
     Ordering:
-    1. Delete (global key, ignores errors).
+    1. Delete (global key, ignores errors — instance may already be gone).
     2. sleep(3) for Evolution to finish cleanup.
-    3. Create — retry once with another delete if 403 (instance still exists).
-    4. Update ONLY api_token in DB — never touch qr_code/qr_updated_at after create().
+    3. Create — retry once with another delete if 403/409 (instance still exists).
+    4. Save new token + QR from create response immediately.
     """
     import requests as _req
 
@@ -263,10 +267,11 @@ def _recreate_evolution_instance(instance: WhatsAppInstance):
     db.session.commit()
 
     logger.info(f"[Recreate] Creating Evolution instance {name}")
+    create_resp = None
     new_token = None
     for attempt in range(2):
         try:
-            _, new_token = evolution_client.create_instance(name)
+            create_resp, new_token = evolution_client.create_instance(name)
             break
         except _req.HTTPError as e:
             if e.response is not None and e.response.status_code in (403, 409) and attempt == 0:
@@ -278,8 +283,26 @@ def _recreate_evolution_instance(instance: WhatsAppInstance):
 
     if new_token:
         instance.api_token = new_token
+
+        # Extract QR from create response — Evolution v2.3.x includes it immediately
+        # in qrcode.base64; older versions send it via QRCODE_UPDATED webhook instead.
+        qr_inline = ''
+        if create_resp and isinstance(create_resp, dict):
+            qr_obj = create_resp.get('qrcode') or {}
+            qr_inline = (
+                qr_obj.get('base64') or
+                create_resp.get('base64') or
+                ''
+            )
+        if qr_inline:
+            instance.qr_code = qr_inline
+            instance.qr_updated_at = datetime.utcnow()
+            logger.info(f"[Recreate] QR saved inline from create response for {name}")
+        else:
+            logger.info(f"[Recreate] No inline QR — will arrive via QRCODE_UPDATED webhook for {name}")
+
         db.session.commit()
-        logger.info(f"[Recreate] Done — {name} recreated, token saved, awaiting QRCODE_UPDATED webhook")
+        logger.info(f"[Recreate] Done — {name} recreated, token saved")
     else:
         logger.error(f"[Recreate] Failed to create instance {name} — no token")
 
