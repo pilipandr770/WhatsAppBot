@@ -1,5 +1,5 @@
 {% extends 'base.html' %}
-{% block title %}AI Chat Pro — KI-Chatbot für dein Unternehmen{% endblock %}
+{% block title %}AI Chat Pro — KI-Assistent für dein Unternehmen{% endblock %}
 {% block meta_description %}AI Chat Pro: Automatisiere deinen Customer Service mit KI (Claude, Mistral, OpenAI). Ohne WhatsApp Business API — QR-Code scannen, fertig. Google Kalender Verfügbarkeit, Sprachnachrichten, PDF-Wissensdatenbank, 24/7. Ab €59/Monat. 3 Tage kostenlos testen.{% endblock %}
 {% block og_title %}AI Chat Pro — Automatischer AI Support auf WhatsApp{% endblock %}
 {% block og_description %}KI antwortet für dich auf WhatsApp — rund um die Uhr, auf Deutsch, mit deinen eigenen Inhalten. Wähle zwischen Claude, Mistral & OpenAI. Keine WhatsApp Business API nötig. Ab €59/Monat. 3 Tage gratis.{% endblock %}
@@ -304,7 +304,7 @@ body { background:#0c0d10; }
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
         <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.12 1.532 5.847L.057 23.882l6.197-1.625C7.88 23.408 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.668-.5-5.217-1.377l-.373-.22-3.872 1.016 1.034-3.775-.241-.387A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
       </svg>
-      Bot testen
+      KI-Assistent testen
     </a>
     {% endif %}
     <a href="{{ url_for('auth.login') }}" class="btn btn-secondary btn-sm">Anmelden</a>
@@ -319,8 +319,8 @@ body { background:#0c0d10; }
   <div class="hero-badge">🇩🇪 Made for Germany · DSGVO-konform</div>
   <h1>Kundenanfragen werden beantwortet<br><span>automatisch — 24/7</span></h1>
   <p>
-    AI-Bot für Messaging: beantwortet Kundenanfragen, prüft freie Termine im Google Kalender
-    und zeigt Verfügbarkeiten — vollautomatisch, auf Deutsch.
+    KI-Assistent für WhatsApp: erkennt automatisch die Sprache des Kunden und antwortet
+    auf Deutsch, Englisch, Russisch oder jeder anderen Sprache — ideal für internationale Kundschaft.
   </p>
   <div class="hero-cta">
     <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
@@ -385,7 +385,7 @@ body { background:#0c0d10; }
     <div class="demo-text">
       <h3>So sieht es in der Praxis aus</h3>
       <p>
-        Der Bot antwortet in Echtzeit — genau so, wie es Ihre Kunden gewohnt sind.
+        Der KI-Assistent antwortet in Echtzeit — genau so, wie es Ihre Kunden gewohnt sind.
         Er kennt Ihre Preise, Öffnungszeiten und kann freie Zeiten aus Ihrem
         Google Kalender abrufen.
       </p>
@@ -426,7 +426,7 @@ body { background:#0c0d10; }
     <div class="feat">
       <div class="feat-icon">📱</div>
       <div class="feat-title">Normale WhatsApp-Nummer</div>
-      <div class="feat-text">Keine WhatsApp Business API-Genehmigung nötig. Einfach QR-Code in der App scannen — der Bot ist sofort aktiv.</div>
+      <div class="feat-text">Keine WhatsApp Business API-Genehmigung nötig. Einfach QR-Code in der App scannen — der KI-Assistent ist sofort aktiv.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🧠</div>
@@ -436,12 +436,12 @@ body { background:#0c0d10; }
     <div class="feat">
       <div class="feat-icon">📄</div>
       <div class="feat-title">Eigene Wissensdatenbank</div>
-      <div class="feat-text">Lade PDFs, Word-Dokumente, Preislisten oder FAQ hoch. Semantische KI-Suche findet die passende Antwort — und der Bot kann Dateien direkt an Kunden senden.</div>
+      <div class="feat-text">Lade PDFs, Word-Dokumente, Preislisten oder FAQ hoch. Semantische KI-Suche findet die passende Antwort — und der KI-Assistent kann Dateien direkt an Kunden senden.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🛍</div>
       <div class="feat-title">Produktkatalog mit Foto-Versand</div>
-      <div class="feat-text">Lege Produkte mit Fotos, Videos, Beschreibung und Preis an. Der Bot nennt Preise, berät — und schickt dem Kunden auf Wunsch die Bilder direkt in WhatsApp.</div>
+      <div class="feat-text">Lege Produkte mit Fotos, Videos, Beschreibung und Preis an. Der KI-Assistent nennt Preise, berät — und schickt dem Kunden auf Wunsch die Bilder direkt in WhatsApp.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🙋</div>
@@ -451,17 +451,17 @@ body { background:#0c0d10; }
     <div class="feat">
       <div class="feat-icon">📊</div>
       <div class="feat-title">Wochen-Statistik im Dashboard</div>
-      <div class="feat-text">Neue Kontakte, Anfragen, bestätigte Termine, gesendete Dateien — du siehst jede Woche schwarz auf weiß, was dein Bot leistet.</div>
+      <div class="feat-text">Neue Kontakte, Anfragen, bestätigte Termine, gesendete Dateien — du siehst jede Woche schwarz auf weiß, was dein KI-Assistent leistet.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🎙️</div>
       <div class="feat-title">Sprachnachrichten verstehen</div>
-      <div class="feat-text">Kunden schicken Sprachnachricht — der Bot transkribiert sie automatisch mit Whisper KI und antwortet normal.</div>
+      <div class="feat-text">Kunden schicken Sprachnachricht — der KI-Assistent transkribiert sie automatisch mit Whisper KI und antwortet normal.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">💬</div>
       <div class="feat-title">Alle Chats im Blick</div>
-      <div class="feat-text">Vollständige Gesprächshistorie im Dashboard. Sieh was Kunden fragen und wie der Bot antwortet — in Echtzeit.</div>
+      <div class="feat-text">Vollständige Gesprächshistorie im Dashboard. Sieh was Kunden fragen und wie der KI-Assistent antwortet — in Echtzeit.</div>
     </div>
     <div class="feat">
       <div class="feat-icon">🔒</div>
@@ -476,7 +476,7 @@ body { background:#0c0d10; }
   <div class="section-label">Premium Feature</div>
   <div class="section-title">Google Kalender — Verfügbarkeit in Echtzeit</div>
   <div class="section-sub">
-    Der Bot prüft direkt deinen Google Kalender — ohne Zapier, ohne Umwege.
+    Der KI-Assistent prüft direkt deinen Google Kalender — ohne Zapier, ohne Umwege.
     Kein Lesezugriff auf Termininhalte, nur Frei/Belegt-Abfrage.
   </div>
 
@@ -492,12 +492,12 @@ body { background:#0c0d10; }
         </svg>
         <div>
           <div style="font-size:20px;font-weight:700;color:#e8eaf0;">Google Kalender</div>
-          <div style="font-size:13px;color:#6b7280;">Frei/Belegt-Abfrage direkt im WhatsApp-Bot</div>
+          <div style="font-size:13px;color:#6b7280;">Frei/Belegt-Abfrage direkt per WhatsApp-KI-Assistent</div>
         </div>
       </div>
 
       <p style="color:#9ca3af;font-size:14.5px;line-height:1.8;margin-bottom:20px;">
-        Verbinde einmal dein Google-Konto — und der Bot kann eigenständig
+        Verbinde einmal dein Google-Konto — und der KI-Assistent kann eigenständig
         prüfen wann du frei bist und dem Kunden verfügbare Zeiten nennen.
         Kein Drittanbieter. Kein Zapier. Keine Extra-Kosten.
       </p>
@@ -515,25 +515,25 @@ body { background:#0c0d10; }
       <div class="google-use-case">
         <div class="google-use-case-title">📅 Terminwunsch per WhatsApp</div>
         <div class="google-use-case-text">
-          Kunde fragt nach freiem Termin → Bot prüft Kalender (Frei/Belegt) → bestätigt Verfügbarkeit → dein Team trägt ein.
+          Kunde fragt nach freiem Termin → KI-Assistent prüft Kalender (Frei/Belegt) → bestätigt Verfügbarkeit → dein Team trägt ein.
         </div>
       </div>
       <div class="google-use-case">
         <div class="google-use-case-title">🔍 Freie Slots für einen Tag anzeigen</div>
         <div class="google-use-case-text">
-          „Wann habt ihr diese Woche noch Zeit?" → Bot nennt alle freien Stunden des Tages aus deinem echten Kalender.
+          „Wann habt ihr diese Woche noch Zeit?" → KI-Assistent nennt alle freien Stunden des Tages aus deinem echten Kalender.
         </div>
       </div>
       <div class="google-use-case">
         <div class="google-use-case-title">🕐 Konkreten Slot prüfen</div>
         <div class="google-use-case-text">
-          „Ist Dienstag 10 Uhr frei?" → Bot antwortet sofort mit Ja oder Nein — ohne Termininhalte zu lesen.
+          „Ist Dienstag 10 Uhr frei?" → KI-Assistent antwortet sofort mit Ja oder Nein — ohne Termininhalte zu lesen.
         </div>
       </div>
       <div class="google-use-case">
         <div class="google-use-case-title">📲 Team-Benachrichtigung</div>
         <div class="google-use-case-text">
-          Wenn ein Kunde einen Wunschtermin bestätigt, sendet der Bot deiner WhatsApp-Nummer eine Zusammenfassung.
+          Wenn ein Kunde einen Wunschtermin bestätigt, sendet der KI-Assistent deiner WhatsApp-Nummer eine Zusammenfassung.
         </div>
       </div>
     </div>
@@ -642,7 +642,7 @@ body { background:#0c0d10; }
     <div class="testimonial">
       <div class="testimonial-stars">★★★★★</div>
       <div class="testimonial-text">
-        „Der Setup hat wirklich nur 5 Minuten gedauert. Jetzt beantwortet der Bot
+        „Der Setup hat wirklich nur 5 Minuten gedauert. Jetzt beantwortet der KI-Assistent
         90 % der Kundenanfragen selbstständig — ich spare täglich 2 Stunden."
       </div>
       <div class="testimonial-author">
@@ -657,7 +657,7 @@ body { background:#0c0d10; }
     <div class="testimonial">
       <div class="testimonial-stars">★★★★★</div>
       <div class="testimonial-text">
-        „Die Google Kalender-Integration ist Gold wert. Der Bot prüft freie Zeiten
+        „Die Google Kalender-Integration ist Gold wert. Der KI-Assistent prüft freie Zeiten
         und informiert mich sofort über neue Terminwünsche per WhatsApp."
       </div>
       <div class="testimonial-author">
@@ -712,13 +712,13 @@ body { background:#0c0d10; }
       <div class="faq-q">Wie funktioniert die Google-Integration?</div>
       <div class="faq-a">
         Einmalig Google-Konto in den Einstellungen verbinden (OAuth 2.0 — sicher und widerrufbar).
-          Danach kann der Bot Frei/Belegt-Zeiten aus deinem Kalender abfragen —
+          Danach kann der KI-Assistent Frei/Belegt-Zeiten aus deinem Kalender abfragen —
           ohne Termininhalte zu lesen (calendar.freebusy — nicht-sensitiver Scope).
           Bei neuen Terminwünschen wird Ihr Team per WhatsApp benachrichtigt, damit Sie den Termin manuell eintragen.
       </div>
     </div>
     <div class="faq-item">
-      <div class="faq-q">Kann der Bot Sprachnachrichten verstehen?</div>
+      <div class="faq-q">Kann der KI-Assistent Sprachnachrichten verstehen?</div>
       <div class="faq-a">
         Ja. Sprachnachrichten werden automatisch transkribiert (Groq Whisper oder OpenAI Whisper)
         und anschließend vom gewählten KI-Modell (Claude, Mistral oder OpenAI GPT) beantwortet —
@@ -750,7 +750,7 @@ body { background:#0c0d10; }
     <h2>Bereit, deine Kundenbetreuung<br>zu automatisieren?</h2>
     <p>
       3 Tage kostenlos testen · Keine Kreditkarte · Setup in 5 Minuten<br>
-      Starte jetzt und sieh wie der AI-Bot für dich antwortet.
+      Starte jetzt und sieh wie der KI-Assistent für dich antwortet.
     </p>
     <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
        style="font-size:16px;padding:14px 36px;color:#000;font-weight:700;">
@@ -824,14 +824,14 @@ body { background:#0c0d10; }
 </style>
 
 <a href="{{ demo_wa_url }}" target="_blank" rel="noopener" class="wa-float"
-   title="WhatsApp Bot ausprobieren">
+   title="KI-Assistent ausprobieren">
   <div class="wa-float-circle">
     <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
       <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.127.558 4.12 1.532 5.847L.057 23.882l6.197-1.625C7.88 23.408 9.895 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.668-.5-5.217-1.377l-.373-.22-3.872 1.016 1.034-3.775-.241-.387A9.944 9.944 0 0 1 2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
     </svg>
   </div>
-  <span class="wa-float-label">Bot ausprobieren →</span>
+  <span class="wa-float-label">KI-Assistent testen →</span>
 </a>
 {% endif %}
 
