@@ -12,6 +12,35 @@ def healthz():
     return Response('ok\n', mimetype='text/plain')
 
 
+@main_bp.route('/healthz/deep')
+def healthz_deep():
+    """Deep health check for external monitoring (UptimeRobot).
+
+    Verifies DB and Evolution API. Returns 503 when either is down so the
+    monitor fires an alert. Kept separate from /healthz, which must stay
+    instant for Render's own frequent probes.
+    """
+    from flask import jsonify
+    from sqlalchemy import text as _text
+    from app import db
+    from app.services.evolution import evolution_client
+
+    db_ok = False
+    try:
+        db.session.execute(_text('SELECT 1'))
+        db_ok = True
+    except Exception:
+        pass
+
+    evo_ok = evolution_client.fetch_instance_names() is not None
+
+    status = 200 if (db_ok and evo_ok) else 503
+    return jsonify({
+        'db': 'ok' if db_ok else 'down',
+        'evolution': 'ok' if evo_ok else 'down',
+    }), status
+
+
 @main_bp.route('/favicon.ico')
 def favicon():
     static_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static')

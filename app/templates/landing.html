@@ -179,25 +179,24 @@ body { background:#0c0d10; }
 .plan-feature span:first-child { color:#6366F1; flex-shrink:0; margin-top:1px; }
 .plan-trial { text-align:center; font-size:12px; color:#4b5563; margin-top:12px; }
 
-/* ── Social proof ─────────────────────────────────────────────────────── */
-.testimonials {
-  display:grid; grid-template-columns:repeat(3,1fr);
-  gap:20px; max-width:960px; margin:0 auto;
+/* ── Onboarding steps ─────────────────────────────────────────────────── */
+.steps-list {
+  max-width:680px; margin:0 auto;
+  display:flex; flex-direction:column; gap:14px;
 }
-.testimonial {
-  background:#141618; border:1px solid #2a2d33; border-radius:14px; padding:28px 24px;
+.step {
+  display:flex; gap:18px; align-items:flex-start;
+  background:#141618; border:1px solid #2a2d33; border-radius:14px;
+  padding:20px 22px;
 }
-.testimonial-stars { color:#f59e0b; font-size:14px; margin-bottom:14px; letter-spacing:2px; }
-.testimonial-text { font-size:14px; color:#9ca3af; line-height:1.75; margin-bottom:20px; font-style:italic; }
-.testimonial-author { display:flex; align-items:center; gap:12px; }
-.testimonial-avatar {
-  width:38px; height:38px; border-radius:50%;
+.step-num {
+  width:34px; height:34px; border-radius:50%; flex-shrink:0;
   background:linear-gradient(135deg,#6366F1,#4f46e5);
   display:flex; align-items:center; justify-content:center;
-  font-weight:700; font-size:14px; color:#000; flex-shrink:0;
+  font-weight:700; font-size:15px; color:#fff;
 }
-.testimonial-name { font-size:13.5px; font-weight:600; color:#e8eaf0; }
-.testimonial-role { font-size:12px; color:#6b7280; }
+.step-title { font-size:14.5px; font-weight:600; color:#e8eaf0; margin-bottom:4px; }
+.step-text  { font-size:13px; color:#6b7280; line-height:1.65; }
 
 /* ── FAQ ──────────────────────────────────────────────────────────────── */
 .faq-list { max-width:680px; margin:0 auto; display:flex; flex-direction:column; gap:2px; }
@@ -248,7 +247,7 @@ body { background:#0c0d10; }
   .features { grid-template-columns:1fr; }
   .google-section { grid-template-columns:1fr; padding:32px 24px; gap:24px; }
   .pricing-grid { grid-template-columns:1fr; }
-  .testimonials { grid-template-columns:1fr; }
+  .step { padding:16px 18px; }
   .final-cta { padding:40px 24px; }
   .final-cta h2 { font-size:26px; }
 }
@@ -293,6 +292,7 @@ body { background:#0c0d10; }
     <a href="#funktionen">Funktionen</a>
     <a href="#google">Google-Integration</a>
     <a href="#preise">Preise</a>
+    <a href="#start">So startest du</a>
     <a href="#faq">FAQ</a>
     <a href="{{ url_for('main.datenschutz') }}" style="color:#9ca3af;">Datenschutz</a>
   </div>
@@ -632,56 +632,98 @@ body { background:#0c0d10; }
   </div>
 </section>
 
-<!-- ═══ SOCIAL PROOF ══════════════════════════════════════════════════════ -->
-<section class="section">
-  <div class="section-label">Kundenstimmen</div>
-  <div class="section-title">Was unsere Kunden sagen</div>
-  <div class="section-sub">Echte Unternehmen, echte Ergebnisse.</div>
+<!-- ═══ ONBOARDING STEPS ══════════════════════════════════════════════════ -->
+<section class="section" id="start">
+  <div class="section-label">So startest du</div>
+  <div class="section-title">In 7 Schritten zum eigenen KI-Assistenten</div>
+  <div class="section-sub">
+    Alles, was du für deinen kostenlosen 3-Tage-Test brauchst —
+    kein technisches Wissen, keine Kreditkarte.
+  </div>
 
-  <div class="testimonials">
-    <div class="testimonial">
-      <div class="testimonial-stars">★★★★★</div>
-      <div class="testimonial-text">
-        „Der Setup hat wirklich nur 5 Minuten gedauert. Jetzt beantwortet der KI-Assistent
-        90 % der Kundenanfragen selbstständig — ich spare täglich 2 Stunden."
-      </div>
-      <div class="testimonial-author">
-        <div class="testimonial-avatar">M</div>
-        <div>
-          <div class="testimonial-name">Markus B.</div>
-          <div class="testimonial-role">Inhaber · Handwerksbetrieb, Bayern</div>
+  <div class="steps-list">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div>
+        <div class="step-title">📱 WhatsApp-Nummer vorbereiten</div>
+        <div class="step-text">
+          Am besten eine neue Prepaid-SIM kaufen (ab ca. 10 €) und damit eine frische
+          WhatsApp-Nummer für dein Unternehmen anlegen. Alternativ eine vorhandene
+          Nummer nutzen, die frei für den KI-Assistenten ist.
         </div>
       </div>
     </div>
-
-    <div class="testimonial">
-      <div class="testimonial-stars">★★★★★</div>
-      <div class="testimonial-text">
-        „Die Google Kalender-Integration ist Gold wert. Der KI-Assistent prüft freie Zeiten
-        und informiert mich sofort über neue Terminwünsche per WhatsApp."
-      </div>
-      <div class="testimonial-author">
-        <div class="testimonial-avatar">S</div>
-        <div>
-          <div class="testimonial-name">Silke T.</div>
-          <div class="testimonial-role">Restaurantbesitzerin · Frankfurt</div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div>
+        <div class="step-title">🔗 Per QR-Code verbinden</div>
+        <div class="step-text">
+          Kostenlos registrieren, QR-Code mit dem Handy scannen — dein Assistent
+          ist verbunden. Dauert keine 2 Minuten, keine WhatsApp Business API nötig.
         </div>
       </div>
     </div>
-
-    <div class="testimonial">
-      <div class="testimonial-stars">★★★★★</div>
-      <div class="testimonial-text">
-        „Wir nutzen den Agentur-Plan für 8 unserer Kunden. White-Label funktioniert
-        einwandfrei. Bester ROI den wir je in ein Tool investiert haben."
-      </div>
-      <div class="testimonial-author">
-        <div class="testimonial-avatar">K</div>
-        <div>
-          <div class="testimonial-name">Kevin R.</div>
-          <div class="testimonial-role">Gründer · Digital-Agentur, Berlin</div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div>
+        <div class="step-title">✍️ Anweisung schreiben</div>
+        <div class="step-text">
+          Erkläre dem KI-Assistenten in eigenen Worten, was dein Unternehmen macht,
+          wie er sich vorstellen und antworten soll — wie eine Einarbeitung
+          für einen neuen Mitarbeiter.
         </div>
       </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div>
+        <div class="step-title">📄 Dokumente hochladen</div>
+        <div class="step-text">
+          Preisliste, FAQ, Broschüren als PDF oder Word — der Assistent nutzt
+          deine Inhalte für präzise Antworten und kann Dateien an Kunden senden.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div>
+        <div class="step-title">📅 Kalender aktivieren</div>
+        <div class="step-text">
+          Google Kalender verbinden oder den integrierten Kalender aktivieren —
+          der Assistent prüft freie Zeiten und nimmt Terminwünsche entgegen.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div>
+        <div class="step-title">🛍 Produkte & Dienstleistungen anlegen</div>
+        <div class="step-text">
+          Mit Preis, Beschreibung und Fotos — der Assistent berät Kunden
+          und verschickt auf Wunsch Bilder direkt im Chat.
+        </div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">7</div>
+      <div>
+        <div class="step-title">🔔 Deine Nummer für Benachrichtigungen</div>
+        <div class="step-text">
+          Hinterlege deine private WhatsApp-Nummer — du wirst sofort informiert,
+          wenn ein Termin gebucht wird oder ein Kunde einen echten Menschen
+          sprechen möchte.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:36px;">
+    <a href="{{ url_for('auth.register') }}" class="btn btn-primary"
+       style="font-size:15px;padding:13px 32px;color:#000;font-weight:600;">
+      Jetzt kostenlos starten →
+    </a>
+    <div style="margin-top:14px;font-size:12.5px;color:#4b5563;">
+      3 Tage gratis · Keine Kreditkarte · Monatlich kündbar
     </div>
   </div>
 </section>
@@ -757,7 +799,7 @@ body { background:#0c0d10; }
       Jetzt kostenlos starten →
     </a>
     <div style="margin-top:18px;font-size:12.5px;color:#4b5563;">
-      Bereits über 50 Unternehmen nutzen WhatsApp KI Helfer · Made in Germany 🇩🇪
+      Early-Adopter-Konditionen · Made in Germany 🇩🇪 · Server in Frankfurt
     </div>
   </div>
 </section>

@@ -104,6 +104,33 @@ class EvolutionAPIClient:
             logger.debug(f"trigger_connect {instance_name}: {e}")
             return ''
 
+    def fetch_instance_names(self):
+        """Return the set of instance names existing in Evolution, or None if
+        Evolution API is unreachable (used by the health monitor to distinguish
+        'instance missing' from 'server down')."""
+        try:
+            resp = requests.get(
+                f'{self.base_url}/instance/fetchInstances',
+                headers=self._headers(),
+                timeout=15
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            names = set()
+            for item in data if isinstance(data, list) else []:
+                # v2.3+: flat {"name": ...}; older: {"instance": {"instanceName": ...}}
+                name = (
+                    item.get('name') or
+                    (item.get('instance') or {}).get('instanceName') or
+                    ''
+                )
+                if name:
+                    names.add(name)
+            return names
+        except Exception as e:
+            logger.error(f"fetch_instance_names: {e}")
+            return None
+
     def get_connection_state(self, instance_name: str, token: str) -> str:
         """Returns: open | connecting | close"""
         try:

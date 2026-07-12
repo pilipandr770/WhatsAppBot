@@ -67,5 +67,10 @@ with app.app_context():
             _lock_conn.execute(text(f"SELECT pg_advisory_unlock({_ADVISORY_LOCK_ID})"))
             _lock_conn.close()
 
+# Background health monitor: syncs instance status with Evolution API every
+# 5 min, auto-reconnects and alerts the admin (see app/services/health_monitor.py).
+from app.services.health_monitor import start_health_monitor
+start_health_monitor(app)
+
 if __name__ == '__main__':
     app.run(debug=False, host='0.0.0.0', port=5000)

@@ -1,0 +1,50 @@
+name: DB Backup
+
+# Daily encrypted PostgreSQL backup stored as a GitHub Actions artifact.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   DATABASE_URL       - external Render connection string (postgresql://...)
+#   BACKUP_PASSPHRASE  - passphrase used to encrypt the dump (store it safely!)
+#
+# Restore procedure: see scripts/README.md
+
+on:
+  schedule:
+    - cron: '30 2 * * *'   # daily at 02:30 UTC (03:30/04:30 German time)
+  workflow_dispatch: {}     # allow manual runs from the Actions tab
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install PostgreSQL 17 client
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql-common
+          sudo YES=1 /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh
+          sudo apt-get install -y -qq postgresql-client-17
+
+      - name: Dump database
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          pg_dump "$DATABASE_URL" --format=custom --no-owner --no-privileges \
+            --file="backup-$(date +%F).dump"
+
+      - name: Encrypt dump
+        env:
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          f=$(ls backup-*.dump)
+          openssl enc -aes-256-cbc -pbkdf2 -salt \
+            -in "$f" -out "$f.enc" -pass env:PASSPHRASE
+          rm "$f"
+
+      - name: Upload encrypted backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: db-backup-${{ github.run_number }}
+          path: backup-*.dump.enc
+          retention-days: 30
+          if-no-files-found: error
