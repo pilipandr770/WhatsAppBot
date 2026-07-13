@@ -139,20 +139,10 @@ def _parse_start_dt(start_datetime: str, tz: zoneinfo.ZoneInfo) -> datetime:
 
 
 def _notify_owner(instance, config, message: str):
-    """Send WhatsApp notification to the owner's notification_phone."""
-    phone = getattr(config, 'notification_phone', None)
-    if not phone:
-        return
-    try:
-        from app.services.evolution import evolution_client
-        evolution_client.send_text(
-            instance_name=instance.instance_name,
-            token=instance.api_token,
-            to_jid=f"{phone}@s.whatsapp.net",
-            text=message,
-        )
-    except Exception as e:
-        logger.warning(f"[Calendar] Owner notify failed for instance {instance.id}: {e}")
+    """Notify the owner on the instance's channel (WhatsApp or Telegram)."""
+    from app.services import messaging
+    if not messaging.notify_owner(instance, config, message):
+        logger.info(f"[Calendar] No owner target configured for instance {instance.id}")
 
 
 def _fmt_dt(utc_dt: datetime, tz: zoneinfo.ZoneInfo) -> str:
