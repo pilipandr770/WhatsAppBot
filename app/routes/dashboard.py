@@ -171,7 +171,95 @@ def create_instance():
 @login_required
 def connect_instance(instance_id):
     instance = _get_instance(instance_id)
+    if instance.channel == 'telegram':
+        return redirect(url_for('dashboard.connect_telegram', instance_id=instance.id))
     return render_template('dashboard/connect.html', instance=instance)
+
+
+# ─── Telegram channel ─────────────────────────────────────────────────────────
+
+@dashboard_bp.route('/instance/create-telegram', methods=['POST'])
+@login_required
+def create_telegram_instance():
+    """Create a Telegram-channel instance (bot token entered on the next screen)."""
+    if not current_user.can_add_instance:
+        flash('Kanal-Limit erreicht. Bitte upgrade deinen Plan.', 'error')
+        return redirect(url_for('billing.plans'))
+
+    display_name = request.form.get('display_name', '').strip()
+    if not display_name:
+        flash('Bitte gib einen Namen ein.', 'error')
+        return redirect(url_for('dashboard.index'))
+
+    instance_name = f"tg_{current_user.id}_{uuid.uuid4().hex[:8]}"
+    instance = WhatsAppInstance(
+        user_id=current_user.id,
+        instance_name=instance_name,
+        display_name=display_name,
+        channel='telegram',
+        status='disconnected',
+    )
+    db.session.add(instance)
+    db.session.flush()
+    db.session.add(BotConfig(instance_id=instance.id))
+    db.session.commit()
+
+    return redirect(url_for('dashboard.connect_telegram', instance_id=instance.id))
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/telegram')
+@login_required
+def connect_telegram(instance_id):
+    instance = _get_instance(instance_id)
+    if instance.channel != 'telegram':
+        return redirect(url_for('dashboard.connect_instance', instance_id=instance.id))
+
+    owner_link = None
+    if instance.status == 'connected' and instance.telegram_username and instance.telegram_webhook_secret:
+        owner_link = (
+            f"https://t.me/{instance.telegram_username}"
+            f"?start=link_{instance.telegram_webhook_secret}"
+        )
+    return render_template('dashboard/connect_telegram.html',
+                           instance=instance, owner_link=owner_link)
+
+
+@dashboard_bp.route('/instance/<int:instance_id>/telegram/save', methods=['POST'])
+@login_required
+def save_telegram_token(instance_id):
+    """Validate the bot token via getMe and register the webhook."""
+    import secrets as _secrets
+    from app.services.telegram import telegram_client
+
+    instance = _get_instance(instance_id)
+    if instance.channel != 'telegram':
+        return jsonify({'status': 'error', 'message': 'Falscher Kanal-Typ.'}), 400
+
+    token = (request.form.get('bot_token') or '').strip()
+    if not token or ':' not in token:
+        flash('Bitte gib einen gültigen Bot-Token ein (Format: 123456:ABC…).', 'error')
+        return redirect(url_for('dashboard.connect_telegram', instance_id=instance.id))
+
+    bot_info = telegram_client.get_me(token)
+    if not bot_info:
+        flash('Token ungültig. Prüfe den Token von @BotFather und versuche es erneut.', 'error')
+        return redirect(url_for('dashboard.connect_telegram', instance_id=instance.id))
+
+    secret = _secrets.token_urlsafe(24)
+    instance.api_token = token
+    instance.telegram_username = bot_info.get('username')
+    instance.telegram_webhook_secret = secret
+
+    if telegram_client.set_webhook(token, instance.instance_name, secret):
+        instance.status = 'connected'
+        db.session.commit()
+        flash(f'Telegram-Bot @{instance.telegram_username} erfolgreich verbunden!', 'success')
+    else:
+        instance.status = 'disconnected'
+        db.session.commit()
+        flash('Webhook konnte nicht registriert werden. Bitte später erneut versuchen.', 'error')
+
+    return redirect(url_for('dashboard.connect_telegram', instance_id=instance.id))
 
 
 @dashboard_bp.route('/instance/<int:instance_id>/qr')
@@ -336,7 +424,11 @@ def instance_status(instance_id):
 def delete_instance(instance_id):
     instance = _get_instance(instance_id)
     try:
-        evolution_client.delete_instance(instance.instance_name, instance.api_token)
+        if instance.channel == 'telegram':
+            from app.services.telegram import telegram_client
+            telegram_client.delete_webhook(instance.api_token)
+        else:
+            evolution_client.delete_instance(instance.instance_name, instance.api_token)
     except Exception:
         pass
     db.session.delete(instance)

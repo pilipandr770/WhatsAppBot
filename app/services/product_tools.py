@@ -8,7 +8,6 @@ and the files go out via Evolution sendMedia.
 """
 
 import os
-import base64
 import logging
 
 logger = logging.getLogger(__name__)
@@ -112,7 +111,7 @@ def send_product_media(instance, contact_jid: str, tool_input: dict) -> str:
     """Execute the tool: send photos and/or video of a product to the customer."""
     from app import db
     from app.models import BotEvent
-    from app.services.evolution import evolution_client
+    from app.services import messaging
 
     products = get_active_products(instance.id)
     product = _find_product(products, tool_input.get('product_name', ''))
@@ -148,14 +147,13 @@ def send_product_media(instance, contact_jid: str, tool_input: dict) -> str:
         if os.path.getsize(m.filename) > MAX_SEND_BYTES:
             continue
         with open(m.filename, 'rb') as f:
-            b64 = base64.b64encode(f.read()).decode('ascii')
+            media_bytes = f.read()
         try:
-            evolution_client.send_media(
-                instance_name=instance.instance_name,
-                token=instance.api_token,
-                to_jid=contact_jid,
-                media_b64=b64,
-                mediatype='image' if m.media_type == 'image' else 'video',
+            messaging.send_media(
+                instance=instance,
+                to_id=contact_jid,
+                media_bytes=media_bytes,
+                kind='image' if m.media_type == 'image' else 'video',
                 mimetype=m.mimetype or 'application/octet-stream',
                 filename=m.original_name or f"{product.name}.{(m.filename or '').rsplit('.', 1)[-1]}",
                 caption=caption_base if idx == 0 else '',

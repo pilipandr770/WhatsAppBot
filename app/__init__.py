@@ -116,12 +116,14 @@ def create_app():
     from app.routes.auth import auth_bp
     from app.routes.dashboard import dashboard_bp
     from app.routes.webhook import webhook_bp
+    from app.routes.telegram_webhook import telegram_bp
     from app.routes.billing import billing_bp
     from app.routes.admin import admin_bp
 
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(dashboard_bp, url_prefix='/dashboard')
     app.register_blueprint(webhook_bp, url_prefix='/wh')
+    app.register_blueprint(telegram_bp, url_prefix='/tg')
     app.register_blueprint(billing_bp, url_prefix='/billing')
     app.register_blueprint(admin_bp, url_prefix='/admin')
 
@@ -134,6 +136,8 @@ def create_app():
     # ── CSRF exemptions: JSON endpoints that don't use browser sessions ───────
     # Evolution API webhooks send raw JSON — exempt the whole blueprint.
     csrf.exempt(webhook_bp)
+    # Telegram Bot API webhooks send raw JSON (auth via secret_token header).
+    csrf.exempt(telegram_bp)
     # Stripe webhook is one specific route; exempt only that view function,
     # NOT the whole billing_bp (cancel/portal are browser forms that need CSRF).
     from app.routes.billing import stripe_webhook

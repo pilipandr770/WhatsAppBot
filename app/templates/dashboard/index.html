@@ -104,7 +104,13 @@
 
       <!-- Name -->
       <div style="flex:1;">
-        <div style="font-weight:600;">{{ inst.display_name }}</div>
+        <div style="font-weight:600;">
+          {% if inst.channel == 'telegram' %}✈️{% else %}💬{% endif %}
+          {{ inst.display_name }}
+          {% if inst.channel == 'telegram' and inst.telegram_username %}
+          <span style="font-size:12px;color:var(--text-muted);font-weight:400;">@{{ inst.telegram_username }}</span>
+          {% endif %}
+        </div>
         <div style="font-size:12px;color:var(--text-muted);font-family:'DM Mono',monospace;">{{ inst.instance_name }}</div>
       </div>
 
@@ -117,7 +123,9 @@
       <!-- Actions -->
       <div style="display:flex;gap:8px;flex-shrink:0;">
         {% if inst.status != 'connected' %}
-        <a href="{{ url_for('dashboard.connect_instance', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">QR-Code</a>
+        <a href="{{ url_for('dashboard.connect_instance', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">
+          {% if inst.channel == 'telegram' %}🔗 Verbinden{% else %}QR-Code{% endif %}
+        </a>
         {% endif %}
         <a href="{{ url_for('dashboard.bot_config', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">⚙ Config</a>
         <a href="{{ url_for('dashboard.conversations', instance_id=inst.id) }}" class="btn btn-secondary btn-sm">💬 Chats</a>
@@ -153,21 +161,71 @@
 <!-- New Instance Modal -->
 <div class="modal-backdrop" id="newInstanceModal">
   <div class="modal">
-    <div class="modal-title">Neue WhatsApp-Instanz</div>
-    <form method="post" action="{{ url_for('dashboard.create_instance') }}">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-      <div class="form-group">
-        <label class="form-label">Name der Instanz</label>
-        <input type="text" name="display_name" class="form-input"
-               placeholder="z.B. Kundenservice, Shop-Support" required maxlength="100">
-        <div class="form-hint">Interner Name zur Unterscheidung deiner Nummern.</div>
+    <div class="modal-title">Neuen Kanal erstellen</div>
+
+    <!-- Channel choice -->
+    <div id="channelChoice">
+      <div class="form-hint" style="margin-bottom:14px;">Über welchen Messenger soll dein KI-Assistent antworten?</div>
+      <div style="display:flex;flex-direction:column;gap:10px;">
+        <button type="button" class="btn btn-secondary" style="justify-content:flex-start;padding:14px 16px;"
+                onclick="pickChannel('whatsapp')">
+          💬 &nbsp;WhatsApp <span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— QR-Code scannen</span>
+        </button>
+        <button type="button" class="btn btn-secondary" style="justify-content:flex-start;padding:14px 16px;"
+                onclick="pickChannel('telegram')">
+          ✈️ &nbsp;Telegram <span style="color:var(--text-muted);font-size:12px;margin-left:6px;">— Bot-Token einfügen</span>
+        </button>
       </div>
-      <div class="modal-actions">
+      <div class="modal-actions" style="margin-top:16px;">
         <button type="button" class="btn btn-ghost"
                 onclick="document.getElementById('newInstanceModal').classList.remove('open')">Abbrechen</button>
+      </div>
+    </div>
+
+    <!-- WhatsApp form -->
+    <form method="post" action="{{ url_for('dashboard.create_instance') }}" id="waForm" style="display:none;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label">💬 WhatsApp-Kanal — Name</label>
+        <input type="text" name="display_name" class="form-input"
+               placeholder="z.B. Kundenservice, Shop-Support" maxlength="100">
+        <div class="form-hint">Interner Name zur Unterscheidung deiner Kanäle.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="backToChoice()">← Zurück</button>
         <button type="submit" class="btn btn-primary">Erstellen & QR anzeigen</button>
+      </div>
+    </form>
+
+    <!-- Telegram form -->
+    <form method="post" action="{{ url_for('dashboard.create_telegram_instance') }}" id="tgForm" style="display:none;">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label">✈️ Telegram-Kanal — Name</label>
+        <input type="text" name="display_name" class="form-input"
+               placeholder="z.B. Telegram-Support" maxlength="100">
+        <div class="form-hint">Im nächsten Schritt fügst du den Bot-Token von @BotFather ein.</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-ghost" onclick="backToChoice()">← Zurück</button>
+        <button type="submit" class="btn btn-primary">Weiter →</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+function pickChannel(ch) {
+  document.getElementById('channelChoice').style.display = 'none';
+  document.getElementById('waForm').style.display = (ch === 'whatsapp') ? 'block' : 'none';
+  document.getElementById('tgForm').style.display = (ch === 'telegram') ? 'block' : 'none';
+  const form = document.getElementById(ch === 'whatsapp' ? 'waForm' : 'tgForm');
+  form.querySelector('input[name="display_name"]').focus();
+}
+function backToChoice() {
+  document.getElementById('waForm').style.display = 'none';
+  document.getElementById('tgForm').style.display = 'none';
+  document.getElementById('channelChoice').style.display = 'block';
+}
+</script>
 {% endblock %}

@@ -98,6 +98,14 @@ class WhatsAppInstance(db.Model):
     qr_code = db.Column(db.Text)
     qr_updated_at = db.Column(db.DateTime)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    # ── Channel ────────────────────────────────────────────────────────────────
+    # 'whatsapp' (Evolution API, default for all legacy rows) | 'telegram' (Bot API)
+    channel = db.Column(db.String(20), default='whatsapp', nullable=False)
+    # Telegram: bot @username (for display) and secret_token echoed by the webhook
+    telegram_username = db.Column(db.String(100))
+    telegram_webhook_secret = db.Column(db.String(100))
+    # Telegram owner notifications: chat_id captured when the owner presses /start
+    owner_chat_id = db.Column(db.String(50))
 
     bot_config = db.relationship('BotConfig', backref='instance', uselist=False, cascade='all, delete-orphan')
     documents = db.relationship('Document', backref='instance', lazy=True, cascade='all, delete-orphan')

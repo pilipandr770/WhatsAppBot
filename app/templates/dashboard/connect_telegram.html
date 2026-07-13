@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Telegram verbinden — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.connect_telegram', instance_id=instance.id) }}" class="nav-item active">✈️ Verbinden</a>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.appointments', instance_id=instance.id) }}" class="nav-item">📅 Termine</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item">🛍 Produkte</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Telegram-Bot verbinden</div>
+    <div class="page-sub">{{ instance.display_name }}</div>
+  </div>
+  <a href="{{ url_for('dashboard.index') }}" class="btn btn-secondary">← Zurück</a>
+</div>
+
+<div class="page-body" style="max-width:640px;">
+
+  <!-- Status -->
+  <div class="card" style="text-align:center;padding:28px;margin-bottom:16px;">
+    {% if instance.status == 'connected' %}
+      <div style="font-size:44px;margin-bottom:10px;">✅</div>
+      <div style="font-size:18px;font-weight:600;color:var(--accent);margin-bottom:6px;">
+        Verbunden mit @{{ instance.telegram_username }}
+      </div>
+      <p style="color:var(--text-muted);font-size:13.5px;">
+        Dein KI-Assistent beantwortet jetzt Nachrichten in Telegram.
+        Teile den Link <strong>t.me/{{ instance.telegram_username }}</strong> mit deinen Kunden.
+      </p>
+    {% else %}
+      <div style="font-size:44px;margin-bottom:10px;">✈️</div>
+      <div style="font-size:18px;font-weight:600;margin-bottom:6px;">Noch nicht verbunden</div>
+      <p style="color:var(--text-muted);font-size:13.5px;">
+        Folge der Anleitung unten — es dauert nur 2 Minuten.
+      </p>
+    {% endif %}
+  </div>
+
+  <!-- Guide -->
+  <div class="card" style="margin-bottom:16px;">
+    <div class="card-title" style="margin-bottom:14px;">📖 So erstellst du deinen Bot-Token</div>
+    <ol style="color:var(--text-dim);font-size:13.5px;line-height:1.9;padding-left:20px;margin:0;">
+      <li>Öffne in Telegram den offiziellen
+        <a href="https://t.me/BotFather" target="_blank" rel="noopener"
+           style="color:var(--accent);font-weight:600;">@BotFather</a> und starte ihn mit <code>/start</code>.</li>
+      <li>Sende <code>/newbot</code> und folge den Anweisungen:
+        <ul style="padding-left:18px;margin:4px 0;">
+          <li><strong>Name</strong> — der Anzeigename (z.B. „Muster GmbH Assistent").</li>
+          <li><strong>Username</strong> — muss auf <code>bot</code> enden (z.B. <code>musterfirma_bot</code>).</li>
+        </ul>
+      </li>
+      <li>BotFather antwortet mit einem <strong>Token</strong> in dieser Form:<br>
+        <code style="font-size:12px;color:var(--text-muted);">123456789:AAHe7...abcDEF</code></li>
+      <li>Kopiere den Token und füge ihn unten ein.</li>
+    </ol>
+  </div>
+
+  <!-- Token form -->
+  <div class="card" style="margin-bottom:16px;">
+    <form method="post" action="{{ url_for('dashboard.save_telegram_token', instance_id=instance.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <div class="form-group">
+        <label class="form-label">🔑 Bot-Token von @BotFather</label>
+        <input type="text" name="bot_token" class="form-input" autocomplete="off"
+               placeholder="123456789:AAHe7...abcDEF"
+               pattern="^[0-9]+:.+$" required
+               style="font-family:'DM Mono',monospace;font-size:13px;">
+        <div class="form-hint">Dein Token wird sicher gespeichert und nur zur Verbindung mit Telegram genutzt.</div>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;">
+        {% if instance.status == 'connected' %}Token aktualisieren{% else %}Bot verbinden →{% endif %}
+      </button>
+    </form>
+  </div>
+
+  <!-- Owner notifications link (only once connected) -->
+  {% if owner_link %}
+  <div class="card" style="border-color:rgba(99,102,241,0.25);background:var(--accent-dim);">
+    <div class="card-title" style="margin-bottom:8px;">🔔 Benachrichtigungen aktivieren</div>
+    <p style="color:var(--text-dim);font-size:13px;line-height:1.7;margin-bottom:14px;">
+      Klicke auf den Button und drücke in Telegram <strong>Start</strong>, damit du persönlich
+      über neue Termine und Anfragen informiert wirst. (Einmalig, mit deinem eigenen Telegram-Konto.)
+    </p>
+    <a href="{{ owner_link }}" target="_blank" rel="noopener"
+       class="btn btn-primary btn-sm" style="justify-content:center;">
+      ✈️ Benachrichtigungen in Telegram aktivieren
+    </a>
+    {% if instance.owner_chat_id %}
+    <div style="margin-top:12px;font-size:12.5px;color:var(--accent);">
+      ✅ Benachrichtigungen sind aktiv.
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <div class="card" style="margin-top:16px;">
+    <div class="card-title">ℹ Hinweise</div>
+    <ul style="color:var(--text-muted);font-size:13px;padding-left:18px;line-height:2;">
+      <li>Kunden schreiben deinen Bot über <strong>t.me/dein_bot_name</strong> an.</li>
+      <li>Anders als bei WhatsApp muss der Kunde den Bot zuerst starten (Start-Button).</li>
+      <li>Der Bot nutzt dieselben Einstellungen, Dokumente und Produkte wie deine WhatsApp-Kanäle.</li>
+      <li>Sprachnachrichten, Fotos und Kalender funktionieren genauso.</li>
+    </ul>
+  </div>
+</div>
+{% endblock %}

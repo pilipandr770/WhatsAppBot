@@ -8,7 +8,6 @@ customer asks for a price list, photos, brochure etc.
 """
 
 import os
-import base64
 import logging
 
 logger = logging.getLogger(__name__)
@@ -81,10 +80,10 @@ def build_files_hint(docs) -> str:
 
 
 def send_file_to_customer(instance, contact_jid: str, tool_input: dict) -> str:
-    """Execute the tool: look up the document and send it via Evolution API."""
+    """Execute the tool: look up the document and send it on the instance's channel."""
     from app import db
     from app.models import BotEvent
-    from app.services.evolution import evolution_client
+    from app.services import messaging
 
     filename = (tool_input.get('filename') or '').strip()
     caption = (tool_input.get('caption') or '').strip()[:300]
@@ -105,18 +104,17 @@ def send_file_to_customer(instance, contact_jid: str, tool_input: dict) -> str:
         return f"Datei '{filename}' ist zu groß zum Versenden ({round(size / 1024 / 1024)} MB)."
 
     with open(doc.filename, 'rb') as f:
-        media_b64 = base64.b64encode(f.read()).decode('ascii')
+        media_bytes = f.read()
 
     mediatype = 'image' if doc.file_type in _IMAGE_TYPES else 'document'
     mimetype = _MIMETYPES.get(doc.file_type, 'application/octet-stream')
 
     try:
-        evolution_client.send_media(
-            instance_name=instance.instance_name,
-            token=instance.api_token,
-            to_jid=contact_jid,
-            media_b64=media_b64,
-            mediatype=mediatype,
+        messaging.send_media(
+            instance=instance,
+            to_id=contact_jid,
+            media_bytes=media_bytes,
+            kind=mediatype,
             mimetype=mimetype,
             filename=doc.original_name,
             caption=caption,

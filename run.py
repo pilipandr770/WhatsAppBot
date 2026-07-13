@@ -54,6 +54,11 @@ with app.app_context():
             "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS business_hours_end INTEGER DEFAULT 18",
             "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS appointment_duration INTEGER DEFAULT 60",
             "ALTER TABLE bot_configs ADD COLUMN IF NOT EXISTS calendar_timezone VARCHAR(50) DEFAULT 'Europe/Berlin'",
+            # Multi-channel: WhatsApp (Evolution) or Telegram (Bot API)
+            "ALTER TABLE whatsapp_instances ADD COLUMN IF NOT EXISTS channel VARCHAR(20) DEFAULT 'whatsapp' NOT NULL",
+            "ALTER TABLE whatsapp_instances ADD COLUMN IF NOT EXISTS telegram_username VARCHAR(100)",
+            "ALTER TABLE whatsapp_instances ADD COLUMN IF NOT EXISTS telegram_webhook_secret VARCHAR(100)",
+            "ALTER TABLE whatsapp_instances ADD COLUMN IF NOT EXISTS owner_chat_id VARCHAR(50)",
         ]
         with db.engine.connect() as _conn:
             for _sql in _additive_migrations:

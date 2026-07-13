@@ -10,6 +10,7 @@ from app.models import WhatsAppInstance, Conversation, Message, SiteConfig, BotE
 from app.services.llm import get_provider as _get_llm_provider
 from app.services.rag import search_relevant_chunks
 from app.services.evolution import evolution_client
+from app.services import messaging
 from app.services.stt import transcribe_audio_base64, transcribe_from_evolution
 from app.services.google_service import GOOGLE_TOOLS, execute_tool as google_execute_tool
 from app.services.media_tools import (
@@ -184,21 +185,38 @@ def _process_single_message(instance_name: str, msg_data: dict):
         logger.warning(f"Instance not found: {instance_name}")
         return
 
+    contact_name = msg_data.get('pushName') or contact_jid.split('@')[0]
+    process_inbound(instance, contact_jid, contact_name, text, is_voice)
+
+
+def process_inbound(instance, contact_id: str, contact_name: str, text: str, is_voice: bool):
+    """Channel-agnostic core: run the AI pipeline for one inbound message and
+    reply on the instance's channel (WhatsApp or Telegram).
+
+    `contact_id` is the reply address: a WhatsApp JID (phone@s.whatsapp.net) or
+    a Telegram chat_id (string). It is stored verbatim in Conversation.contact_jid.
+    Both channel adapters (Evolution webhook, Telegram webhook) funnel here after
+    parsing their own wire format.
+    """
     config = instance.bot_config
     if not config or not config.is_active:
         return
 
+    # Legacy body below refers to contact_jid; keep it as an alias of contact_id.
+    contact_jid = contact_id
+    instance_name = instance.instance_name
+
     # Get or create conversation
     conversation = Conversation.query.filter_by(
         instance_id=instance.id,
-        contact_jid=contact_jid
+        contact_jid=contact_id
     ).first()
 
     if not conversation:
         conversation = Conversation(
             instance_id=instance.id,
-            contact_jid=contact_jid,
-            contact_name=msg_data.get('pushName') or contact_jid.split('@')[0]
+            contact_jid=contact_id,
+            contact_name=contact_name
         )
         db.session.add(conversation)
         db.session.flush()
@@ -353,37 +371,20 @@ def _process_single_message(instance_name: str, msg_data: dict):
 
     db.session.commit()
 
-    # Send reply via Evolution API
-    evolution_client.send_text(
-        instance_name=instance_name,
-        token=instance.api_token,
-        to_jid=contact_jid,
-        text=ai_text
-    )
+    # Send reply on the instance's channel (WhatsApp via Evolution, or Telegram)
+    messaging.send_text(instance, contact_id, ai_text)
 
     logger.info(f"Replied to {contact_jid} on {instance_name}: {len(ai_text)} chars")
 
     # ── Owner notifications for write-tool events ─────────────────────────────
-    if write_events and config.notification_phone:
-        owner_jid = f"{config.notification_phone}@s.whatsapp.net"
+    if write_events:
         contact_display = conversation.contact_name or contact_jid.split('@')[0]
         customer_phone  = contact_jid.split('@')[0]
 
         for ev in write_events:
             notif = _build_owner_notification(ev, contact_display, customer_phone)
-            try:
-                evolution_client.send_text(
-                    instance_name=instance_name,
-                    token=instance.api_token,
-                    to_jid=owner_jid,
-                    text=notif
-                )
-                logger.info(
-                    f"Owner notification sent to {owner_jid} "
-                    f"for {ev['tool']} on {instance_name}"
-                )
-            except Exception as notif_err:
-                logger.warning(f"Owner notification failed: {notif_err}")
+            if messaging.notify_owner(instance, config, notif):
+                logger.info(f"Owner notification sent for {ev['tool']} on {instance_name}")
 
     # ── Owner notification for appointment intent (no Google write) ───────────
     if appointment_event:
@@ -394,19 +395,9 @@ def _process_single_message(instance_name: str, msg_data: dict):
             _log_bot_event(instance.id, 'appointment', contact_jid,
                            f"{appointment_event.get('title', '')} {appointment_event.get('datetime', '')}".strip())
             _mark_appointment_notify_sent(instance.id, customer_phone, fingerprint)
-            if config.notification_phone:
-                owner_jid = f"{config.notification_phone}@s.whatsapp.net"
-                notif = _build_appointment_notify_message(appointment_event, contact_display, customer_phone)
-                try:
-                    evolution_client.send_text(
-                        instance_name=instance_name,
-                        token=instance.api_token,
-                        to_jid=owner_jid,
-                        text=notif
-                    )
-                    logger.info(f"Owner appointment notification sent to {owner_jid} on {instance_name}")
-                except Exception as notif_err:
-                    logger.warning(f"Owner appointment notification failed: {notif_err}")
+            notif = _build_appointment_notify_message(appointment_event, contact_display, customer_phone)
+            if messaging.notify_owner(instance, config, notif):
+                logger.info(f"Owner appointment notification sent on {instance_name}")
         else:
             logger.info(
                 "Skipped duplicate appointment notification for instance=%s customer=%s",
@@ -421,19 +412,9 @@ def _process_single_message(instance_name: str, msg_data: dict):
         if _should_send_handoff_notify(instance.id, customer_phone):
             _log_bot_event(instance.id, 'handoff', contact_jid, handoff_event.get('reason', ''))
             _mark_handoff_notify_sent(instance.id, customer_phone)
-            if config.notification_phone:
-                owner_jid = f"{config.notification_phone}@s.whatsapp.net"
-                notif = _build_handoff_notify_message(handoff_event, contact_display, customer_phone)
-                try:
-                    evolution_client.send_text(
-                        instance_name=instance_name,
-                        token=instance.api_token,
-                        to_jid=owner_jid,
-                        text=notif
-                    )
-                    logger.info(f"Owner handoff notification sent to {owner_jid} on {instance_name}")
-                except Exception as notif_err:
-                    logger.warning(f"Owner handoff notification failed: {notif_err}")
+            notif = _build_handoff_notify_message(handoff_event, contact_display, customer_phone)
+            if messaging.notify_owner(instance, config, notif):
+                logger.info(f"Owner handoff notification sent on {instance_name}")
         else:
             logger.info(
                 "Skipped duplicate handoff notification for instance=%s customer=%s",
