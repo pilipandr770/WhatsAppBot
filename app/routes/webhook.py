@@ -212,6 +212,7 @@ def process_inbound(instance, contact_id: str, contact_name: str, text: str, is_
         contact_jid=contact_id
     ).first()
 
+    is_new_conversation = conversation is None
     if not conversation:
         conversation = Conversation(
             instance_id=instance.id,
@@ -295,6 +296,11 @@ def process_inbound(instance, contact_id: str, contact_name: str, text: str, is_
         "Nur verwenden, wenn der Wunsch nach einem Menschen klar erkennbar ist."
     )
     system_prompt = system_prompt + _datetime_hint + _appointment_hint + _handoff_hint
+
+    # EU AI Act guardrail: prepend platform rules with priority over the owner's
+    # prompt, and proactively disclose the AI on the first message of a new chat.
+    from app.services.compliance import apply_compliance
+    system_prompt = apply_compliance(system_prompt, is_new_conversation=is_new_conversation)
 
     # ── Assemble tools: Google Calendar + built-in Calendar + files + products ─
     has_google   = bool(instance.google_token and instance.google_token.access_token)
