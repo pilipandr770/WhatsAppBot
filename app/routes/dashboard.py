@@ -271,6 +271,18 @@ def save_telegram_token(instance_id):
     return redirect(url_for('dashboard.connect_telegram', instance_id=instance.id))
 
 
+@dashboard_bp.route('/instance/<int:instance_id>/legal-snippet')
+@login_required
+def legal_snippet(instance_id):
+    """Ready-to-paste privacy text block for the customer's own website,
+    pre-filled with the AI Act / security / sub-processor info we provide."""
+    instance = _get_instance(instance_id)
+    config = instance.bot_config or BotConfig(instance_id=instance.id)
+    from app.services.legal_snippet import build_privacy_snippet
+    snippet = build_privacy_snippet(current_user, instance, config)
+    return render_template('dashboard/legal_snippet.html', instance=instance, snippet=snippet)
+
+
 @dashboard_bp.route('/instance/<int:instance_id>/qr')
 @login_required
 def get_qr(instance_id):

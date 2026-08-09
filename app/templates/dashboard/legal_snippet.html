@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}Rechtstext — {{ instance.display_name }}{% endblock %}
+
+{% block sidebar_instance %}
+<div class="nav-section">{{ instance.display_name }}</div>
+<a href="{{ url_for('dashboard.connect_instance', instance_id=instance.id) }}" class="nav-item">🔗 Verbinden</a>
+<a href="{{ url_for('dashboard.bot_config', instance_id=instance.id) }}" class="nav-item">⚙ Konfiguration</a>
+<a href="{{ url_for('dashboard.legal_snippet', instance_id=instance.id) }}" class="nav-item active">📄 Rechtstext</a>
+<a href="{{ url_for('dashboard.appointments', instance_id=instance.id) }}" class="nav-item">📅 Termine</a>
+<a href="{{ url_for('dashboard.documents', instance_id=instance.id) }}" class="nav-item">📄 Dokumente</a>
+<a href="{{ url_for('dashboard.products', instance_id=instance.id) }}" class="nav-item">🛍 Produkte</a>
+<a href="{{ url_for('dashboard.conversations', instance_id=instance.id) }}" class="nav-item">💬 Gespräche</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-header">
+  <div>
+    <div class="page-title">Rechtstext für deine Website</div>
+    <div class="page-sub">{{ instance.display_name }}</div>
+  </div>
+</div>
+
+<div class="page-body" style="max-width:760px;">
+
+  <div class="card" style="margin-bottom:16px;border-color:rgba(99,102,241,0.25);background:var(--accent-dim);">
+    <div style="font-size:13.5px;color:var(--text-dim);line-height:1.7;">
+      Dieser Textbaustein beschreibt den Teil, den <strong>wir für dich bereitstellen</strong>:
+      den KI-Assistenten, die Transparenz nach EU-KI-Verordnung, Sicherheit und die eingesetzten
+      Dienstleister — automatisch an deine Einstellungen (Kanal, KI-Anbieter, Kalender) angepasst.
+      Füge ihn in die <strong>Datenschutzerklärung deiner eigenen Website</strong> ein und ergänze
+      deine unternehmensspezifischen Angaben.
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div class="card-title" style="margin:0;">📄 Datenschutz-Textbaustein</div>
+      <button type="button" class="btn btn-primary btn-sm" onclick="copySnippet()">📋 Kopieren</button>
+    </div>
+    <textarea id="snippet" readonly rows="22"
+      style="width:100%;font-family:'DM Mono',monospace;font-size:12.5px;line-height:1.7;
+             background:#0d0e11;color:#d1d5db;border:1px solid #2a2d33;border-radius:8px;
+             padding:14px;resize:vertical;">{{ snippet }}</textarea>
+    <div id="copy-hint" style="font-size:12px;color:var(--accent);margin-top:8px;display:none;">
+      ✅ In die Zwischenablage kopiert.
+    </div>
+  </div>
+
+  <div class="card" style="border-color:rgba(251,191,36,0.35);">
+    <div class="card-title" style="color:#fbbf24;">⚠️ Wichtiger Hinweis</div>
+    <div style="font-size:13px;color:var(--text-dim);line-height:1.7;">
+      Dies ist eine <strong>Vorlage</strong>, keine Rechtsberatung. Sie deckt nur den von uns
+      bereitgestellten KI-Teil ab und ersetzt keine vollständige Datenschutzerklärung. Bitte ergänze
+      deine eigenen Angaben (Verantwortlicher, weitere Verarbeitungen, Cookies, etc.) und lasse den
+      Text im Zweifel von einer fachkundigen Person oder deinem Berater prüfen.
+      Platzhalter in eckigen Klammern <code>[ ... ]</code> musst du selbst ausfüllen.
+    </div>
+  </div>
+</div>
+
+<script>
+function copySnippet() {
+  const el = document.getElementById('snippet');
+  el.select();
+  el.setSelectionRange(0, 999999);
+  navigator.clipboard.writeText(el.value).then(() => {
+    const h = document.getElementById('copy-hint');
+    h.style.display = 'block';
+    setTimeout(() => { h.style.display = 'none'; }, 2500);
+  }).catch(() => { document.execCommand('copy'); });
+}
+</script>
+{% endblock %}

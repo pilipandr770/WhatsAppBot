@@ -22,7 +22,7 @@
   <ul style="margin:8px 0 8px 24px;color:var(--text-dim);">
     <li><strong style="color:#e8eaf0;">Registrierungsdaten:</strong> Name, E-Mail-Adresse, Firmenname (bei Registrierung)</li>
     <li><strong style="color:#e8eaf0;">Zahlungsdaten:</strong> werden ausschließlich von Stripe verarbeitet; wir speichern nur die Stripe-Kunden-ID und den Abonnementstatus</li>
-    <li><strong style="color:#e8eaf0;">WhatsApp-Nachrichten:</strong> Textnachrichten und Sprachnachrichten von Endkunden werden zur KI-Verarbeitung übermittelt und in unserer Datenbank gespeichert, um dem Bot Gesprächskontext bereitzustellen</li>
+    <li><strong style="color:#e8eaf0;">WhatsApp- und Telegram-Nachrichten:</strong> Text- und Sprachnachrichten von Endkunden werden zur KI-Verarbeitung übermittelt und in unserer Datenbank gespeichert, um dem Bot Gesprächskontext bereitzustellen</li>
     <li><strong style="color:#e8eaf0;">Sprachaufnahmen:</strong> Sprachnachrichten werden automatisch transkribiert (Groq Whisper oder OpenAI Whisper, je nach Konfiguration) und als Text gespeichert; Audiodateien werden nicht dauerhaft gespeichert</li>
     <li><strong style="color:#e8eaf0;">Hochgeladene Dokumente:</strong> vom Nutzer hochgeladene Dateien (PDF, DOCX, TXT) für die Wissensdatenbank (RAG)</li>
     <li><strong style="color:#e8eaf0;">Nutzungsdaten:</strong> Log-Daten, IP-Adressen (in Server-Logs, nicht dauerhaft in der Anwendungsdatenbank gespeichert)</li>
@@ -147,6 +147,37 @@
     <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" style="color:#9ca3af;">Google API Services User Data Policy</a>,
     including the Limited Use requirements. This application does not use Google data to develop,
     improve, or train generalized AI/ML models.</p>
+  </div>
+
+  <!-- ── KI-Einsatz und Transparenz nach EU-KI-Verordnung (AI Act) ── -->
+  <div style="margin:24px 0;padding:20px;border:1px solid rgba(99,102,241,0.35);border-radius:8px;background:#141618;">
+    <h3 style="font-size:15px;font-weight:700;margin:0 0 14px;color:#e8eaf0;">
+      KI-Einsatz und Transparenz (EU-KI-Verordnung / AI Act, Verordnung (EU) 2024/1689)
+    </h3>
+    <p style="margin-bottom:10px;">
+      Der Dienst betreibt KI-gestützte, automatische Chat-Assistenten. Wir setzen auf Plattformebene
+      verbindliche Regeln durch, die den anwendbaren Transparenz- und Schutzpflichten der
+      EU-KI-Verordnung entsprechen und von den Nutzern (Betreibern der Assistenten) nicht deaktiviert
+      werden können:
+    </p>
+    <ul style="margin:0 0 10px 24px;color:var(--text-dim);">
+      <li><strong style="color:#e8eaf0;">Transparenz (Art. 50):</strong> Endkunden werden darüber
+        informiert, dass sie mit einem automatischen KI-Assistenten und nicht mit einem Menschen
+        kommunizieren. Der Assistent weist zu Beginn eines Gesprächs darauf hin und gibt sich
+        niemals als Mensch aus.</li>
+      <li><strong style="color:#e8eaf0;">Keine verbotenen Praktiken (Art. 5):</strong> keine
+        manipulativen, täuschenden oder die Schwächen von Personen ausnutzenden Techniken.</li>
+      <li><strong style="color:#e8eaf0;">Keine verbindlichen Fachentscheidungen:</strong> der
+        Assistent trifft keine verbindlichen medizinischen, rechtlichen oder finanziellen
+        Entscheidungen und gibt sich nicht als lizenzierte Fachkraft aus.</li>
+      <li><strong style="color:#e8eaf0;">Datenminimierung:</strong> es werden keine unnötigen
+        besonders sensiblen Daten und keine Passwörter oder vollständigen Zahlungsdaten abgefragt.</li>
+    </ul>
+    <p style="margin-bottom:0;color:var(--text-dim);">
+      KI-Antworten können trotz sorgfältiger Gestaltung Fehler enthalten. Auf Wunsch kann jederzeit
+      an einen menschlichen Mitarbeiter weitergeleitet werden. Diese Einstufung betrifft einen
+      KI-Assistenten mit begrenztem Risiko („limited risk") nach der EU-KI-Verordnung.
+    </p>
   </div>
 
   <h2 style="font-size:16px;font-weight:600;margin:24px 0 8px;">5. Datenübertragung in Drittländer</h2>
