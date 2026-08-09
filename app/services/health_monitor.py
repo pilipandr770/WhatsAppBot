@@ -133,8 +133,11 @@ def _tick(app):
         pending = set()
     new_pending = set()
 
-    # ── 2+3. Instances the DB believes are connected ─────────────────────────
-    connected = WhatsAppInstance.query.filter_by(status='connected').all()
+    # ── 2+3. WhatsApp instances the DB believes are connected ────────────────
+    # Only WhatsApp/Evolution instances belong here. Telegram instances live on
+    # the Bot API (webhook-managed) and never appear in Evolution's instance
+    # list, so including them would falsely mark them "vanished" every tick.
+    connected = WhatsAppInstance.query.filter_by(status='connected', channel='whatsapp').all()
     for inst in connected:
         name = inst.instance_name
 
@@ -180,7 +183,8 @@ def _tick(app):
 
     # ── 4. Reverse sync: DB stale, Evolution actually connected ──────────────
     stale = WhatsAppInstance.query.filter(
-        WhatsAppInstance.status.in_(('disconnected', 'connecting'))
+        WhatsAppInstance.status.in_(('disconnected', 'connecting')),
+        WhatsAppInstance.channel == 'whatsapp',
     ).all()
     for inst in stale:
         if inst.instance_name in evo_names and inst.api_token:

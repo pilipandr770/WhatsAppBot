@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 import time
 import threading
@@ -189,6 +190,14 @@ def create_telegram_instance():
     display_name = request.form.get('display_name', '').strip()
     if not display_name:
         flash('Bitte gib einen Namen ein.', 'error')
+        return redirect(url_for('dashboard.index'))
+
+    # Guard: users sometimes paste the bot TOKEN into the name field. A token
+    # looks like "123456789:AA...". Reject it so it never lands in display_name
+    # (which is shown in the UI) — the token belongs on the next screen.
+    if re.match(r'^\d{6,}:[A-Za-z0-9_-]{20,}$', display_name):
+        flash('Das sieht wie ein Bot-Token aus. Bitte hier nur einen Namen eingeben — '
+              'den Token fügst du im nächsten Schritt ein.', 'error')
         return redirect(url_for('dashboard.index'))
 
     instance_name = f"tg_{current_user.id}_{uuid.uuid4().hex[:8]}"
